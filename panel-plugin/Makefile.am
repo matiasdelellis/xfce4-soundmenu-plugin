@@ -1,31 +1,33 @@
 INCLUDES = \
 	-I$(top_srcdir) \
-	-DG_LOG_DOMAIN=\"xfce4-sample-plugin\" \
+	-DG_LOG_DOMAIN=\"xfce4-pragha-plugin\" \
 	-DPACKAGE_LOCALE_DIR=\"$(localedir)\" \
 	$(PLATFORM_CPPFLAGS)
 
 #
-# Sample plugin
+# Pragha plugin
 #
 plugin_PROGRAMS = \
-	xfce4-sample-plugin
+	xfce4-pragha-plugin
 
 plugindir = \
 	$(libexecdir)/xfce4/panel-plugins
 
-xfce4_sample_plugin_SOURCES = \
-	sample.c \
-	sample.h \
-	sample-dialogs.c \
-	sample-dialogs.h
+xfce4_pragha_plugin_SOURCES = \
+	pragha.c \
+	pragha.h \
+	pragha-dialogs.c \
+	pragha-dialogs.h	
 
-xfce4_sample_plugin_CFLAGS = \
+xfce4_pragha_plugin_CFLAGS = \
+	$(DBUS_GLIB_CFLAGS) \
 	$(LIBXFCE4UTIL_CFLAGS) \
 	$(LIBXFCE4UI_CFLAGS) \
 	$(LIBXFCE4PANEL_CFLAGS) \
 	$(PLATFORM_CFLAGS)
-
-xfce4_sample_plugin_LDADD = \
+	
+xfce4_pragha_plugin_LDADD = \
+	$(DBUS_GLIB_LIBS) \
 	$(LIBXFCE4UTIL_LIBS) \
 	$(LIBXFCE4UI_LIBS) \
 	$(LIBXFCE4PANEL_LIBS)
@@ -37,7 +39,7 @@ desktopdir =								\
 	$(datadir)/xfce4/panel-plugins
 
 desktop_in_in_files =							\
-	sample.desktop.in.in
+	pragha.desktop.in.in
 
 desktop_in_files =							\
 	$(desktop_in_in_files:.desktop.in.in=.desktop.in)

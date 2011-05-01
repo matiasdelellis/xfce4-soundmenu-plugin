@@ -1,0 +1,8 @@
+[Xfce Panel]
+Type=X-XFCE-PanelPlugin
+Encoding=UTF-8
+Name=Pragha Plugin
+Comment=Pragha plugin for the Xfce panel
+Icon=xfce4-pragha-plugin
+X-XFCE-Exec=/usr/libexec/xfce4/panel-plugins/xfce4-pragha-plugin
+#X-XFCE-Unique=true

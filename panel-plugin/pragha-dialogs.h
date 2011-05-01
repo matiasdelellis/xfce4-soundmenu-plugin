@@ -17,17 +17,17 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef __SAMPLE_DIALOGS_H__
-#define __SAMPLE_DIALOGS_H__
+#ifndef __PRAGHA_DIALOGS_H__
+#define __PRAGHA_DIALOGS_H__
 
 G_BEGIN_DECLS
 
 void
-sample_configure    (XfcePanelPlugin *plugin,
-                     SamplePlugin    *sample);
+pragha_configure    (XfcePanelPlugin *plugin,
+                     PraghaPlugin    *pragha);
 
 void
-sample_about        (XfcePanelPlugin *plugin);
+pragha_about        (XfcePanelPlugin *plugin);
 
 G_END_DECLS
 

@@ -17,10 +17,16 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef __SAMPLE_H__
-#define __SAMPLE_H__
+#ifndef __PRAGHA_H__
+#define __PRAGHA_H__
 
 G_BEGIN_DECLS
+
+enum player_state {
+	ST_PLAYING = 1,
+	ST_STOPPED,
+	ST_PAUSED
+};
 
 /* plugin structure */
 typedef struct
@@ -30,21 +36,27 @@ typedef struct
     /* panel widgets */
     GtkWidget       *ebox;
     GtkWidget       *hvbox;
-    GtkWidget       *label;
+    GtkWidget       *play_button;
+		GtkWidget       *image_pause;
+		GtkWidget       *image_play;
 
-    /* sample settings */
+		/* pragha helpers */
+		enum player_state state;
+    DBusConnection  *connection;
+
+    /* pragha settings */
     gchar           *setting1;
     gint             setting2;
     gboolean         setting3;
 }
-SamplePlugin;
+PraghaPlugin;
 
 
 
 void
-sample_save (XfcePanelPlugin *plugin,
-             SamplePlugin    *sample);
+pragha_save (XfcePanelPlugin *plugin,
+             PraghaPlugin    *pragha);
 
 G_END_DECLS
 
-#endif /* !__SAMPLE_H__ */
+#endif /* !__PRAGHA_H__ */

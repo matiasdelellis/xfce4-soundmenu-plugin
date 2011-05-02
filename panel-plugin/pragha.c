@@ -59,27 +59,15 @@ void play_button_toggle_state (PraghaPlugin *pragha)
 		gtk_button_set_image(GTK_BUTTON(pragha->play_button), pragha->image_pause);
 }
 
-void cmd_current_state (PraghaPlugin *pragha)
+static void get_meta_item_str(DBusMessageIter *dict_entry, PraghaPlugin *pragha)
 {
-	DBusMessage *msg = NULL;
-	DBusMessage *reply_msg = NULL;
-	DBusError d_error;
-	const char *state;
+	DBusMessageIter variant;
+	char *state;
 
-	dbus_error_init(&d_error);
-
-	msg = dbus_message_new_method_call("org.pragha.DBus",
-					   "/org/pragha/DBus",
-					   "org.pragha.DBus",
-					   "curent_state");
-
-	reply_msg = dbus_connection_send_with_reply_and_block(pragha->connection, msg,
-							      -1, &d_error);
-
-	dbus_message_get_args(reply_msg, &d_error,
-				   DBUS_TYPE_STRING, &state,
-				   DBUS_TYPE_INVALID);
-
+	dbus_message_iter_next(dict_entry);
+	dbus_message_iter_recurse(dict_entry, &variant);
+	dbus_message_iter_get_basic(&variant, (void*) &state);
+	
 	if (0 == g_ascii_strcasecmp(state, "Playing"))
 		pragha->state = ST_PLAYING;
 	else if (0 == g_ascii_strcasecmp(state, "Paused"))
@@ -88,20 +76,35 @@ void cmd_current_state (PraghaPlugin *pragha)
 		pragha->state = ST_STOPPED;
 
 	play_button_toggle_state(pragha);
-
-	dbus_message_unref(msg);
 }
 
 static DBusHandlerResult
 dbus_filter (DBusConnection *connection, DBusMessage *message, void *user_data)
 {
-    if ( dbus_message_is_signal (message, "org.pragha.DBus", "update_state" ) )
+		const char **signal;
+		DBusError d_error;
+		DBusMessageIter args, status, dict, dict_entry;
+		char* str_buf = NULL;
+		PraghaPlugin *pragha = user_data;
+
+		dbus_error_init(&d_error);
+
+    if ( dbus_message_is_signal (message, "org.freedesktop.DBus.Properties", "PropertiesChanged" ) )
     {
-    		PraghaPlugin *pragha = user_data;
-				cmd_current_state (pragha);
-        return DBUS_HANDLER_RESULT_HANDLED;
-    }
-    
+			dbus_message_iter_init(message, &args);
+			dbus_message_iter_recurse(&args, &dict);
+
+			do
+			{
+				dbus_message_iter_recurse(&dict, &dict_entry);
+				dbus_message_iter_get_basic(&dict_entry, (void*) &str_buf);
+
+				if (!strcmp(str_buf, "PlaybackStatus"))
+					get_meta_item_str (&dict_entry, pragha);
+			} while (dbus_message_iter_next(&dict));
+
+		  return DBUS_HANDLER_RESULT_HANDLED;
+		}
     return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 }
 
@@ -110,9 +113,7 @@ send_message (PraghaPlugin *pragha, const char *msg)
 {
     DBusMessage *message;
  
-    message = dbus_message_new_signal ("/org/pragha/DBus",
-                                       "org.pragha.DBus",
-                                       msg);
+    message = dbus_message_new_method_call ("org.mpris.MediaPlayer2.pragha", "/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2.Player",  msg);
     /* Send the message */
     dbus_connection_send (pragha->connection, message, NULL);
     dbus_message_unref (message);
@@ -121,26 +122,26 @@ send_message (PraghaPlugin *pragha, const char *msg)
 void
 prev_button_handler(GtkButton *button, PraghaPlugin *pragha)
 {
-	send_message (pragha, "prev");
+	send_message (pragha, "Previous");
 }
 
 void
 play_button_handler(GtkButton *button, PraghaPlugin    *pragha)
 {
 	/* Pragha play, pause and resume with pause action */
-	send_message (pragha, "pause");
+	send_message (pragha, "PlayPause");
 }
 
 void
 stop_button_handler(GtkButton *button, PraghaPlugin    *pragha)
 {
-	send_message (pragha, "stop");
+	send_message (pragha, "Stop");
 }
 
 void
 next_button_handler(GtkButton *button, PraghaPlugin    *pragha)
 {
-	send_message (pragha, "next");
+	send_message (pragha, "Next");
 }
 
 void
@@ -331,7 +332,7 @@ pragha_new (XfcePanelPlugin *plugin)
 
   connection = dbus_bus_get (DBUS_BUS_SESSION, NULL);
   
-  dbus_bus_add_match (connection, "type=\'signal\',interface=\'org.pragha.DBus\'", NULL);
+  dbus_bus_add_match (connection, "type=\'signal\', sender=\'org.mpris.MediaPlayer2.pragha\'", NULL);
   dbus_connection_add_filter (connection, dbus_filter, pragha, NULL);
   dbus_connection_setup_with_g_main (connection, NULL);
 

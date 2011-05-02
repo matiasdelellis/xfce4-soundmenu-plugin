@@ -111,6 +111,10 @@ pragha_configure (XfcePanelPlugin *plugin,
 void
 pragha_about (XfcePanelPlugin *plugin)
 {
-  /* about dialog code. you can use the GtkAboutDialog
-   * or the XfceAboutInfo widget */
+	gboolean result;
+
+	result = g_spawn_command_line_async ("exo-open --launch WebBrowser " PLUGIN_WEBSITE, NULL);
+
+	if (G_UNLIKELY (result == FALSE))
+		g_warning (_("Unable to open the following url: %s"), PLUGIN_WEBSITE);
 }

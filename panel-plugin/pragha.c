@@ -250,12 +250,8 @@ pragha_new (XfcePanelPlugin *plugin)
   orientation = xfce_panel_plugin_get_orientation (plugin);
 
   /* create some panel widgets */
-  pragha->ebox = gtk_event_box_new ();
-  gtk_widget_show (pragha->ebox);
 
   pragha->hvbox = xfce_hvbox_new (orientation, FALSE, 2);
-  gtk_widget_show (pragha->hvbox);
-  gtk_container_add (GTK_CONTAINER (pragha->ebox), pragha->hvbox);
 
   /* some pragha widgets */
 
@@ -320,11 +316,6 @@ pragha_new (XfcePanelPlugin *plugin)
 			 G_CALLBACK(stop_button_handler), pragha);
 	g_signal_connect(G_OBJECT(next_button), "clicked",
 			 G_CALLBACK(next_button_handler), pragha);
-
-  xfce_panel_plugin_add_action_widget (plugin, prev_button);
-  xfce_panel_plugin_add_action_widget (plugin, play_button);
-  xfce_panel_plugin_add_action_widget (plugin, stop_button);
-  xfce_panel_plugin_add_action_widget (plugin, next_button);
 
 	pragha->play_button = play_button;
 
@@ -409,11 +400,11 @@ pragha_construct (XfcePanelPlugin *plugin)
   /* create the plugin */
   pragha = pragha_new (plugin);
 
-  /* add the ebox to the panel */
-  gtk_container_add (GTK_CONTAINER (plugin), pragha->ebox);
+  /* add the hvbox to the panel */
+  gtk_container_add (GTK_CONTAINER (plugin), pragha->hvbox);
 
-  /* show the panel's right-click menu on this ebox */
-  xfce_panel_plugin_add_action_widget (plugin, pragha->ebox);
+  /* show the panel's right-click menu on this hvbox */
+  xfce_panel_plugin_add_action_widget (plugin, pragha->hvbox);
 
   /* connect plugin signals */
   g_signal_connect (G_OBJECT (plugin), "free-data",

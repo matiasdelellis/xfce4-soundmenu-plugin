@@ -34,7 +34,6 @@ typedef struct
     XfcePanelPlugin *plugin;
 
     /* panel widgets */
-    GtkWidget       *ebox;
     GtkWidget       *hvbox;
     GtkWidget       *play_button;
 		GtkWidget       *image_pause;

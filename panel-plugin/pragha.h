@@ -36,6 +36,7 @@ typedef struct
     /* panel widgets */
     GtkWidget       *hvbox;
     GtkWidget       *play_button;
+    GtkWidget       *stop_button;
 		GtkWidget       *image_pause;
 		GtkWidget       *image_play;
 
@@ -46,7 +47,7 @@ typedef struct
     /* pragha settings */
     gchar           *setting1;
     gint             setting2;
-    gboolean         setting3;
+    gboolean         show_stop;
 }
 PraghaPlugin;
 

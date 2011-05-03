@@ -69,13 +69,23 @@ pragha_configure_response (GtkWidget    *dialog,
     }
 }
 
+static void
+toggle_show_stop(GtkToggleButton *button, PraghaPlugin    *pragha)
+{
+	pragha->show_stop = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button));
 
+	if(pragha->show_stop)
+		gtk_widget_show(pragha->stop_button);
+	else
+		gtk_widget_hide(pragha->stop_button);
+}
 
 void
 pragha_configure (XfcePanelPlugin *plugin,
                   PraghaPlugin    *pragha)
 {
   GtkWidget *dialog;
+  GtkWidget *show_stop_check;
 
   /* block the plugin menu */
   xfce_panel_plugin_block_menu (plugin);
@@ -87,8 +97,7 @@ pragha_configure (XfcePanelPlugin *plugin,
                                                 GTK_STOCK_HELP, GTK_RESPONSE_HELP,
                                                 GTK_STOCK_CLOSE, GTK_RESPONSE_OK,
                                                 NULL);
-
-  /* center dialog on the screen */
+	/* center dialog on the screen */
   gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER);
 
   /* set dialog icon */
@@ -102,8 +111,18 @@ pragha_configure (XfcePanelPlugin *plugin,
   g_signal_connect (G_OBJECT (dialog), "response",
                     G_CALLBACK(pragha_configure_response), pragha);
 
+  show_stop_check = gtk_check_button_new_with_label(_("Show stop button"));
+
+	if(pragha->show_stop)
+  	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(show_stop_check), TRUE);
+
+	gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), show_stop_check);
+ 
+	g_signal_connect(G_OBJECT(show_stop_check), "toggled",
+									G_CALLBACK(toggle_show_stop), pragha);
+
   /* show the entire dialog */
-  gtk_widget_show (dialog);
+	gtk_widget_show_all(dialog);
 }
 
 

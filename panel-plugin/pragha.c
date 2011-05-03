@@ -38,7 +38,7 @@
 /* default settings */
 #define DEFAULT_SETTING1 NULL
 #define DEFAULT_SETTING2 1
-#define DEFAULT_SETTING3 FALSE
+#define DEFAULT_SHOW_STOP TRUE
 
 /* prototypes */
 
@@ -172,7 +172,7 @@ pragha_save (XfcePanelPlugin *plugin,
         xfce_rc_write_entry    (rc, "setting1", pragha->setting1);
 
       xfce_rc_write_int_entry  (rc, "setting2", pragha->setting2);
-      xfce_rc_write_bool_entry (rc, "setting3", pragha->setting3);
+      xfce_rc_write_bool_entry (rc, "show_stop", pragha->show_stop);
 
       /* close the rc file */
       xfce_rc_close (rc);
@@ -206,7 +206,7 @@ pragha_read (PraghaPlugin *pragha)
           pragha->setting1 = g_strdup (value);
 
           pragha->setting2 = xfce_rc_read_int_entry (rc, "setting2", DEFAULT_SETTING2);
-          pragha->setting3 = xfce_rc_read_bool_entry (rc, "setting3", DEFAULT_SETTING3);
+          pragha->show_stop = xfce_rc_read_bool_entry (rc, "show_stop", DEFAULT_SHOW_STOP);
           
           pragha->state = ST_STOPPED;
 
@@ -223,7 +223,7 @@ pragha_read (PraghaPlugin *pragha)
 
   pragha->setting1 = g_strdup (DEFAULT_SETTING1);
   pragha->setting2 = DEFAULT_SETTING2;
-  pragha->setting3 = DEFAULT_SETTING3;
+  pragha->show_stop = DEFAULT_SHOW_STOP;
   pragha->state = ST_STOPPED;
 }
 
@@ -251,7 +251,8 @@ pragha_new (XfcePanelPlugin *plugin)
 
   /* create some panel widgets */
 
-  pragha->hvbox = xfce_hvbox_new (orientation, FALSE, 2);
+	pragha->hvbox = xfce_hvbox_new (orientation, FALSE, 2);
+	gtk_widget_show (pragha->hvbox);
 
   /* some pragha widgets */
 
@@ -303,7 +304,8 @@ pragha_new (XfcePanelPlugin *plugin)
 
 	gtk_widget_show(prev_button);
 	gtk_widget_show(play_button);
-	gtk_widget_show(stop_button);
+	if(pragha->show_stop)
+		gtk_widget_show(stop_button);
 	gtk_widget_show(next_button);
 
 	/* Signal handlers */
@@ -317,7 +319,13 @@ pragha_new (XfcePanelPlugin *plugin)
 	g_signal_connect(G_OBJECT(next_button), "clicked",
 			 G_CALLBACK(next_button_handler), pragha);
 
+	xfce_panel_plugin_add_action_widget (plugin, prev_button);
+	xfce_panel_plugin_add_action_widget (plugin, play_button);
+	xfce_panel_plugin_add_action_widget (plugin, stop_button);
+	xfce_panel_plugin_add_action_widget (plugin, next_button);
+
 	pragha->play_button = play_button;
+	pragha->stop_button = stop_button;
 
 	/* Pragha dbus helpers */
 
@@ -402,9 +410,6 @@ pragha_construct (XfcePanelPlugin *plugin)
 
   /* add the hvbox to the panel */
   gtk_container_add (GTK_CONTAINER (plugin), pragha->hvbox);
-
-  /* show the panel's right-click menu on this hvbox */
-  xfce_panel_plugin_add_action_widget (plugin, pragha->hvbox);
 
   /* connect plugin signals */
   g_signal_connect (G_OBJECT (plugin), "free-data",

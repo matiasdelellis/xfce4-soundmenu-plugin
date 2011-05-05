@@ -92,8 +92,12 @@ dbus_filter (DBusConnection *connection, DBusMessage *message, void *user_data)
     if ( dbus_message_is_signal (message, "org.freedesktop.DBus.Properties", "PropertiesChanged" ) )
     {
 			dbus_message_iter_init(message, &args);
-			dbus_message_iter_recurse(&args, &dict);
 
+			if(dbus_message_iter_get_arg_type(&args) != DBUS_TYPE_ARRAY ||
+				dbus_message_iter_get_element_type(&args) != DBUS_TYPE_STRING)
+				return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+
+			dbus_message_iter_recurse(&args, &dict);
 			do
 			{
 				dbus_message_iter_recurse(&dict, &dict_entry);

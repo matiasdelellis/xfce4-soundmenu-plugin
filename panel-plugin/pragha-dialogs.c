@@ -43,7 +43,8 @@ pragha_configure_response (GtkWidget    *dialog,
                            gint          response,
                            PraghaPlugin *pragha)
 {
-  gboolean result;
+	gboolean result;
+	gchar *rule = NULL, *player = NULL;
 
   if (response == GTK_RESPONSE_HELP)
     {
@@ -55,6 +56,25 @@ pragha_configure_response (GtkWidget    *dialog,
     }
   else
     {
+			player = strdup(gtk_entry_get_text(GTK_ENTRY(pragha->w_player)));
+			if(player)
+				{
+					if (G_LIKELY (pragha->player != NULL))
+						g_free (pragha->player);
+					pragha->player = player;
+					
+				  rule = g_strdup_printf ("type='signal', sender='%s'", pragha->dbus_name);
+					dbus_bus_remove_match (pragha->connection, rule, NULL);
+					g_free(rule);
+
+					if (G_LIKELY (pragha->dbus_name != NULL))
+						g_free(pragha->dbus_name);
+					pragha->dbus_name = g_strdup_printf("org.mpris.MediaPlayer2.%s", pragha->player);
+
+				  rule = g_strdup_printf ("type='signal', sender='%s'", pragha->dbus_name);
+  				dbus_bus_add_match (pragha->connection, rule, NULL);
+  				g_free(rule);
+  		}
       /* remove the dialog data from the plugin */
       g_object_set_data (G_OBJECT (pragha->plugin), "dialog", NULL);
 
@@ -85,6 +105,7 @@ pragha_configure (XfcePanelPlugin *plugin,
                   PraghaPlugin    *pragha)
 {
   GtkWidget *dialog;
+  GtkWidget *player_entry;
   GtkWidget *show_stop_check;
 
   /* block the plugin menu */
@@ -103,6 +124,21 @@ pragha_configure (XfcePanelPlugin *plugin,
   /* set dialog icon */
   gtk_window_set_icon_name (GTK_WINDOW (dialog), "xfce4-settings");
 
+	player_entry = gtk_entry_new();
+	gtk_entry_set_text(GTK_ENTRY(player_entry), pragha->player);
+	pragha->w_player = player_entry;
+
+  show_stop_check = gtk_check_button_new_with_label(_("Show stop button"));
+
+	if(pragha->show_stop)
+  	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(show_stop_check), TRUE);
+
+	g_signal_connect(G_OBJECT(show_stop_check), "toggled",
+									G_CALLBACK(toggle_show_stop), pragha);
+
+	gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), player_entry, TRUE, TRUE, 0);
+	gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), show_stop_check, TRUE, TRUE, 0);
+ 
   /* link the dialog to the plugin, so we can destroy it when the plugin
    * is closed, but the dialog is still open */
   g_object_set_data (G_OBJECT (plugin), "dialog", dialog);
@@ -110,16 +146,6 @@ pragha_configure (XfcePanelPlugin *plugin,
   /* connect the reponse signal to the dialog */
   g_signal_connect (G_OBJECT (dialog), "response",
                     G_CALLBACK(pragha_configure_response), pragha);
-
-  show_stop_check = gtk_check_button_new_with_label(_("Show stop button"));
-
-	if(pragha->show_stop)
-  	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(show_stop_check), TRUE);
-
-	gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), show_stop_check);
- 
-	g_signal_connect(G_OBJECT(show_stop_check), "toggled",
-									G_CALLBACK(toggle_show_stop), pragha);
 
   /* show the entire dialog */
 	gtk_widget_show_all(dialog);

@@ -40,12 +40,16 @@ typedef struct
 		GtkWidget       *image_pause;
 		GtkWidget       *image_play;
 
+		/* Helper to obtain player name of preferences */
+		GtkWidget				*w_player;
+
 		/* pragha helpers */
 		enum player_state state;
     DBusConnection  *connection;
+    gchar						*dbus_name;
 
     /* pragha settings */
-    gchar           *setting1;
+    gchar           *player;
     gint             setting2;
     gboolean         show_stop;
 }

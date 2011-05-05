@@ -36,7 +36,7 @@
 #include "pragha-dialogs.h"
 
 /* default settings */
-#define DEFAULT_SETTING1 NULL
+#define DEFAULT_PLAYER pragha
 #define DEFAULT_SETTING2 1
 #define DEFAULT_SHOW_STOP TRUE
 
@@ -81,21 +81,16 @@ static void get_meta_item_str(DBusMessageIter *dict_entry, PraghaPlugin *pragha)
 static DBusHandlerResult
 dbus_filter (DBusConnection *connection, DBusMessage *message, void *user_data)
 {
-		const char **signal;
-		DBusError d_error;
-		DBusMessageIter args, status, dict, dict_entry;
+		DBusMessageIter args, dict, dict_entry;
 		char* str_buf = NULL;
 		PraghaPlugin *pragha = user_data;
 
-		dbus_error_init(&d_error);
-
-    if ( dbus_message_is_signal (message, "org.freedesktop.DBus.Properties", "PropertiesChanged" ) )
-    {
+		if ( dbus_message_is_signal (message, "org.freedesktop.DBus.Properties", "PropertiesChanged" ) )
+		{
 			dbus_message_iter_init(message, &args);
 
-			if(dbus_message_iter_get_arg_type(&args) != DBUS_TYPE_ARRAY ||
-				dbus_message_iter_get_element_type(&args) != DBUS_TYPE_STRING)
-				return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+			/* Ignore the interface_name*/
+			dbus_message_iter_next(&args);
 
 			dbus_message_iter_recurse(&args, &dict);
 			do
@@ -115,12 +110,16 @@ dbus_filter (DBusConnection *connection, DBusMessage *message, void *user_data)
 void
 send_message (PraghaPlugin *pragha, const char *msg)
 {
-    DBusMessage *message;
- 
-    message = dbus_message_new_method_call ("org.mpris.MediaPlayer2.pragha", "/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2.Player",  msg);
-    /* Send the message */
-    dbus_connection_send (pragha->connection, message, NULL);
-    dbus_message_unref (message);
+	DBusMessage *message;
+	gchar *destination = NULL;
+
+	destination = g_strdup_printf ("org.mpris.MediaPlayer2.%s", pragha->player);
+	message = dbus_message_new_method_call (destination, "/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2.Player",  msg);
+	g_free(destination);
+
+	/* Send the message */
+	dbus_connection_send (pragha->connection, message, NULL);
+	dbus_message_unref (message);
 }
 
 void
@@ -172,8 +171,8 @@ pragha_save (XfcePanelPlugin *plugin,
     {
       /* save the settings */
       DBG(".");
-      if (pragha->setting1)
-        xfce_rc_write_entry    (rc, "setting1", pragha->setting1);
+      if (pragha->player)
+        xfce_rc_write_entry    (rc, "player", pragha->player);
 
       xfce_rc_write_int_entry  (rc, "setting2", pragha->setting2);
       xfce_rc_write_bool_entry (rc, "show_stop", pragha->show_stop);
@@ -206,8 +205,8 @@ pragha_read (PraghaPlugin *pragha)
       if (G_LIKELY (rc != NULL))
         {
           /* read the settings */
-          value = xfce_rc_read_entry (rc, "setting1", DEFAULT_SETTING1);
-          pragha->setting1 = g_strdup (value);
+          value = xfce_rc_read_entry (rc, "player", "pragha");
+          pragha->player = g_strdup (value);
 
           pragha->setting2 = xfce_rc_read_int_entry (rc, "setting2", DEFAULT_SETTING2);
           pragha->show_stop = xfce_rc_read_bool_entry (rc, "show_stop", DEFAULT_SHOW_STOP);
@@ -225,7 +224,7 @@ pragha_read (PraghaPlugin *pragha)
   /* something went wrong, apply default values */
   DBG ("Applying default settings");
 
-  pragha->setting1 = g_strdup (DEFAULT_SETTING1);
+  pragha->player = g_strdup ("pragha");
   pragha->setting2 = DEFAULT_SETTING2;
   pragha->show_stop = DEFAULT_SHOW_STOP;
   pragha->state = ST_STOPPED;
@@ -240,6 +239,7 @@ pragha_new (XfcePanelPlugin *plugin)
   GtkOrientation  orientation;
 	GtkWidget *play_button, *stop_button, *prev_button, *next_button;
   DBusConnection *connection;
+  gchar *rule = NULL;
 
   /* allocate memory for the plugin structure */
   pragha = panel_slice_new0 (PraghaPlugin);
@@ -334,8 +334,13 @@ pragha_new (XfcePanelPlugin *plugin)
 	/* Pragha dbus helpers */
 
   connection = dbus_bus_get (DBUS_BUS_SESSION, NULL);
+
+	pragha->dbus_name = g_strdup_printf("org.mpris.MediaPlayer2.%s", pragha->player);
+
+	rule = g_strdup_printf ("type='signal', sender='%s'", pragha->dbus_name);
+	dbus_bus_add_match (connection, rule, NULL);
+	g_free(rule);
   
-  dbus_bus_add_match (connection, "type=\'signal\', sender=\'org.mpris.MediaPlayer2.pragha\'", NULL);
   dbus_connection_add_filter (connection, dbus_filter, pragha, NULL);
   dbus_connection_setup_with_g_main (connection, NULL);
 
@@ -359,8 +364,10 @@ pragha_free (XfcePanelPlugin *plugin,
   gtk_widget_destroy (pragha->hvbox);
 
   /* cleanup the settings */
-  if (G_LIKELY (pragha->setting1 != NULL))
-    g_free (pragha->setting1);
+  if (G_LIKELY (pragha->player != NULL))
+    g_free (pragha->player);
+  if (G_LIKELY (pragha->dbus_name != NULL))
+    g_free (pragha->dbus_name);
 
   /* free the plugin structure */
   panel_slice_free (PraghaPlugin, pragha);

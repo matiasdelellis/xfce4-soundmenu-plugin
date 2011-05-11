@@ -59,15 +59,8 @@ void play_button_toggle_state (PraghaPlugin *pragha)
 		gtk_button_set_image(GTK_BUTTON(pragha->play_button), pragha->image_pause);
 }
 
-static void get_meta_item_str(DBusMessageIter *dict_entry, PraghaPlugin *pragha)
+static void update_state(gchar *state, PraghaPlugin *pragha)
 {
-	DBusMessageIter variant;
-	char *state;
-
-	dbus_message_iter_next(dict_entry);
-	dbus_message_iter_recurse(dict_entry, &variant);
-	dbus_message_iter_get_basic(&variant, (void*) &state);
-	
 	if (0 == g_ascii_strcasecmp(state, "Playing"))
 		pragha->state = ST_PLAYING;
 	else if (0 == g_ascii_strcasecmp(state, "Paused"))
@@ -78,11 +71,24 @@ static void get_meta_item_str(DBusMessageIter *dict_entry, PraghaPlugin *pragha)
 	play_button_toggle_state(pragha);
 }
 
+static void get_meta_item_str(DBusMessageIter *dict_entry, char **item)
+{
+	DBusMessageIter variant;
+	char *str_buf;
+
+	dbus_message_iter_next(dict_entry);
+	dbus_message_iter_recurse(dict_entry, &variant);
+	dbus_message_iter_get_basic(&variant, (void*) &str_buf);
+
+	*item = malloc(strlen(str_buf) + 1);
+	strcpy(*item, str_buf);
+}
+
 static DBusHandlerResult
 dbus_filter (DBusConnection *connection, DBusMessage *message, void *user_data)
 {
 		DBusMessageIter args, dict, dict_entry;
-		char* str_buf = NULL;
+		gchar *str_buf = NULL, *state = NULL;
 		PraghaPlugin *pragha = user_data;
 
 		if ( dbus_message_is_signal (message, "org.freedesktop.DBus.Properties", "PropertiesChanged" ) )
@@ -98,8 +104,13 @@ dbus_filter (DBusConnection *connection, DBusMessage *message, void *user_data)
 				dbus_message_iter_recurse(&dict, &dict_entry);
 				dbus_message_iter_get_basic(&dict_entry, (void*) &str_buf);
 
-				if (!strcmp(str_buf, "PlaybackStatus"))
-					get_meta_item_str (&dict_entry, pragha);
+				if (0 == g_ascii_strcasecmp (str_buf, "PlaybackStatus")) {
+					get_meta_item_str (&dict_entry, &state);
+					update_state (state, pragha);
+				}
+				else if (0 == g_ascii_strcasecmp (str_buf, "Metadata")) {
+					g_message("Metadata.\n");
+				}
 			} while (dbus_message_iter_next(&dict));
 
 		  return DBUS_HANDLER_RESULT_HANDLED;

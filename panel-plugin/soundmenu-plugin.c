@@ -71,6 +71,21 @@ static void update_state(gchar *state, SoundmenuPlugin *soundmenu)
 	play_button_toggle_state(soundmenu);
 }
 
+static void get_meta_item_array(DBusMessageIter *dict_entry, char **item)
+{
+	DBusMessageIter variant, array;
+	char *str_buf;
+
+	dbus_message_iter_next(dict_entry);
+	dbus_message_iter_recurse(dict_entry, &array);
+
+	dbus_message_iter_recurse(&array, &variant);
+	dbus_message_iter_get_basic(&variant, (void*) &str_buf);
+
+	*item = malloc(strlen(str_buf) + 1);
+	strcpy(*item, str_buf);
+}
+
 static void get_meta_item_str(DBusMessageIter *dict_entry, char **item)
 {
 	DBusMessageIter variant;
@@ -84,38 +99,123 @@ static void get_meta_item_str(DBusMessageIter *dict_entry, char **item)
 	strcpy(*item, str_buf);
 }
 
+static void get_meta_item_gint(DBusMessageIter *dict_entry, void *item)
+{
+	DBusMessageIter variant;
+
+	dbus_message_iter_next(dict_entry);
+	dbus_message_iter_recurse(dict_entry, &variant);
+	dbus_message_iter_get_basic(&variant, (void*) item);
+}
+
+demarshal_metadata (DBusMessageIter *args, SoundmenuPlugin *soundmenu)	// arg inited on Metadata string
+{
+	DBG ("Demarshal_metadata");
+
+	DBusMessageIter dict, dict_entry, variant;
+	gchar *str_buf = NULL, *string = NULL;
+	gchar *trackid = NULL, *url = NULL, *title = NULL, *artist = NULL, *album = NULL, *arturl = NULL;
+	gchar *tooltip = NULL;
+
+	gint64 length = 0;
+	gint32 trackNumber = 0;
+
+	dbus_message_iter_next(args);				// Next => args on "variant array []"
+	dbus_message_iter_recurse(args, &dict);		// Recurse => dict on fist "dict entry()"
+	
+	dbus_message_iter_recurse(&dict, &dict_entry);	// Recurse => dict_entry on "string "mpris:trackid""
+	do
+	{
+		dbus_message_iter_recurse(&dict_entry, &variant);
+		dbus_message_iter_get_basic(&variant, (void*) &str_buf);
+
+		if (0 == g_ascii_strcasecmp (str_buf, "mpris:trackid"))
+			get_meta_item_str(&variant, &trackid);
+		else if (0 == g_ascii_strcasecmp (str_buf, "xesam:url"))
+			get_meta_item_str(&variant, &url);
+		else if (0 == g_ascii_strcasecmp (str_buf, "xesam:title"))
+			get_meta_item_str(&variant, &title);
+		else if (0 == g_ascii_strcasecmp (str_buf, "xesam:artist"))
+			get_meta_item_array(&variant, &artist);
+		else if (0 == g_ascii_strcasecmp (str_buf, "xesam:album"))
+			get_meta_item_str(&variant, &album);
+		else if (0 == g_ascii_strcasecmp (str_buf, "xesam:genre"));
+			/* (List of Strings.) Not use genre */
+		else if (0 == g_ascii_strcasecmp (str_buf, "xesam:albumArtist"));
+			// List of Strings.
+		else if (0 == g_ascii_strcasecmp (str_buf, "xesam:comment"));
+			/* (List of Strings) Not use comment */
+		else if (0 == g_ascii_strcasecmp (str_buf, "xesam:audioBitrate"));
+			/* (uint32) Not use audioBitrate */
+		else if (0 == g_ascii_strcasecmp (str_buf, "mpris:length"))
+			get_meta_item_gint(&variant, &length);
+		else if (0 == g_ascii_strcasecmp (str_buf, "xesam:trackNumber"))
+			get_meta_item_gint(&variant, &trackNumber);
+		else if (0 == g_ascii_strcasecmp (str_buf, "xesam:useCount"));
+			/* (Integer) Not use useCount */
+		else if (0 == g_ascii_strcasecmp (str_buf, "xesam:userRating"));
+			/* (Float) Not use userRating */
+		else if (0 == g_ascii_strcasecmp (str_buf, "mpris:arturl"))
+			get_meta_item_str(&variant, &arturl);
+		else
+			DBG ("New metadata message: %s. (Investigate)\n", str_buf);
+	
+	} while (dbus_message_iter_next(&dict_entry));
+
+	tooltip = g_markup_printf_escaped(_("%s\nby %s in %s"),
+			(title && strlen(title)) ? title : url,
+			(artist && strlen(artist)) ? artist : _("Unknown Artist"),
+			(album && strlen(album)) ? album : _("Unknown Album"));
+	
+	gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->prev_button), tooltip);
+	gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->play_button), tooltip);
+	gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->stop_button), tooltip);
+	gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->next_button), tooltip);
+
+	g_free(tooltip);
+	g_free(trackid);
+	g_free(url);
+	g_free(title);
+	g_free(artist);
+	g_free(album);
+	g_free(arturl);
+}
+
 static DBusHandlerResult
 dbus_filter (DBusConnection *connection, DBusMessage *message, void *user_data)
 {
-		DBusMessageIter args, dict, dict_entry;
-		gchar *str_buf = NULL, *state = NULL;
-		SoundmenuPlugin *soundmenu = user_data;
+	DBusMessageIter args, dict, dict_entry;
+	gchar *str_buf = NULL, *state = NULL;
 
-		if ( dbus_message_is_signal (message, "org.freedesktop.DBus.Properties", "PropertiesChanged" ) )
+	SoundmenuPlugin *soundmenu = user_data;
+
+	if ( dbus_message_is_signal (message, "org.freedesktop.DBus.Properties", "PropertiesChanged" ) )
+	{
+		dbus_message_iter_init(message, &args);
+
+		/* Ignore the interface_name*/
+		dbus_message_iter_next(&args);
+
+		dbus_message_iter_recurse(&args, &dict);
+		do
 		{
-			dbus_message_iter_init(message, &args);
+			dbus_message_iter_recurse(&dict, &dict_entry);
+			dbus_message_iter_get_basic(&dict_entry, (void*) &str_buf);
 
-			/* Ignore the interface_name*/
-			dbus_message_iter_next(&args);
-
-			dbus_message_iter_recurse(&args, &dict);
-			do
+			if (0 == g_ascii_strcasecmp (str_buf, "PlaybackStatus"))
 			{
-				dbus_message_iter_recurse(&dict, &dict_entry);
-				dbus_message_iter_get_basic(&dict_entry, (void*) &str_buf);
+				get_meta_item_str (&dict_entry, &state);
+				update_state (state, soundmenu);
+			}
+			else if (0 == g_ascii_strcasecmp (str_buf, "Metadata"))
+			{
+				demarshal_metadata (&dict_entry, soundmenu);
+			}
+		} while (dbus_message_iter_next(&dict));
 
-				if (0 == g_ascii_strcasecmp (str_buf, "PlaybackStatus")) {
-					get_meta_item_str (&dict_entry, &state);
-					update_state (state, soundmenu);
-				}
-				else if (0 == g_ascii_strcasecmp (str_buf, "Metadata")) {
-					g_message("Metadata.\n");
-				}
-			} while (dbus_message_iter_next(&dict));
-
-		  return DBUS_HANDLER_RESULT_HANDLED;
-		}
-    return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+		return DBUS_HANDLER_RESULT_HANDLED;
+	}
+	return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 }
 
 void
@@ -191,8 +291,6 @@ soundmenu_save (XfcePanelPlugin *plugin,
       xfce_rc_close (rc);
     }
 }
-
-
 
 static void
 soundmenu_read (SoundmenuPlugin *soundmenu)
@@ -338,8 +436,10 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	xfce_panel_plugin_add_action_widget (plugin, stop_button);
 	xfce_panel_plugin_add_action_widget (plugin, next_button);
 
+	soundmenu->prev_button = prev_button;
 	soundmenu->play_button = play_button;
 	soundmenu->stop_button = stop_button;
+	soundmenu->next_button = next_button;
 
 	/* Soundmenu dbus helpers */
 

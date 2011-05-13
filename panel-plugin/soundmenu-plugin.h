@@ -31,27 +31,29 @@ enum player_state {
 /* plugin structure */
 typedef struct
 {
-    XfcePanelPlugin *plugin;
+	XfcePanelPlugin	*plugin;
 
-    /* panel widgets */
-    GtkWidget       *hvbox;
-    GtkWidget       *play_button;
-    GtkWidget       *stop_button;
-		GtkWidget       *image_pause;
-		GtkWidget       *image_play;
+	/* panel widgets */
+	GtkWidget		*hvbox;
+	GtkWidget		*prev_button;
+	GtkWidget		*play_button;
+	GtkWidget		*stop_button;
+	GtkWidget		*next_button;
+	GtkWidget		*image_pause;
+	GtkWidget		*image_play;
 
-		/* Helper to obtain player name of preferences */
-		GtkWidget				*w_player;
+	/* Helper to obtain player name of preferences */
+	GtkWidget	*w_player;
 
-		/* soundmenu helpers */
-		enum player_state state;
-    DBusConnection  *connection;
-    gchar						*dbus_name;
+	/* soundmenu helpers */
+	enum player_state state;
+	DBusConnection 	*connection;
+	gchar			*dbus_name;
 
-    /* soundmenu settings */
-    gchar           *player;
-    gint             setting2;
-    gboolean         show_stop;
+	/* soundmenu settings */
+	gchar			*player;
+	gint			setting2;
+	gboolean		show_stop;
 }
 SoundmenuPlugin;
 

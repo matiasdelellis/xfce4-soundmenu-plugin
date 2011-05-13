@@ -17,8 +17,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef __PRAGHA_H__
-#define __PRAGHA_H__
+#ifndef __SOUNDMENU_H__
+#define __SOUNDMENU_H__
 
 G_BEGIN_DECLS
 
@@ -43,24 +43,24 @@ typedef struct
 		/* Helper to obtain player name of preferences */
 		GtkWidget				*w_player;
 
-		/* pragha helpers */
+		/* soundmenu helpers */
 		enum player_state state;
     DBusConnection  *connection;
     gchar						*dbus_name;
 
-    /* pragha settings */
+    /* soundmenu settings */
     gchar           *player;
     gint             setting2;
     gboolean         show_stop;
 }
-PraghaPlugin;
+SoundmenuPlugin;
 
 
 
 void
-pragha_save (XfcePanelPlugin *plugin,
-             PraghaPlugin    *pragha);
+soundmenu_save (XfcePanelPlugin *plugin,
+             SoundmenuPlugin    *soundmenu);
 
 G_END_DECLS
 
-#endif /* !__PRAGHA_H__ */
+#endif /* !__SOUNDMENU_H__ */

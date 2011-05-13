@@ -30,8 +30,8 @@
 #include <libxfce4ui/libxfce4ui.h>
 #include <libxfce4panel/xfce-panel-plugin.h>
 
-#include "pragha.h"
-#include "pragha-dialogs.h"
+#include "soundmenu-plugin.h"
+#include "soundmenu-dialogs.h"
 
 /* the website url */
 #define PLUGIN_WEBSITE "http://pragha.wikispaces.com/"
@@ -39,9 +39,9 @@
 
 
 static void
-pragha_configure_response (GtkWidget    *dialog,
+soundmenu_configure_response (GtkWidget    *dialog,
                            gint          response,
-                           PraghaPlugin *pragha)
+                           SoundmenuPlugin *soundmenu)
 {
 	gboolean result;
 	gchar *rule = NULL, *player = NULL;
@@ -56,33 +56,33 @@ pragha_configure_response (GtkWidget    *dialog,
     }
   else
     {
-			player = strdup(gtk_entry_get_text(GTK_ENTRY(pragha->w_player)));
+			player = strdup(gtk_entry_get_text(GTK_ENTRY(soundmenu->w_player)));
 			if(player)
 				{
-					if (G_LIKELY (pragha->player != NULL))
-						g_free (pragha->player);
-					pragha->player = player;
+					if (G_LIKELY (soundmenu->player != NULL))
+						g_free (soundmenu->player);
+					soundmenu->player = player;
 					
-				  rule = g_strdup_printf ("type='signal', sender='%s'", pragha->dbus_name);
-					dbus_bus_remove_match (pragha->connection, rule, NULL);
+				  rule = g_strdup_printf ("type='signal', sender='%s'", soundmenu->dbus_name);
+					dbus_bus_remove_match (soundmenu->connection, rule, NULL);
 					g_free(rule);
 
-					if (G_LIKELY (pragha->dbus_name != NULL))
-						g_free(pragha->dbus_name);
-					pragha->dbus_name = g_strdup_printf("org.mpris.MediaPlayer2.%s", pragha->player);
+					if (G_LIKELY (soundmenu->dbus_name != NULL))
+						g_free(soundmenu->dbus_name);
+					soundmenu->dbus_name = g_strdup_printf("org.mpris.MediaPlayer2.%s", soundmenu->player);
 
-				  rule = g_strdup_printf ("type='signal', sender='%s'", pragha->dbus_name);
-  				dbus_bus_add_match (pragha->connection, rule, NULL);
+				  rule = g_strdup_printf ("type='signal', sender='%s'", soundmenu->dbus_name);
+  				dbus_bus_add_match (soundmenu->connection, rule, NULL);
   				g_free(rule);
   		}
       /* remove the dialog data from the plugin */
-      g_object_set_data (G_OBJECT (pragha->plugin), "dialog", NULL);
+      g_object_set_data (G_OBJECT (soundmenu->plugin), "dialog", NULL);
 
       /* unlock the panel menu */
-      xfce_panel_plugin_unblock_menu (pragha->plugin);
+      xfce_panel_plugin_unblock_menu (soundmenu->plugin);
 
       /* save the plugin */
-      pragha_save (pragha->plugin, pragha);
+      soundmenu_save (soundmenu->plugin, soundmenu);
 
       /* destroy the properties dialog */
       gtk_widget_destroy (dialog);
@@ -90,19 +90,19 @@ pragha_configure_response (GtkWidget    *dialog,
 }
 
 static void
-toggle_show_stop(GtkToggleButton *button, PraghaPlugin    *pragha)
+toggle_show_stop(GtkToggleButton *button, SoundmenuPlugin    *soundmenu)
 {
-	pragha->show_stop = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button));
+	soundmenu->show_stop = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button));
 
-	if(pragha->show_stop)
-		gtk_widget_show(pragha->stop_button);
+	if(soundmenu->show_stop)
+		gtk_widget_show(soundmenu->stop_button);
 	else
-		gtk_widget_hide(pragha->stop_button);
+		gtk_widget_hide(soundmenu->stop_button);
 }
 
 void
-pragha_configure (XfcePanelPlugin *plugin,
-                  PraghaPlugin    *pragha)
+soundmenu_configure (XfcePanelPlugin *plugin,
+                  SoundmenuPlugin    *soundmenu)
 {
   GtkWidget *dialog;
   GtkWidget *player_entry;
@@ -112,7 +112,7 @@ pragha_configure (XfcePanelPlugin *plugin,
   xfce_panel_plugin_block_menu (plugin);
 
   /* create the dialog */
-  dialog = xfce_titled_dialog_new_with_buttons (_("Pragha Plugin"),
+  dialog = xfce_titled_dialog_new_with_buttons (_("Sound menu Plugin"),
                                                 GTK_WINDOW (gtk_widget_get_toplevel (GTK_WIDGET (plugin))),
                                                 GTK_DIALOG_DESTROY_WITH_PARENT | GTK_DIALOG_NO_SEPARATOR,
                                                 GTK_STOCK_HELP, GTK_RESPONSE_HELP,
@@ -125,16 +125,16 @@ pragha_configure (XfcePanelPlugin *plugin,
   gtk_window_set_icon_name (GTK_WINDOW (dialog), "xfce4-settings");
 
 	player_entry = gtk_entry_new();
-	gtk_entry_set_text(GTK_ENTRY(player_entry), pragha->player);
-	pragha->w_player = player_entry;
+	gtk_entry_set_text(GTK_ENTRY(player_entry), soundmenu->player);
+	soundmenu->w_player = player_entry;
 
   show_stop_check = gtk_check_button_new_with_label(_("Show stop button"));
 
-	if(pragha->show_stop)
+	if(soundmenu->show_stop)
   	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(show_stop_check), TRUE);
 
 	g_signal_connect(G_OBJECT(show_stop_check), "toggled",
-									G_CALLBACK(toggle_show_stop), pragha);
+									G_CALLBACK(toggle_show_stop), soundmenu);
 
 	gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), player_entry, TRUE, TRUE, 0);
 	gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), show_stop_check, TRUE, TRUE, 0);
@@ -145,7 +145,7 @@ pragha_configure (XfcePanelPlugin *plugin,
 
   /* connect the reponse signal to the dialog */
   g_signal_connect (G_OBJECT (dialog), "response",
-                    G_CALLBACK(pragha_configure_response), pragha);
+                    G_CALLBACK(soundmenu_configure_response), soundmenu);
 
   /* show the entire dialog */
 	gtk_widget_show_all(dialog);
@@ -154,7 +154,7 @@ pragha_configure (XfcePanelPlugin *plugin,
 
 
 void
-pragha_about (XfcePanelPlugin *plugin)
+soundmenu_about (XfcePanelPlugin *plugin)
 {
 	gboolean result;
 

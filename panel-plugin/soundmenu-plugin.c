@@ -32,43 +32,43 @@
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib-lowlevel.h>
 
-#include "pragha.h"
-#include "pragha-dialogs.h"
+#include "soundmenu-plugin.h"
+#include "soundmenu-dialogs.h"
 
 /* default settings */
-#define DEFAULT_PLAYER pragha
+#define DEFAULT_PLAYER "pragha"
 #define DEFAULT_SETTING2 1
 #define DEFAULT_SHOW_STOP TRUE
 
 /* prototypes */
 
 static void
-pragha_construct (XfcePanelPlugin *plugin);
+soundmenu_construct (XfcePanelPlugin *plugin);
 
 /* register the plugin */
 
-XFCE_PANEL_PLUGIN_REGISTER_EXTERNAL (pragha_construct);
+XFCE_PANEL_PLUGIN_REGISTER_EXTERNAL (soundmenu_construct);
 
-/* Dbus helpers to connect with Pragha */
+/* Dbus helpers to connect with Soundmenu */
 
-void play_button_toggle_state (PraghaPlugin *pragha)
+void play_button_toggle_state (SoundmenuPlugin *soundmenu)
 {
-	if ((pragha->state == ST_PAUSED) || (pragha->state == ST_STOPPED))
-		gtk_button_set_image(GTK_BUTTON(pragha->play_button), pragha->image_play);
+	if ((soundmenu->state == ST_PAUSED) || (soundmenu->state == ST_STOPPED))
+		gtk_button_set_image(GTK_BUTTON(soundmenu->play_button), soundmenu->image_play);
 	else
-		gtk_button_set_image(GTK_BUTTON(pragha->play_button), pragha->image_pause);
+		gtk_button_set_image(GTK_BUTTON(soundmenu->play_button), soundmenu->image_pause);
 }
 
-static void update_state(gchar *state, PraghaPlugin *pragha)
+static void update_state(gchar *state, SoundmenuPlugin *soundmenu)
 {
 	if (0 == g_ascii_strcasecmp(state, "Playing"))
-		pragha->state = ST_PLAYING;
+		soundmenu->state = ST_PLAYING;
 	else if (0 == g_ascii_strcasecmp(state, "Paused"))
-		pragha->state = ST_PAUSED;
+		soundmenu->state = ST_PAUSED;
 	else
-		pragha->state = ST_STOPPED;
+		soundmenu->state = ST_STOPPED;
 
-	play_button_toggle_state(pragha);
+	play_button_toggle_state(soundmenu);
 }
 
 static void get_meta_item_str(DBusMessageIter *dict_entry, char **item)
@@ -89,7 +89,7 @@ dbus_filter (DBusConnection *connection, DBusMessage *message, void *user_data)
 {
 		DBusMessageIter args, dict, dict_entry;
 		gchar *str_buf = NULL, *state = NULL;
-		PraghaPlugin *pragha = user_data;
+		SoundmenuPlugin *soundmenu = user_data;
 
 		if ( dbus_message_is_signal (message, "org.freedesktop.DBus.Properties", "PropertiesChanged" ) )
 		{
@@ -106,7 +106,7 @@ dbus_filter (DBusConnection *connection, DBusMessage *message, void *user_data)
 
 				if (0 == g_ascii_strcasecmp (str_buf, "PlaybackStatus")) {
 					get_meta_item_str (&dict_entry, &state);
-					update_state (state, pragha);
+					update_state (state, soundmenu);
 				}
 				else if (0 == g_ascii_strcasecmp (str_buf, "Metadata")) {
 					g_message("Metadata.\n");
@@ -119,48 +119,47 @@ dbus_filter (DBusConnection *connection, DBusMessage *message, void *user_data)
 }
 
 void
-send_message (PraghaPlugin *pragha, const char *msg)
+send_message (SoundmenuPlugin *soundmenu, const char *msg)
 {
 	DBusMessage *message;
 	gchar *destination = NULL;
 
-	destination = g_strdup_printf ("org.mpris.MediaPlayer2.%s", pragha->player);
+	destination = g_strdup_printf ("org.mpris.MediaPlayer2.%s", soundmenu->player);
 	message = dbus_message_new_method_call (destination, "/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2.Player",  msg);
 	g_free(destination);
 
 	/* Send the message */
-	dbus_connection_send (pragha->connection, message, NULL);
+	dbus_connection_send (soundmenu->connection, message, NULL);
 	dbus_message_unref (message);
 }
 
 void
-prev_button_handler(GtkButton *button, PraghaPlugin *pragha)
+prev_button_handler(GtkButton *button, SoundmenuPlugin *soundmenu)
 {
-	send_message (pragha, "Previous");
+	send_message (soundmenu, "Previous");
 }
 
 void
-play_button_handler(GtkButton *button, PraghaPlugin    *pragha)
+play_button_handler(GtkButton *button, SoundmenuPlugin *soundmenu)
 {
-	/* Pragha play, pause and resume with pause action */
-	send_message (pragha, "PlayPause");
+	send_message (soundmenu, "PlayPause");
 }
 
 void
-stop_button_handler(GtkButton *button, PraghaPlugin    *pragha)
+stop_button_handler(GtkButton *button, SoundmenuPlugin    *soundmenu)
 {
-	send_message (pragha, "Stop");
+	send_message (soundmenu, "Stop");
 }
 
 void
-next_button_handler(GtkButton *button, PraghaPlugin    *pragha)
+next_button_handler(GtkButton *button, SoundmenuPlugin    *soundmenu)
 {
-	send_message (pragha, "Next");
+	send_message (soundmenu, "Next");
 }
 
 void
-pragha_save (XfcePanelPlugin *plugin,
-             PraghaPlugin    *pragha)
+soundmenu_save (XfcePanelPlugin *plugin,
+             SoundmenuPlugin    *soundmenu)
 {
   XfceRc *rc;
   gchar  *file;
@@ -182,11 +181,11 @@ pragha_save (XfcePanelPlugin *plugin,
     {
       /* save the settings */
       DBG(".");
-      if (pragha->player)
-        xfce_rc_write_entry    (rc, "player", pragha->player);
+      if (soundmenu->player)
+        xfce_rc_write_entry    (rc, "player", soundmenu->player);
 
-      xfce_rc_write_int_entry  (rc, "setting2", pragha->setting2);
-      xfce_rc_write_bool_entry (rc, "show_stop", pragha->show_stop);
+      xfce_rc_write_int_entry  (rc, "setting2", soundmenu->setting2);
+      xfce_rc_write_bool_entry (rc, "show_stop", soundmenu->show_stop);
 
       /* close the rc file */
       xfce_rc_close (rc);
@@ -196,14 +195,14 @@ pragha_save (XfcePanelPlugin *plugin,
 
 
 static void
-pragha_read (PraghaPlugin *pragha)
+soundmenu_read (SoundmenuPlugin *soundmenu)
 {
   XfceRc      *rc;
   gchar       *file;
   const gchar *value;
 
   /* get the plugin config file location */
-  file = xfce_panel_plugin_save_location (pragha->plugin, TRUE);
+  file = xfce_panel_plugin_save_location (soundmenu->plugin, TRUE);
 
   if (G_LIKELY (file != NULL))
     {
@@ -216,13 +215,13 @@ pragha_read (PraghaPlugin *pragha)
       if (G_LIKELY (rc != NULL))
         {
           /* read the settings */
-          value = xfce_rc_read_entry (rc, "player", "pragha");
-          pragha->player = g_strdup (value);
+          value = xfce_rc_read_entry (rc, "player", DEFAULT_PLAYER);
+          soundmenu->player = g_strdup (value);
 
-          pragha->setting2 = xfce_rc_read_int_entry (rc, "setting2", DEFAULT_SETTING2);
-          pragha->show_stop = xfce_rc_read_bool_entry (rc, "show_stop", DEFAULT_SHOW_STOP);
+          soundmenu->setting2 = xfce_rc_read_int_entry (rc, "setting2", DEFAULT_SETTING2);
+          soundmenu->show_stop = xfce_rc_read_bool_entry (rc, "show_stop", DEFAULT_SHOW_STOP);
           
-          pragha->state = ST_STOPPED;
+          soundmenu->state = ST_STOPPED;
 
           /* cleanup */
           xfce_rc_close (rc);
@@ -235,41 +234,41 @@ pragha_read (PraghaPlugin *pragha)
   /* something went wrong, apply default values */
   DBG ("Applying default settings");
 
-  pragha->player = g_strdup ("pragha");
-  pragha->setting2 = DEFAULT_SETTING2;
-  pragha->show_stop = DEFAULT_SHOW_STOP;
-  pragha->state = ST_STOPPED;
+  soundmenu->player = g_strdup (DEFAULT_PLAYER);
+  soundmenu->setting2 = DEFAULT_SETTING2;
+  soundmenu->show_stop = DEFAULT_SHOW_STOP;
+  soundmenu->state = ST_STOPPED;
 }
 
 
 
-static PraghaPlugin *
-pragha_new (XfcePanelPlugin *plugin)
+static SoundmenuPlugin *
+soundmenu_new (XfcePanelPlugin *plugin)
 {
-  PraghaPlugin   *pragha;
+  SoundmenuPlugin   *soundmenu;
   GtkOrientation  orientation;
 	GtkWidget *play_button, *stop_button, *prev_button, *next_button;
   DBusConnection *connection;
   gchar *rule = NULL;
 
   /* allocate memory for the plugin structure */
-  pragha = panel_slice_new0 (PraghaPlugin);
+  soundmenu = panel_slice_new0 (SoundmenuPlugin);
 
   /* pointer to plugin */
-  pragha->plugin = plugin;
+  soundmenu->plugin = plugin;
 
   /* read the user settings */
-  pragha_read (pragha);
+  soundmenu_read (soundmenu);
 
   /* get the current orientation */
   orientation = xfce_panel_plugin_get_orientation (plugin);
 
   /* create some panel widgets */
 
-	pragha->hvbox = xfce_hvbox_new (orientation, FALSE, 2);
-	gtk_widget_show (pragha->hvbox);
+	soundmenu->hvbox = xfce_hvbox_new (orientation, FALSE, 2);
+	gtk_widget_show (soundmenu->hvbox);
 
-  /* some pragha widgets */
+  /* some soundmenu widgets */
 
 	prev_button = gtk_button_new();
 	play_button = gtk_button_new();
@@ -291,78 +290,78 @@ pragha_new (XfcePanelPlugin *plugin)
 			     gtk_image_new_from_stock(GTK_STOCK_MEDIA_NEXT,
 						      GTK_ICON_SIZE_LARGE_TOOLBAR));
 
-	pragha->image_pause =
+	soundmenu->image_pause =
 		gtk_image_new_from_stock(GTK_STOCK_MEDIA_PAUSE,
 					 GTK_ICON_SIZE_LARGE_TOOLBAR);
-	pragha->image_play =
+	soundmenu->image_play =
 		gtk_image_new_from_stock(GTK_STOCK_MEDIA_PLAY,
 					 GTK_ICON_SIZE_LARGE_TOOLBAR);
 
-	g_object_ref(pragha->image_play);
-	g_object_ref(pragha->image_pause);
+	g_object_ref(soundmenu->image_play);
+	g_object_ref(soundmenu->image_pause);
 
 	gtk_button_set_image(GTK_BUTTON(play_button),
-			     pragha->image_play);
+			     soundmenu->image_play);
 
-	gtk_box_pack_start(GTK_BOX(pragha->hvbox),
+	gtk_box_pack_start(GTK_BOX(soundmenu->hvbox),
 			   GTK_WIDGET(prev_button),
 			   FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(pragha->hvbox),
+	gtk_box_pack_start(GTK_BOX(soundmenu->hvbox),
 			   GTK_WIDGET(play_button),
 			   FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(pragha->hvbox),
+	gtk_box_pack_start(GTK_BOX(soundmenu->hvbox),
 			   GTK_WIDGET(stop_button),
 			   FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(pragha->hvbox),
+	gtk_box_pack_start(GTK_BOX(soundmenu->hvbox),
 			   GTK_WIDGET(next_button),
 			   FALSE, FALSE, 0);
 
 	gtk_widget_show(prev_button);
 	gtk_widget_show(play_button);
-	if(pragha->show_stop)
+	if(soundmenu->show_stop)
 		gtk_widget_show(stop_button);
 	gtk_widget_show(next_button);
 
 	/* Signal handlers */
 
 	g_signal_connect(G_OBJECT(prev_button), "clicked",
-			 G_CALLBACK(prev_button_handler), pragha);
+			 G_CALLBACK(prev_button_handler), soundmenu);
 	g_signal_connect(G_OBJECT(play_button), "clicked",
-			 G_CALLBACK(play_button_handler), pragha);
+			 G_CALLBACK(play_button_handler), soundmenu);
 	g_signal_connect(G_OBJECT(stop_button), "clicked",
-			 G_CALLBACK(stop_button_handler), pragha);
+			 G_CALLBACK(stop_button_handler), soundmenu);
 	g_signal_connect(G_OBJECT(next_button), "clicked",
-			 G_CALLBACK(next_button_handler), pragha);
+			 G_CALLBACK(next_button_handler), soundmenu);
 
 	xfce_panel_plugin_add_action_widget (plugin, prev_button);
 	xfce_panel_plugin_add_action_widget (plugin, play_button);
 	xfce_panel_plugin_add_action_widget (plugin, stop_button);
 	xfce_panel_plugin_add_action_widget (plugin, next_button);
 
-	pragha->play_button = play_button;
-	pragha->stop_button = stop_button;
+	soundmenu->play_button = play_button;
+	soundmenu->stop_button = stop_button;
 
-	/* Pragha dbus helpers */
+	/* Soundmenu dbus helpers */
 
-  connection = dbus_bus_get (DBUS_BUS_SESSION, NULL);
+	connection = dbus_bus_get (DBUS_BUS_SESSION, NULL);
 
-	pragha->dbus_name = g_strdup_printf("org.mpris.MediaPlayer2.%s", pragha->player);
+	soundmenu->dbus_name = g_strdup_printf("org.mpris.MediaPlayer2.%s", soundmenu->player);
 
-	rule = g_strdup_printf ("type='signal', sender='%s'", pragha->dbus_name);
+	rule = g_strdup_printf ("type='signal', sender='%s'", soundmenu->dbus_name);
 	dbus_bus_add_match (connection, rule, NULL);
 	g_free(rule);
   
-  dbus_connection_add_filter (connection, dbus_filter, pragha, NULL);
-  dbus_connection_setup_with_g_main (connection, NULL);
+	dbus_connection_add_filter (connection, dbus_filter, soundmenu, NULL);
+	dbus_connection_setup_with_g_main (connection, NULL);
 
-  pragha->connection = connection;
+	soundmenu->connection = connection;
 
-  return pragha;
+	return soundmenu;
 }
 
 static void
-pragha_free (XfcePanelPlugin *plugin,
-             PraghaPlugin    *pragha)
+soundmenu_free (XfcePanelPlugin *plugin,
+             SoundmenuPlugin    *soundmenu)
 {
   GtkWidget *dialog;
 
@@ -372,35 +371,35 @@ pragha_free (XfcePanelPlugin *plugin,
     gtk_widget_destroy (dialog);
 
   /* destroy the panel widgets */
-  gtk_widget_destroy (pragha->hvbox);
+  gtk_widget_destroy (soundmenu->hvbox);
 
   /* cleanup the settings */
-  if (G_LIKELY (pragha->player != NULL))
-    g_free (pragha->player);
-  if (G_LIKELY (pragha->dbus_name != NULL))
-    g_free (pragha->dbus_name);
+  if (G_LIKELY (soundmenu->player != NULL))
+    g_free (soundmenu->player);
+  if (G_LIKELY (soundmenu->dbus_name != NULL))
+    g_free (soundmenu->dbus_name);
 
   /* free the plugin structure */
-  panel_slice_free (PraghaPlugin, pragha);
+  panel_slice_free (SoundmenuPlugin, soundmenu);
 }
 
 
 
 static void
-pragha_orientation_changed (XfcePanelPlugin *plugin,
+soundmenu_orientation_changed (XfcePanelPlugin *plugin,
                             GtkOrientation   orientation,
-                            PraghaPlugin    *pragha)
+                            SoundmenuPlugin    *soundmenu)
 {
   /* change the orienation of the box */
-  xfce_hvbox_set_orientation (XFCE_HVBOX (pragha->hvbox), orientation);
+  xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->hvbox), orientation);
 }
 
 
 
 static gboolean
-pragha_size_changed (XfcePanelPlugin *plugin,
+soundmenu_size_changed (XfcePanelPlugin *plugin,
                      gint             size,
-                     PraghaPlugin    *pragha)
+                     SoundmenuPlugin    *soundmenu)
 {
   GtkOrientation orientation;
 
@@ -420,39 +419,39 @@ pragha_size_changed (XfcePanelPlugin *plugin,
 
 
 static void
-pragha_construct (XfcePanelPlugin *plugin)
+soundmenu_construct (XfcePanelPlugin *plugin)
 {
-  PraghaPlugin *pragha;
+  SoundmenuPlugin *soundmenu;
 
   /* setup transation domain */
   xfce_textdomain(GETTEXT_PACKAGE, PACKAGE_LOCALE_DIR, "UTF-8");
 
   /* create the plugin */
-  pragha = pragha_new (plugin);
+  soundmenu = soundmenu_new (plugin);
 
   /* add the hvbox to the panel */
-  gtk_container_add (GTK_CONTAINER (plugin), pragha->hvbox);
+  gtk_container_add (GTK_CONTAINER (plugin), soundmenu->hvbox);
 
   /* connect plugin signals */
   g_signal_connect (G_OBJECT (plugin), "free-data",
-                    G_CALLBACK (pragha_free), pragha);
+                    G_CALLBACK (soundmenu_free), soundmenu);
 
   g_signal_connect (G_OBJECT (plugin), "save",
-                    G_CALLBACK (pragha_save), pragha);
+                    G_CALLBACK (soundmenu_save), soundmenu);
 
   g_signal_connect (G_OBJECT (plugin), "size-changed",
-                    G_CALLBACK (pragha_size_changed), pragha);
+                    G_CALLBACK (soundmenu_size_changed), soundmenu);
 
   g_signal_connect (G_OBJECT (plugin), "orientation-changed",
-                    G_CALLBACK (pragha_orientation_changed), pragha);
+                    G_CALLBACK (soundmenu_orientation_changed), soundmenu);
 
   /* show the configure menu item and connect signal */
   xfce_panel_plugin_menu_show_configure (plugin);
   g_signal_connect (G_OBJECT (plugin), "configure-plugin",
-                    G_CALLBACK (pragha_configure), pragha);
+                    G_CALLBACK (soundmenu_configure), soundmenu);
 
   /* show the about menu item and connect signal */
   xfce_panel_plugin_menu_show_about (plugin);
   g_signal_connect (G_OBJECT (plugin), "about",
-                    G_CALLBACK (pragha_about), NULL);
+                    G_CALLBACK (soundmenu_about), NULL);
 }

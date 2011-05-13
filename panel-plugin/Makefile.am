@@ -1,32 +1,32 @@
 INCLUDES = \
 	-I$(top_srcdir) \
-	-DG_LOG_DOMAIN=\"xfce4-pragha-plugin\" \
+	-DG_LOG_DOMAIN=\"xfce4-soundmenu-plugin\" \
 	-DPACKAGE_LOCALE_DIR=\"$(localedir)\" \
 	$(PLATFORM_CPPFLAGS)
 
 #
-# Pragha plugin
+# Soundmenu plugin
 #
 plugin_PROGRAMS = \
-	xfce4-pragha-plugin
+	xfce4-soundmenu-plugin
 
 plugindir = \
 	$(libexecdir)/xfce4/panel-plugins
 
-xfce4_pragha_plugin_SOURCES = \
-	pragha.c \
-	pragha.h \
-	pragha-dialogs.c \
-	pragha-dialogs.h	
+xfce4_soundmenu_plugin_SOURCES = \
+	soundmenu-plugin.c \
+	soundmenu-plugin.h \
+	soundmenu-dialogs.c \
+	soundmenu-dialogs.h
 
-xfce4_pragha_plugin_CFLAGS = \
+xfce4_soundmenu_plugin_CFLAGS = \
 	$(DBUS_GLIB_CFLAGS) \
 	$(LIBXFCE4UTIL_CFLAGS) \
 	$(LIBXFCE4UI_CFLAGS) \
 	$(LIBXFCE4PANEL_CFLAGS) \
 	$(PLATFORM_CFLAGS)
 	
-xfce4_pragha_plugin_LDADD = \
+xfce4_soundmenu_plugin_LDADD = \
 	$(DBUS_GLIB_LIBS) \
 	$(LIBXFCE4UTIL_LIBS) \
 	$(LIBXFCE4UI_LIBS) \
@@ -39,7 +39,7 @@ desktopdir =								\
 	$(datadir)/xfce4/panel-plugins
 
 desktop_in_in_files =							\
-	pragha.desktop.in.in
+	soundmenu.desktop.in.in
 
 desktop_in_files =							\
 	$(desktop_in_in_files:.desktop.in.in=.desktop.in)

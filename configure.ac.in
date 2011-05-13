@@ -1,23 +1,23 @@
 dnl $Id$
 dnl
-dnl xfce4-pragha-plugin - A pragha remote control plugin for the Xfce panel
+dnl xfce4-soundmenu-plugin - A mpris2 remote control plugin for the Xfce panel
 dnl based on xfce4-sample-plugin thanks to John Doo <john@foo.org>
 dnl
 
 dnl ***************************
 dnl *** Version information ***
 dnl ***************************
-m4_define([pragha_version_major], [0])
-m4_define([pragha_version_minor], [1])
-m4_define([pragha_version_micro], [0])
-m4_define([pragha_version], [pragha_version_major().pragha_version_minor().pragha_version_micro()])
+m4_define([soundmenu_version_major], [0])
+m4_define([soundmenu_version_minor], [2])
+m4_define([soundmenu_version_micro], [git])
+m4_define([soundmenu_version], [soundmenu_version_major().soundmenu_version_minor().soundmenu_version_micro()])
 
 dnl ***************************
 dnl *** Initialize autoconf ***
 dnl ***************************
 AC_COPYRIGHT([Copyright (c) 2011
         Matias De lellis. All rights reserved.])
-AC_INIT([xfce4-pragha-plugin], [pragha_version], [http://bugzilla.xfce.org/], [xfce4-pragha-plugin])
+AC_INIT([xfce4-soundmenu-plugin], [soundmenu_version], [http://bugzilla.xfce.org/], [xfce4-soundmenu-plugin])
 AC_PREREQ([2.50])
 AC_REVISION([xfce4_panel_version_build])
 

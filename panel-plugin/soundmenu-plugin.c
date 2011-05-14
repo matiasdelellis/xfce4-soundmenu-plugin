@@ -59,15 +59,23 @@ void play_button_toggle_state (SoundmenuPlugin *soundmenu)
 		gtk_button_set_image(GTK_BUTTON(soundmenu->play_button), soundmenu->image_pause);
 }
 
+void unset_tooltips (SoundmenuPlugin *soundmenu)
+{
+	gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->prev_button), _("Stopped"));
+	gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->play_button), _("Stopped"));
+	gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->stop_button), _("Stopped"));
+	gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->next_button), _("Stopped"));
+}
 static void update_state(gchar *state, SoundmenuPlugin *soundmenu)
 {
 	if (0 == g_ascii_strcasecmp(state, "Playing"))
 		soundmenu->state = ST_PLAYING;
 	else if (0 == g_ascii_strcasecmp(state, "Paused"))
 		soundmenu->state = ST_PAUSED;
-	else
+	else {
 		soundmenu->state = ST_STOPPED;
-
+		unset_tooltips (soundmenu);
+	}
 	play_button_toggle_state(soundmenu);
 }
 
@@ -119,6 +127,9 @@ demarshal_metadata (DBusMessageIter *args, SoundmenuPlugin *soundmenu)	// arg in
 
 	gint64 length = 0;
 	gint32 trackNumber = 0;
+	
+	if (soundmenu->state == ST_STOPPED)
+		return;
 
 	dbus_message_iter_next(args);				// Next => args on "variant array []"
 	dbus_message_iter_recurse(args, &dict);		// Recurse => dict on fist "dict entry()"
@@ -440,6 +451,8 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	soundmenu->play_button = play_button;
 	soundmenu->stop_button = stop_button;
 	soundmenu->next_button = next_button;
+
+	unset_tooltips (soundmenu);
 
 	/* Soundmenu dbus helpers */
 

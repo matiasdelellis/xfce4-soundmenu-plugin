@@ -22,6 +22,17 @@
 
 G_BEGIN_DECLS
 
+typedef struct {
+	char *trackid;
+	char *url;
+	char *title;
+	char *artist;
+	char *album;
+	unsigned int length;
+	unsigned int trackNumber;
+	char *arturl;
+} Metadata;
+
 enum player_state {
 	ST_PLAYING = 1,
 	ST_STOPPED,
@@ -45,8 +56,11 @@ typedef struct
 	/* Helper to obtain player name of preferences */
 	GtkWidget	*w_player;
 
-	/* soundmenu helpers */
+	/* Player states */
 	enum player_state state;
+	Metadata		*metadata;
+
+	/* Dbus conecction */
 	DBusConnection 	*connection;
 	gchar			*dbus_name;
 
@@ -57,7 +71,8 @@ typedef struct
 }
 SoundmenuPlugin;
 
-
+Metadata *malloc_metadata();
+void free_metadata(Metadata *m);
 
 void
 soundmenu_save (XfcePanelPlugin *plugin,

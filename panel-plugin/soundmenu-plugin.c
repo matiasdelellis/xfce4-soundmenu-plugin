@@ -49,7 +49,7 @@ soundmenu_construct (XfcePanelPlugin *plugin);
 
 XFCE_PANEL_PLUGIN_REGISTER_EXTERNAL (soundmenu_construct);
 
-/* Dbus helpers to connect with Soundmenu */
+/* Function to update the soundmenu state */
 
 void play_button_toggle_state (SoundmenuPlugin *soundmenu)
 {
@@ -59,13 +59,34 @@ void play_button_toggle_state (SoundmenuPlugin *soundmenu)
 		gtk_button_set_image(GTK_BUTTON(soundmenu->play_button), soundmenu->image_pause);
 }
 
-void unset_tooltips (SoundmenuPlugin *soundmenu)
+void update_tooltips (SoundmenuPlugin *soundmenu)
 {
-	gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->prev_button), _("Stopped"));
-	gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->play_button), _("Stopped"));
-	gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->stop_button), _("Stopped"));
-	gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->next_button), _("Stopped"));
+	gchar *tooltip = NULL;
+
+	if (soundmenu->state == ST_STOPPED) {
+		gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->prev_button), _("Stopped"));
+		gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->play_button), _("Stopped"));
+		gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->stop_button), _("Stopped"));
+		gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->next_button), _("Stopped"));
+	}
+	else {
+		tooltip = g_markup_printf_escaped(_("%s\nby %s in %s"),
+				(soundmenu->metadata->title && strlen(soundmenu->metadata->title)) ?
+				soundmenu->metadata->title : soundmenu->metadata->url,
+				(soundmenu->metadata->artist && strlen(soundmenu->metadata->artist)) ?
+				soundmenu->metadata->artist : _("Unknown Artist"),
+				(soundmenu->metadata->album && strlen(soundmenu->metadata->album)) ?
+				soundmenu->metadata->album : _("Unknown Album"));
+	
+		gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->prev_button), tooltip);
+		gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->play_button), tooltip);
+		gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->stop_button), tooltip);
+		gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->next_button), tooltip);
+	}
+
+	g_free(tooltip);
 }
+
 static void update_state(gchar *state, SoundmenuPlugin *soundmenu)
 {
 	if (0 == g_ascii_strcasecmp(state, "Playing"))
@@ -74,10 +95,44 @@ static void update_state(gchar *state, SoundmenuPlugin *soundmenu)
 		soundmenu->state = ST_PAUSED;
 	else {
 		soundmenu->state = ST_STOPPED;
-		unset_tooltips (soundmenu);
 	}
 	play_button_toggle_state(soundmenu);
+	update_tooltips (soundmenu);
 }
+
+Metadata *malloc_metadata()
+{
+	Metadata *m;
+	m = malloc(sizeof(Metadata));
+
+	m->trackid = NULL;
+	m->url = NULL;
+	m->title = NULL;
+	m->artist = NULL;
+	m->album = NULL;
+	m->length = 0;
+	m->trackNumber = 0;
+	m->arturl = NULL;
+
+	return m;
+}
+
+void free_metadata(Metadata *m)
+{
+	if(m == NULL)
+		return;
+
+	if(m->trackid)	free(m->trackid);
+	if(m->url)		free(m->url);
+	if(m->title)	free(m->title);
+	if(m->artist)	free(m->artist);
+	if(m->album) 	free(m->album);
+	if(m->arturl)	free(m->arturl);
+
+	free(m);
+}
+
+/* Dbus helpers to parse Metadata info, etc.. */
 
 static void get_meta_item_array(DBusMessageIter *dict_entry, char **item)
 {
@@ -121,15 +176,16 @@ demarshal_metadata (DBusMessageIter *args, SoundmenuPlugin *soundmenu)	// arg in
 	DBG ("Demarshal_metadata");
 
 	DBusMessageIter dict, dict_entry, variant;
+	Metadata *metadata;
 	gchar *str_buf = NULL, *string = NULL;
-	gchar *trackid = NULL, *url = NULL, *title = NULL, *artist = NULL, *album = NULL, *arturl = NULL;
-	gchar *tooltip = NULL;
 
 	gint64 length = 0;
 	gint32 trackNumber = 0;
 	
 	if (soundmenu->state == ST_STOPPED)
 		return;
+	
+	metadata = malloc_metadata();
 
 	dbus_message_iter_next(args);				// Next => args on "variant array []"
 	dbus_message_iter_recurse(args, &dict);		// Recurse => dict on fist "dict entry()"
@@ -141,15 +197,15 @@ demarshal_metadata (DBusMessageIter *args, SoundmenuPlugin *soundmenu)	// arg in
 		dbus_message_iter_get_basic(&variant, (void*) &str_buf);
 
 		if (0 == g_ascii_strcasecmp (str_buf, "mpris:trackid"))
-			get_meta_item_str(&variant, &trackid);
+			get_meta_item_str(&variant, &metadata->trackid);
 		else if (0 == g_ascii_strcasecmp (str_buf, "xesam:url"))
-			get_meta_item_str(&variant, &url);
+			get_meta_item_str(&variant, &metadata->url);
 		else if (0 == g_ascii_strcasecmp (str_buf, "xesam:title"))
-			get_meta_item_str(&variant, &title);
+			get_meta_item_str(&variant, &metadata->title);
 		else if (0 == g_ascii_strcasecmp (str_buf, "xesam:artist"))
-			get_meta_item_array(&variant, &artist);
+			get_meta_item_array(&variant, &metadata->artist);
 		else if (0 == g_ascii_strcasecmp (str_buf, "xesam:album"))
-			get_meta_item_str(&variant, &album);
+			get_meta_item_str(&variant, &metadata->album);
 		else if (0 == g_ascii_strcasecmp (str_buf, "xesam:genre"));
 			/* (List of Strings.) Not use genre */
 		else if (0 == g_ascii_strcasecmp (str_buf, "xesam:albumArtist"));
@@ -167,30 +223,22 @@ demarshal_metadata (DBusMessageIter *args, SoundmenuPlugin *soundmenu)	// arg in
 		else if (0 == g_ascii_strcasecmp (str_buf, "xesam:userRating"));
 			/* (Float) Not use userRating */
 		else if (0 == g_ascii_strcasecmp (str_buf, "mpris:arturl"))
-			get_meta_item_str(&variant, &arturl);
+			get_meta_item_str(&variant, &metadata->arturl);
 		else
 			DBG ("New metadata message: %s. (Investigate)\n", str_buf);
 	
 	} while (dbus_message_iter_next(&dict_entry));
 
-	tooltip = g_markup_printf_escaped(_("%s\nby %s in %s"),
-			(title && strlen(title)) ? title : url,
-			(artist && strlen(artist)) ? artist : _("Unknown Artist"),
-			(album && strlen(album)) ? album : _("Unknown Album"));
-	
-	gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->prev_button), tooltip);
-	gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->play_button), tooltip);
-	gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->stop_button), tooltip);
-	gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->next_button), tooltip);
+	metadata->length = length;
+	metadata->trackNumber = trackNumber;
 
-	g_free(tooltip);
-	g_free(trackid);
-	g_free(url);
-	g_free(title);
-	g_free(artist);
-	g_free(album);
-	g_free(arturl);
+	free_metadata(soundmenu->metadata);
+	soundmenu->metadata = metadata;
+
+	update_tooltips (soundmenu);
 }
+
+/* Basic dbus functions for interacting with MPRIS2*/
 
 static DBusHandlerResult
 dbus_filter (DBusConnection *connection, DBusMessage *message, void *user_data)
@@ -244,6 +292,8 @@ send_message (SoundmenuPlugin *soundmenu, const char *msg)
 	dbus_message_unref (message);
 }
 
+/* Callbacks of button controls */
+
 void
 prev_button_handler(GtkButton *button, SoundmenuPlugin *soundmenu)
 {
@@ -268,116 +318,113 @@ next_button_handler(GtkButton *button, SoundmenuPlugin    *soundmenu)
 	send_message (soundmenu, "Next");
 }
 
+/* Sound menu plugin construct */
+
 void
 soundmenu_save (XfcePanelPlugin *plugin,
              SoundmenuPlugin    *soundmenu)
 {
-  XfceRc *rc;
-  gchar  *file;
+	XfceRc *rc;
+	gchar  *file;
 
-  /* get the config file location */
-  file = xfce_panel_plugin_save_location (plugin, TRUE);
+	/* get the config file location */
+	file = xfce_panel_plugin_save_location (plugin, TRUE);
 
-  if (G_UNLIKELY (file == NULL))
-    {
-       DBG ("Failed to open config file");
-       return;
-    }
+	if (G_UNLIKELY (file == NULL)) {
+		DBG ("Failed to open config file");
+		return;
+	}
 
-  /* open the config file, read/write */
-  rc = xfce_rc_simple_open (file, FALSE);
-  g_free (file);
+	/* open the config file, read/write */
+	rc = xfce_rc_simple_open (file, FALSE);
+	g_free (file);
 
-  if (G_LIKELY (rc != NULL))
-    {
-      /* save the settings */
-      DBG(".");
-      if (soundmenu->player)
-        xfce_rc_write_entry    (rc, "player", soundmenu->player);
+	if (G_LIKELY (rc != NULL)) {
+		/* save the settings */
+		DBG(".");
+		if (soundmenu->player)
+			xfce_rc_write_entry    (rc, "player", soundmenu->player);
 
-      xfce_rc_write_int_entry  (rc, "setting2", soundmenu->setting2);
-      xfce_rc_write_bool_entry (rc, "show_stop", soundmenu->show_stop);
+		xfce_rc_write_int_entry  (rc, "setting2", soundmenu->setting2);
+		xfce_rc_write_bool_entry (rc, "show_stop", soundmenu->show_stop);
 
-      /* close the rc file */
-      xfce_rc_close (rc);
-    }
+		/* close the rc file */
+		xfce_rc_close (rc);
+	}
 }
 
 static void
 soundmenu_read (SoundmenuPlugin *soundmenu)
 {
-  XfceRc      *rc;
-  gchar       *file;
-  const gchar *value;
+	XfceRc      *rc;
+	gchar       *file;
+	const gchar *value;
 
-  /* get the plugin config file location */
-  file = xfce_panel_plugin_save_location (soundmenu->plugin, TRUE);
+	/* get the plugin config file location */
+	file = xfce_panel_plugin_save_location (soundmenu->plugin, TRUE);
 
-  if (G_LIKELY (file != NULL))
-    {
-      /* open the config file, readonly */
-      rc = xfce_rc_simple_open (file, TRUE);
+	if (G_LIKELY (file != NULL)) {
+		/* open the config file, readonly */
+		rc = xfce_rc_simple_open (file, TRUE);
 
-      /* cleanup */
-      g_free (file);
+		/* cleanup */
+		g_free (file);
 
-      if (G_LIKELY (rc != NULL))
-        {
-          /* read the settings */
-          value = xfce_rc_read_entry (rc, "player", DEFAULT_PLAYER);
-          soundmenu->player = g_strdup (value);
+		if (G_LIKELY (rc != NULL)) {
+			/* read the settings */
+			value = xfce_rc_read_entry (rc, "player", DEFAULT_PLAYER);
+			soundmenu->player = g_strdup (value);
 
-          soundmenu->setting2 = xfce_rc_read_int_entry (rc, "setting2", DEFAULT_SETTING2);
-          soundmenu->show_stop = xfce_rc_read_bool_entry (rc, "show_stop", DEFAULT_SHOW_STOP);
-          
-          soundmenu->state = ST_STOPPED;
+			soundmenu->setting2 = xfce_rc_read_int_entry (rc, "setting2", DEFAULT_SETTING2);
+			soundmenu->show_stop = xfce_rc_read_bool_entry (rc, "show_stop", DEFAULT_SHOW_STOP);
 
-          /* cleanup */
-          xfce_rc_close (rc);
+			soundmenu->state = ST_STOPPED;
 
-          /* leave the function, everything went well */
-          return;
-        }
-    }
+			/* cleanup */
+			xfce_rc_close (rc);
 
-  /* something went wrong, apply default values */
-  DBG ("Applying default settings");
+			/* leave the function, everything went well */
+			return;
+		}
+	}
 
-  soundmenu->player = g_strdup (DEFAULT_PLAYER);
-  soundmenu->setting2 = DEFAULT_SETTING2;
-  soundmenu->show_stop = DEFAULT_SHOW_STOP;
-  soundmenu->state = ST_STOPPED;
+	/* something went wrong, apply default values */
+	DBG ("Applying default settings");
+
+	soundmenu->player = g_strdup (DEFAULT_PLAYER);
+	soundmenu->setting2 = DEFAULT_SETTING2;
+	soundmenu->show_stop = DEFAULT_SHOW_STOP;
+	soundmenu->state = ST_STOPPED;
 }
-
-
 
 static SoundmenuPlugin *
 soundmenu_new (XfcePanelPlugin *plugin)
 {
-  SoundmenuPlugin   *soundmenu;
-  GtkOrientation  orientation;
+	SoundmenuPlugin   *soundmenu;
+	GtkOrientation orientation;
 	GtkWidget *play_button, *stop_button, *prev_button, *next_button;
-  DBusConnection *connection;
-  gchar *rule = NULL;
+	DBusConnection *connection;
+	Metadata *metadata;
+	gchar *rule = NULL;
 
-  /* allocate memory for the plugin structure */
-  soundmenu = panel_slice_new0 (SoundmenuPlugin);
+	/* allocate memory for the plugin structure */
+	soundmenu = panel_slice_new0 (SoundmenuPlugin);
 
-  /* pointer to plugin */
-  soundmenu->plugin = plugin;
+	/* pointer to plugin */
+	soundmenu->plugin = plugin;
 
-  /* read the user settings */
-  soundmenu_read (soundmenu);
+	/* read the user settings */
+	soundmenu_read (soundmenu);
 
-  /* get the current orientation */
-  orientation = xfce_panel_plugin_get_orientation (plugin);
+	/* get the current orientation */
+	orientation = xfce_panel_plugin_get_orientation (plugin);
 
-  /* create some panel widgets */
+	/* create some panel widgets */
 
 	soundmenu->hvbox = xfce_hvbox_new (orientation, FALSE, 2);
 	gtk_widget_show (soundmenu->hvbox);
 
-  /* some soundmenu widgets */
+	/* some soundmenu widgets */
 
 	prev_button = gtk_button_new();
 	play_button = gtk_button_new();
@@ -452,7 +499,10 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	soundmenu->stop_button = stop_button;
 	soundmenu->next_button = next_button;
 
-	unset_tooltips (soundmenu);
+	update_tooltips (soundmenu);
+
+	metadata = malloc_metadata();
+	soundmenu->metadata = metadata;
 
 	/* Soundmenu dbus helpers */
 
@@ -476,24 +526,28 @@ static void
 soundmenu_free (XfcePanelPlugin *plugin,
              SoundmenuPlugin    *soundmenu)
 {
-  GtkWidget *dialog;
+	GtkWidget *dialog;
 
-  /* check if the dialog is still open. if so, destroy it */
-  dialog = g_object_get_data (G_OBJECT (plugin), "dialog");
-  if (G_UNLIKELY (dialog != NULL))
-    gtk_widget_destroy (dialog);
+	/* check if the dialog is still open. if so, destroy it */
+	dialog = g_object_get_data (G_OBJECT (plugin), "dialog");
+	if (G_UNLIKELY (dialog != NULL))
+	gtk_widget_destroy (dialog);
 
-  /* destroy the panel widgets */
-  gtk_widget_destroy (soundmenu->hvbox);
+	/* destroy the panel widgets */
+	gtk_widget_destroy (soundmenu->hvbox);
 
-  /* cleanup the settings */
-  if (G_LIKELY (soundmenu->player != NULL))
-    g_free (soundmenu->player);
-  if (G_LIKELY (soundmenu->dbus_name != NULL))
-    g_free (soundmenu->dbus_name);
+	if (G_LIKELY (soundmenu->player != NULL))
+		g_free (soundmenu->player);
 
-  /* free the plugin structure */
-  panel_slice_free (SoundmenuPlugin, soundmenu);
+	/* cleanup the metadata and settings */
+	if (G_LIKELY (soundmenu->player != NULL))
+		g_free (soundmenu->player);
+	if (G_LIKELY (soundmenu->dbus_name != NULL))
+		g_free (soundmenu->dbus_name);
+	free_metadata(soundmenu->metadata);
+
+	/* free the plugin structure */
+	panel_slice_free (SoundmenuPlugin, soundmenu);
 }
 
 
@@ -503,8 +557,8 @@ soundmenu_orientation_changed (XfcePanelPlugin *plugin,
                             GtkOrientation   orientation,
                             SoundmenuPlugin    *soundmenu)
 {
-  /* change the orienation of the box */
-  xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->hvbox), orientation);
+	/* change the orienation of the box */
+	xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->hvbox), orientation);
 }
 
 
@@ -514,19 +568,19 @@ soundmenu_size_changed (XfcePanelPlugin *plugin,
                      gint             size,
                      SoundmenuPlugin    *soundmenu)
 {
-  GtkOrientation orientation;
+	GtkOrientation orientation;
 
-  /* get the orientation of the plugin */
-  orientation = xfce_panel_plugin_get_orientation (plugin);
+	/* get the orientation of the plugin */
+	orientation = xfce_panel_plugin_get_orientation (plugin);
 
-  /* set the widget size */
-  if (orientation == GTK_ORIENTATION_HORIZONTAL)
-    gtk_widget_set_size_request (GTK_WIDGET (plugin), -1, size);
-  else
-    gtk_widget_set_size_request (GTK_WIDGET (plugin), size, -1);
+	/* set the widget size */
+	if (orientation == GTK_ORIENTATION_HORIZONTAL)
+		gtk_widget_set_size_request (GTK_WIDGET (plugin), -1, size);
+	else
+		gtk_widget_set_size_request (GTK_WIDGET (plugin), size, -1);
 
-  /* we handled the orientation */
-  return TRUE;
+	/* we handled the orientation */
+	return TRUE;
 }
 
 
@@ -534,37 +588,39 @@ soundmenu_size_changed (XfcePanelPlugin *plugin,
 static void
 soundmenu_construct (XfcePanelPlugin *plugin)
 {
-  SoundmenuPlugin *soundmenu;
+	SoundmenuPlugin *soundmenu;
 
-  /* setup transation domain */
-  xfce_textdomain(GETTEXT_PACKAGE, PACKAGE_LOCALE_DIR, "UTF-8");
+	/* setup transation domain */
+	xfce_textdomain(GETTEXT_PACKAGE, PACKAGE_LOCALE_DIR, "UTF-8");
 
-  /* create the plugin */
-  soundmenu = soundmenu_new (plugin);
+	/* create the plugin */
+	soundmenu = soundmenu_new (plugin);
 
-  /* add the hvbox to the panel */
-  gtk_container_add (GTK_CONTAINER (plugin), soundmenu->hvbox);
+	/* add the hvbox to the panel */
+	gtk_container_add (GTK_CONTAINER (plugin), soundmenu->hvbox);
 
-  /* connect plugin signals */
-  g_signal_connect (G_OBJECT (plugin), "free-data",
-                    G_CALLBACK (soundmenu_free), soundmenu);
+	/* connect plugin signals */
+	g_signal_connect (G_OBJECT (plugin), "free-data",
+				G_CALLBACK (soundmenu_free), soundmenu);
 
-  g_signal_connect (G_OBJECT (plugin), "save",
-                    G_CALLBACK (soundmenu_save), soundmenu);
+	g_signal_connect (G_OBJECT (plugin), "save",
+				G_CALLBACK (soundmenu_save), soundmenu);
 
-  g_signal_connect (G_OBJECT (plugin), "size-changed",
-                    G_CALLBACK (soundmenu_size_changed), soundmenu);
+	g_signal_connect (G_OBJECT (plugin), "size-changed",
+				G_CALLBACK (soundmenu_size_changed), soundmenu);
 
-  g_signal_connect (G_OBJECT (plugin), "orientation-changed",
-                    G_CALLBACK (soundmenu_orientation_changed), soundmenu);
+	g_signal_connect (G_OBJECT (plugin), "orientation-changed",
+				G_CALLBACK (soundmenu_orientation_changed), soundmenu);
 
-  /* show the configure menu item and connect signal */
-  xfce_panel_plugin_menu_show_configure (plugin);
-  g_signal_connect (G_OBJECT (plugin), "configure-plugin",
-                    G_CALLBACK (soundmenu_configure), soundmenu);
+	/* show the configure menu item and connect signal */
+	xfce_panel_plugin_menu_show_configure (plugin);
 
-  /* show the about menu item and connect signal */
-  xfce_panel_plugin_menu_show_about (plugin);
-  g_signal_connect (G_OBJECT (plugin), "about",
-                    G_CALLBACK (soundmenu_about), NULL);
+	g_signal_connect (G_OBJECT (plugin), "configure-plugin",
+				G_CALLBACK (soundmenu_configure), soundmenu);
+
+	/* show the about menu item and connect signal */
+	xfce_panel_plugin_menu_show_about (plugin);
+
+	g_signal_connect (G_OBJECT (plugin), "about",
+				G_CALLBACK (soundmenu_about), NULL);
 }

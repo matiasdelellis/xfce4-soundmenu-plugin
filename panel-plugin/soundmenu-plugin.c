@@ -51,7 +51,8 @@ XFCE_PANEL_PLUGIN_REGISTER_EXTERNAL (soundmenu_construct);
 
 /* Function to update the soundmenu state */
 
-void play_button_toggle_state (SoundmenuPlugin *soundmenu)
+void
+play_button_toggle_state (SoundmenuPlugin *soundmenu)
 {
 	if ((soundmenu->state == ST_PAUSED) || (soundmenu->state == ST_STOPPED))
 		gtk_button_set_image(GTK_BUTTON(soundmenu->play_button), soundmenu->image_play);
@@ -59,7 +60,8 @@ void play_button_toggle_state (SoundmenuPlugin *soundmenu)
 		gtk_button_set_image(GTK_BUTTON(soundmenu->play_button), soundmenu->image_pause);
 }
 
-void update_tooltips (SoundmenuPlugin *soundmenu)
+void
+update_tooltips (SoundmenuPlugin *soundmenu)
 {
 	gchar *tooltip = NULL;
 
@@ -87,7 +89,8 @@ void update_tooltips (SoundmenuPlugin *soundmenu)
 	g_free(tooltip);
 }
 
-static void update_state(gchar *state, SoundmenuPlugin *soundmenu)
+static void
+update_state(gchar *state, SoundmenuPlugin *soundmenu)
 {
 	if (0 == g_ascii_strcasecmp(state, "Playing"))
 		soundmenu->state = ST_PLAYING;
@@ -134,7 +137,8 @@ void free_metadata(Metadata *m)
 
 /* Dbus helpers to parse Metadata info, etc.. */
 
-static void get_meta_item_array(DBusMessageIter *dict_entry, char **item)
+static void
+get_meta_item_array(DBusMessageIter *dict_entry, char **item)
 {
 	DBusMessageIter variant, array;
 	char *str_buf;
@@ -149,7 +153,8 @@ static void get_meta_item_array(DBusMessageIter *dict_entry, char **item)
 	strcpy(*item, str_buf);
 }
 
-static void get_meta_item_str(DBusMessageIter *dict_entry, char **item)
+static void
+get_meta_item_str(DBusMessageIter *dict_entry, char **item)
 {
 	DBusMessageIter variant;
 	char *str_buf;
@@ -162,7 +167,8 @@ static void get_meta_item_str(DBusMessageIter *dict_entry, char **item)
 	strcpy(*item, str_buf);
 }
 
-static void get_meta_item_gint(DBusMessageIter *dict_entry, void *item)
+static void
+get_meta_item_gint(DBusMessageIter *dict_entry, void *item)
 {
 	DBusMessageIter variant;
 
@@ -171,6 +177,7 @@ static void get_meta_item_gint(DBusMessageIter *dict_entry, void *item)
 	dbus_message_iter_get_basic(&variant, (void*) item);
 }
 
+void
 demarshal_metadata (DBusMessageIter *args, SoundmenuPlugin *soundmenu)	// arg inited on Metadata string
 {
 	DBG ("Demarshal_metadata");

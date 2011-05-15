@@ -5,4 +5,4 @@ _Name=Sound menu Plugin
 _Comment=Sound menu plugin for the Xfce panel
 Icon=xfce4-soundmenu-plugin
 X-XFCE-Exec=@libexecdir@/xfce4/panel-plugins/xfce4-soundmenu-plugin
-#X-XFCE-Unique=true
+X-XFCE-Unique=true

@@ -1,5 +1,21 @@
-0.0.1
-=====
-- Enter here some release highlights.
-- Updated translations: John Doo (be), Foo Bar (nl).
-- New translations: Anton (de).
+V0.2.git
+Parse metadata info.
+Show basic metadata in a tooltip on the control buttons.
+
+V0.1.0
+Now YESS!-) is a generic MPRIS 2 control pluging.
+
+V0.0.5
+Now is a generic MPRIS 2 control pluging.
+Add show stop button option in preferences.
+
+V0.0.2
+Description:
+A very basic xfce4-panel plugin to control pragha.
+
+Based on last xfce4-sample-plugin (http://git.xfce.org/panel-plugins/xfce4-sample-plugin)
+and written with the excuse to learn dbus thank to http://www.aliov.org/?page_id=47 :)
+
+For now it is just an experiment, but it works. :)
+
+Rergards.

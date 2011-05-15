@@ -1,12 +1,13 @@
 What is it?
 ===========
+A very basic xfce4-panel plugin to control any players MPRIS2 compatible
 
-This is a sample plugin for the Xfce panel, version 4.3 or higher. It
-demonstrates the basic usage of the plugin framework and provides a
-good layout for initial imports.
+Based on last xfce4-sample-plugin (http://git.xfce.org/panel-plugins/xfce4-sample-plugin)
+and written with the excuse to learn dbus thank to http://www.aliov.org/?page_id=47 :)
 
+For now it is just an experiment, but it works. :)
 
-Installation
+Installation (FIXME)
 ============
 
 The file 'INSTALL' contains generic installation instructions. For more
@@ -14,7 +15,7 @@ detailed information, visit the Sample plugin website at
 http://goodies.xfce.org/projects/panel-plugins/xfce4-sample-plugin
 
 
-How to report bugs?
+How to report bugs? (FIXME)
 ===================
 
 Bugs should be reported to the Xfce bug tracking system

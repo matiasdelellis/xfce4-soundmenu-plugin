@@ -1,0 +1,6 @@
+TODO list for a "hypothetical" xfce4-soundmenu-plugin 1.0.
+
+Goodies:
+* All volumes control. Master with gstreamer and playback with mpris2.
+* Add multimedia keys support. keybinder.
+* Scrobbling on lastfm. libclastfm.

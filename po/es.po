@@ -1,0 +1,65 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0.2.git\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2011-05-14 20:42-0300\n"
+"PO-Revision-Date: 2011-05-14 20:52-0300\n"
+"Last-Translator: Matias <mati86dl@gmail.com>\n"
+"Language-Team: Spanish <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Language: Spanish\n"
+"X-Poedit-Country: SPAIN\n"
+"X-Poedit-SourceCharset: utf-8\n"
+
+#: ../panel-plugin/soundmenu-plugin.c:64
+#: ../panel-plugin/soundmenu-plugin.c:65
+#: ../panel-plugin/soundmenu-plugin.c:66
+#: ../panel-plugin/soundmenu-plugin.c:67
+msgid "Stopped"
+msgstr "Detenido"
+
+#: ../panel-plugin/soundmenu-plugin.c:176
+#, c-format
+msgid ""
+"%s\n"
+"by %s in %s"
+msgstr ""
+"%s\n"
+"por %s en %s"
+
+#: ../panel-plugin/soundmenu-plugin.c:178
+msgid "Unknown Artist"
+msgstr "Artista Desconocido"
+
+#: ../panel-plugin/soundmenu-plugin.c:179
+msgid "Unknown Album"
+msgstr "Álbum desconocido"
+
+#: ../panel-plugin/soundmenu-dialogs.c:55
+#: ../panel-plugin/soundmenu-dialogs.c:164
+#, c-format
+msgid "Unable to open the following url: %s"
+msgstr "No pudo abrir la siguiente url: %s"
+
+#. create the dialog
+#: ../panel-plugin/soundmenu-dialogs.c:115
+#: ../panel-plugin/soundmenu.desktop.in.in.h:1
+msgid "Sound menu Plugin"
+msgstr ""
+
+#: ../panel-plugin/soundmenu-dialogs.c:131
+msgid "Show stop button"
+msgstr "Mostrar el boton  Detener"
+
+#: ../panel-plugin/soundmenu.desktop.in.in.h:2
+msgid "Sound menu plugin for the Xfce panel"
+msgstr "Sound menu plugin para el panel de Xfce"
+

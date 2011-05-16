@@ -72,7 +72,7 @@ update_tooltips (SoundmenuPlugin *soundmenu)
 		gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->next_button), _("Stopped"));
 	}
 	else {
-		tooltip = g_markup_printf_escaped(_("%s\nby %s in %s"),
+		tooltip = g_strdup_printf(_("%s\nby %s in %s"),
 				(soundmenu->metadata->title && strlen(soundmenu->metadata->title)) ?
 				soundmenu->metadata->title : soundmenu->metadata->url,
 				(soundmenu->metadata->artist && strlen(soundmenu->metadata->artist)) ?

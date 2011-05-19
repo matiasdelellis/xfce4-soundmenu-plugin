@@ -59,6 +59,7 @@ typedef struct
 	/* Player states */
 	enum player_state state;
 	Metadata		*metadata;
+	gdouble		volume;
 
 	/* Dbus conecction */
 	DBusConnection 	*connection;

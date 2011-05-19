@@ -64,6 +64,7 @@ void
 update_tooltips (SoundmenuPlugin *soundmenu)
 {
 	gchar *tooltip = NULL;
+	gint volume = 0;
 
 	if (soundmenu->state == ST_STOPPED) {
 		gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->prev_button), _("Stopped"));
@@ -72,13 +73,14 @@ update_tooltips (SoundmenuPlugin *soundmenu)
 		gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->next_button), _("Stopped"));
 	}
 	else {
-		tooltip = g_strdup_printf(_("%s\nby %s in %s"),
+		tooltip = g_strdup_printf(_("%s\nby %s in %s (Volume: %d%%)"),
 				(soundmenu->metadata->title && strlen(soundmenu->metadata->title)) ?
 				soundmenu->metadata->title : soundmenu->metadata->url,
 				(soundmenu->metadata->artist && strlen(soundmenu->metadata->artist)) ?
 				soundmenu->metadata->artist : _("Unknown Artist"),
 				(soundmenu->metadata->album && strlen(soundmenu->metadata->album)) ?
-				soundmenu->metadata->album : _("Unknown Album"));
+				soundmenu->metadata->album : _("Unknown Album"),
+				volume = (soundmenu->volume*100));
 	
 		gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->prev_button), tooltip);
 		gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->play_button), tooltip);
@@ -252,6 +254,7 @@ dbus_filter (DBusConnection *connection, DBusMessage *message, void *user_data)
 {
 	DBusMessageIter args, dict, dict_entry;
 	gchar *str_buf = NULL, *state = NULL;
+	gdouble volume = 0;
 
 	SoundmenuPlugin *soundmenu = user_data;
 
@@ -272,6 +275,12 @@ dbus_filter (DBusConnection *connection, DBusMessage *message, void *user_data)
 			{
 				get_meta_item_str (&dict_entry, &state);
 				update_state (state, soundmenu);
+			}
+			else if (0 == g_ascii_strcasecmp (str_buf, "Volume"))
+			{
+				get_meta_item_gint(&dict_entry, &volume);
+				soundmenu->volume = volume;
+				update_tooltips (soundmenu);
 			}
 			else if (0 == g_ascii_strcasecmp (str_buf, "Metadata"))
 			{

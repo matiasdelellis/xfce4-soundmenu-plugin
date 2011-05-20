@@ -60,35 +60,35 @@ play_button_toggle_state (SoundmenuPlugin *soundmenu)
 		gtk_button_set_image(GTK_BUTTON(soundmenu->play_button), soundmenu->image_pause);
 }
 
-void
-update_tooltips (SoundmenuPlugin *soundmenu)
+gboolean status_get_tooltip_cb (GtkWidget        *widget,
+					gint              x,
+					gint              y,
+					gboolean          keyboard_mode,
+					GtkTooltip       *tooltip,
+					SoundmenuPlugin *soundmenu)
 {
-	gchar *tooltip = NULL;
-	gint volume = 0;
+	gchar *markup_text = NULL;
 
-	if (soundmenu->state == ST_STOPPED) {
-		gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->prev_button), _("Stopped"));
-		gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->play_button), _("Stopped"));
-		gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->stop_button), _("Stopped"));
-		gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->next_button), _("Stopped"));
-	}
+	gint volume = (soundmenu->volume*100);
+
+	if (soundmenu->state == ST_STOPPED)
+		markup_text = g_strdup_printf("%s", _("Stopped"));
 	else {
-		tooltip = g_strdup_printf(_("%s\nby %s in %s (Volume: %d%%)"),
-				(soundmenu->metadata->title && strlen(soundmenu->metadata->title)) ?
-				soundmenu->metadata->title : soundmenu->metadata->url,
-				(soundmenu->metadata->artist && strlen(soundmenu->metadata->artist)) ?
-				soundmenu->metadata->artist : _("Unknown Artist"),
-				(soundmenu->metadata->album && strlen(soundmenu->metadata->album)) ?
-				soundmenu->metadata->album : _("Unknown Album"),
-				volume = (soundmenu->volume*100));
-	
-		gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->prev_button), tooltip);
-		gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->play_button), tooltip);
-		gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->stop_button), tooltip);
-		gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->next_button), tooltip);
+		markup_text = g_markup_printf_escaped(_("<b>%s</b> (Volume: %d%%)\nby %s in %s"),
+						(soundmenu->metadata->title && strlen(soundmenu->metadata->title)) ?
+						soundmenu->metadata->title : soundmenu->metadata->url,
+						volume,
+						(soundmenu->metadata->artist && strlen(soundmenu->metadata->artist)) ?
+						soundmenu->metadata->artist : _("Unknown Artist"),
+						(soundmenu->metadata->album && strlen(soundmenu->metadata->album)) ?
+						soundmenu->metadata->album : _("Unknown Album"));
 	}
 
-	g_free(tooltip);
+	gtk_tooltip_set_markup (tooltip, markup_text);
+
+	g_free(markup_text);
+
+	return TRUE;
 }
 
 static void
@@ -102,7 +102,6 @@ update_state(gchar *state, SoundmenuPlugin *soundmenu)
 		soundmenu->state = ST_STOPPED;
 	}
 	play_button_toggle_state(soundmenu);
-	update_tooltips (soundmenu);
 }
 
 Metadata *malloc_metadata()
@@ -243,8 +242,6 @@ demarshal_metadata (DBusMessageIter *args, SoundmenuPlugin *soundmenu)	// arg in
 
 	free_metadata(soundmenu->metadata);
 	soundmenu->metadata = metadata;
-
-	update_tooltips (soundmenu);
 }
 
 /* Basic dbus functions for interacting with MPRIS2*/
@@ -280,7 +277,6 @@ dbus_filter (DBusConnection *connection, DBusMessage *message, void *user_data)
 			{
 				get_meta_item_gint(&dict_entry, &volume);
 				soundmenu->volume = volume;
-				update_tooltips (soundmenu);
 			}
 			else if (0 == g_ascii_strcasecmp (str_buf, "Metadata"))
 			{
@@ -510,12 +506,24 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	xfce_panel_plugin_add_action_widget (plugin, stop_button);
 	xfce_panel_plugin_add_action_widget (plugin, next_button);
 
+	g_object_set (G_OBJECT(prev_button), "has-tooltip", TRUE, NULL);
+	g_object_set (G_OBJECT(play_button), "has-tooltip", TRUE, NULL);
+	g_object_set (G_OBJECT(stop_button), "has-tooltip", TRUE, NULL);
+	g_object_set (G_OBJECT(next_button), "has-tooltip", TRUE, NULL);
+
+	g_signal_connect(G_OBJECT(prev_button), "query-tooltip",
+			G_CALLBACK(status_get_tooltip_cb), soundmenu);
+	g_signal_connect(G_OBJECT(play_button), "query-tooltip",
+			G_CALLBACK(status_get_tooltip_cb), soundmenu);
+	g_signal_connect(G_OBJECT(stop_button), "query-tooltip",
+			G_CALLBACK(status_get_tooltip_cb), soundmenu);
+	g_signal_connect(G_OBJECT(next_button), "query-tooltip",
+			G_CALLBACK(status_get_tooltip_cb), soundmenu);
+
 	soundmenu->prev_button = prev_button;
 	soundmenu->play_button = play_button;
 	soundmenu->stop_button = stop_button;
 	soundmenu->next_button = next_button;
-
-	update_tooltips (soundmenu);
 
 	metadata = malloc_metadata();
 	soundmenu->metadata = metadata;

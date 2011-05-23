@@ -36,8 +36,6 @@
 /* the website url */
 #define PLUGIN_WEBSITE "http://pragha.wikispaces.com/"
 
-
-
 static void
 soundmenu_configure_response (GtkWidget    *dialog,
                            gint          response,
@@ -87,6 +85,7 @@ soundmenu_configure_response (GtkWidget    *dialog,
 		/* destroy the properties dialog */
 		gtk_widget_destroy (dialog);
 	}
+	update_player_status (soundmenu);
 }
 
 static void

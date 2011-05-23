@@ -190,12 +190,8 @@ demarshal_metadata (DBusMessageIter *args, SoundmenuPlugin *soundmenu)	// arg in
 	gint64 length = 0;
 	gint32 trackNumber = 0;
 	
-	if (soundmenu->state == ST_STOPPED)
-		return;
-	
 	metadata = malloc_metadata();
 
-	dbus_message_iter_next(args);				// Next => args on "variant array []"
 	dbus_message_iter_recurse(args, &dict);		// Recurse => dict on fist "dict entry()"
 	
 	dbus_message_iter_recurse(&dict, &dict_entry);	// Recurse => dict_entry on "string "mpris:trackid""
@@ -280,6 +276,7 @@ dbus_filter (DBusConnection *connection, DBusMessage *message, void *user_data)
 			}
 			else if (0 == g_ascii_strcasecmp (str_buf, "Metadata"))
 			{
+				dbus_message_iter_next(&dict_entry);
 				demarshal_metadata (&dict_entry, soundmenu);
 			}
 		} while (dbus_message_iter_next(&dict));
@@ -302,6 +299,100 @@ send_message (SoundmenuPlugin *soundmenu, const char *msg)
 	/* Send the message */
 	dbus_connection_send (soundmenu->connection, message, NULL);
 	dbus_message_unref (message);
+}
+
+void
+get_playbackstatus (SoundmenuPlugin *soundmenu)
+{
+	DBusMessage *message = NULL, *reply_message = NULL;
+	DBusMessageIter dict_entry, variant;
+	gchar *destination = NULL, *state= NULL;
+
+	const char * const interface_name = "org.mpris.MediaPlayer2.Player";
+	const char * const query = "PlaybackStatus";
+
+	destination = g_strdup_printf ("org.mpris.MediaPlayer2.%s", soundmenu->player);
+
+	message = dbus_message_new_method_call (destination, "/org/mpris/MediaPlayer2", "org.freedesktop.DBus.Properties", "Get");
+	dbus_message_append_args(message,
+					DBUS_TYPE_STRING, &interface_name,
+					DBUS_TYPE_STRING, &query,
+					DBUS_TYPE_INVALID);
+
+	if(reply_message = dbus_connection_send_with_reply_and_block (soundmenu->connection, message, -1, NULL)) {
+		dbus_message_iter_init(reply_message, &dict_entry);
+		dbus_message_iter_recurse(&dict_entry, &variant);
+
+		dbus_message_iter_get_basic(&variant, (void*) &state);
+		update_state (state, soundmenu);
+	}
+
+	dbus_message_unref (message);
+	g_free(destination);
+}
+
+void
+get_metadata (SoundmenuPlugin *soundmenu)
+{
+	DBusMessage *message = NULL, *reply_message = NULL;
+	DBusMessageIter args;
+	gchar *destination = NULL;
+
+	const char * const interface_name = "org.mpris.MediaPlayer2.Player";
+	const char * const query = "Metadata";
+
+	destination = g_strdup_printf ("org.mpris.MediaPlayer2.%s", soundmenu->player);
+
+	message = dbus_message_new_method_call (destination, "/org/mpris/MediaPlayer2", "org.freedesktop.DBus.Properties", "Get");
+	dbus_message_append_args(message,
+					DBUS_TYPE_STRING, &interface_name,
+					DBUS_TYPE_STRING, &query,
+					DBUS_TYPE_INVALID);
+
+	if(reply_message = dbus_connection_send_with_reply_and_block (soundmenu->connection, message, -1, NULL)) {
+		dbus_message_iter_init(reply_message, &args);
+		demarshal_metadata (&args, soundmenu);
+	}
+
+	dbus_message_unref (message);
+	g_free(destination);
+}
+
+void
+get_volume (SoundmenuPlugin *soundmenu)
+{
+	DBusMessage *message = NULL, *reply_message = NULL;
+	DBusMessageIter dict_entry, variant;
+	gchar *destination = NULL;
+	gdouble volume = 0;
+
+	const char * const interface_name = "org.mpris.MediaPlayer2.Player";
+	const char * const query = "Volume";
+
+	destination = g_strdup_printf ("org.mpris.MediaPlayer2.%s", soundmenu->player);
+
+	message = dbus_message_new_method_call (destination, "/org/mpris/MediaPlayer2", "org.freedesktop.DBus.Properties", "Get");
+	dbus_message_append_args(message,
+					DBUS_TYPE_STRING, &interface_name,
+					DBUS_TYPE_STRING, &query,
+					DBUS_TYPE_INVALID);
+
+	if(reply_message = dbus_connection_send_with_reply_and_block (soundmenu->connection, message, -1, NULL)) {
+		dbus_message_iter_init(reply_message, &dict_entry);
+		dbus_message_iter_recurse(&dict_entry, &variant);
+		dbus_message_iter_get_basic(&variant, &volume);
+	}
+	soundmenu->volume = volume;
+
+	dbus_message_unref (message);
+	g_free(destination);
+}
+
+void update_player_status (SoundmenuPlugin *soundmenu)
+{
+	get_playbackstatus (soundmenu);
+	get_metadata (soundmenu);
+	get_volume (soundmenu);
 }
 
 /* Callbacks of button controls */
@@ -542,6 +633,8 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	dbus_connection_setup_with_g_main (connection, NULL);
 
 	soundmenu->connection = connection;
+	
+	update_player_status (soundmenu);
 
 	return soundmenu;
 }

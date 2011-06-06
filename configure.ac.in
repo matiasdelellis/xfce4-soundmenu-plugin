@@ -9,7 +9,7 @@ dnl *** Version information ***
 dnl ***************************
 m4_define([soundmenu_version_major], [0])
 m4_define([soundmenu_version_minor], [2])
-m4_define([soundmenu_version_micro], [0])
+m4_define([soundmenu_version_micro], [2])
 m4_define([soundmenu_version], [soundmenu_version_major().soundmenu_version_minor().soundmenu_version_micro()])
 
 dnl ***************************

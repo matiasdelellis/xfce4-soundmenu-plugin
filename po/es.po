@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.2.git\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-05-14 20:42-0300\n"
-"PO-Revision-Date: 2011-05-14 20:52-0300\n"
+"POT-Creation-Date: 2011-06-06 20:32-0300\n"
+"PO-Revision-Date: 2011-06-06 20:33-0300\n"
 "Last-Translator: Matias <mati86dl@gmail.com>\n"
 "Language-Team: Spanish <LL@li.org>\n"
 "Language: \n"
@@ -19,47 +19,50 @@ msgstr ""
 "X-Poedit-Country: SPAIN\n"
 "X-Poedit-SourceCharset: utf-8\n"
 
-#: ../panel-plugin/soundmenu-plugin.c:64
-#: ../panel-plugin/soundmenu-plugin.c:65
-#: ../panel-plugin/soundmenu-plugin.c:66
-#: ../panel-plugin/soundmenu-plugin.c:67
+#: ../panel-plugin/soundmenu-plugin.c:75
 msgid "Stopped"
 msgstr "Detenido"
 
-#: ../panel-plugin/soundmenu-plugin.c:176
+#: ../panel-plugin/soundmenu-plugin.c:77
 #, c-format
 msgid ""
-"%s\n"
+"<b>%s</b> (Volume: %d%%)\n"
 "by %s in %s"
 msgstr ""
-"%s\n"
+"<b>%s</b> (Volumen: %d%%)\n"
 "por %s en %s"
 
-#: ../panel-plugin/soundmenu-plugin.c:178
+#: ../panel-plugin/soundmenu-plugin.c:82
 msgid "Unknown Artist"
 msgstr "Artista Desconocido"
 
-#: ../panel-plugin/soundmenu-plugin.c:179
+#: ../panel-plugin/soundmenu-plugin.c:84
 msgid "Unknown Album"
 msgstr "Álbum desconocido"
 
-#: ../panel-plugin/soundmenu-dialogs.c:55
-#: ../panel-plugin/soundmenu-dialogs.c:164
+#: ../panel-plugin/soundmenu-dialogs.c:53
+#: ../panel-plugin/soundmenu-dialogs.c:163
 #, c-format
 msgid "Unable to open the following url: %s"
 msgstr "No pudo abrir la siguiente url: %s"
 
 #. create the dialog
-#: ../panel-plugin/soundmenu-dialogs.c:115
+#: ../panel-plugin/soundmenu-dialogs.c:114
 #: ../panel-plugin/soundmenu.desktop.in.in.h:1
 msgid "Sound menu Plugin"
 msgstr ""
 
-#: ../panel-plugin/soundmenu-dialogs.c:131
+#: ../panel-plugin/soundmenu-dialogs.c:130
 msgid "Show stop button"
-msgstr "Mostrar el boton  Detener"
+msgstr "Mostrar el botón Detener"
 
 #: ../panel-plugin/soundmenu.desktop.in.in.h:2
 msgid "Sound menu plugin for the Xfce panel"
 msgstr "Sound menu plugin para el panel de Xfce"
 
+#~ msgid ""
+#~ "%s\n"
+#~ "by %s in %s"
+#~ msgstr ""
+#~ "%s\n"
+#~ "por %s en %s"

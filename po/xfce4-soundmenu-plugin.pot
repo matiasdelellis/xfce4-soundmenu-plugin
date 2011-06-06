@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-05-14 20:42-0300\n"
+"POT-Creation-Date: 2011-06-06 20:32-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,39 +17,38 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../panel-plugin/soundmenu-plugin.c:64 ../panel-plugin/soundmenu-plugin.c:65
-#: ../panel-plugin/soundmenu-plugin.c:66 ../panel-plugin/soundmenu-plugin.c:67
+#: ../panel-plugin/soundmenu-plugin.c:75
 msgid "Stopped"
 msgstr ""
 
-#: ../panel-plugin/soundmenu-plugin.c:176
+#: ../panel-plugin/soundmenu-plugin.c:77
 #, c-format
 msgid ""
-"%s\n"
+"<b>%s</b> (Volume: %d%%)\n"
 "by %s in %s"
 msgstr ""
 
-#: ../panel-plugin/soundmenu-plugin.c:178
+#: ../panel-plugin/soundmenu-plugin.c:82
 msgid "Unknown Artist"
 msgstr ""
 
-#: ../panel-plugin/soundmenu-plugin.c:179
+#: ../panel-plugin/soundmenu-plugin.c:84
 msgid "Unknown Album"
 msgstr ""
 
-#: ../panel-plugin/soundmenu-dialogs.c:55
-#: ../panel-plugin/soundmenu-dialogs.c:164
+#: ../panel-plugin/soundmenu-dialogs.c:53
+#: ../panel-plugin/soundmenu-dialogs.c:163
 #, c-format
 msgid "Unable to open the following url: %s"
 msgstr ""
 
 #. create the dialog
-#: ../panel-plugin/soundmenu-dialogs.c:115
+#: ../panel-plugin/soundmenu-dialogs.c:114
 #: ../panel-plugin/soundmenu.desktop.in.in.h:1
 msgid "Sound menu Plugin"
 msgstr ""
 
-#: ../panel-plugin/soundmenu-dialogs.c:131
+#: ../panel-plugin/soundmenu-dialogs.c:130
 msgid "Show stop button"
 msgstr ""
 

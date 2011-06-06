@@ -276,6 +276,7 @@ dbus_filter (DBusConnection *connection, DBusMessage *message, void *user_data)
 			}
 			else if (0 == g_ascii_strcasecmp (str_buf, "Metadata"))
 			{
+				/* Ignore inferface string and send the pointer to metadata. */
 				dbus_message_iter_next(&dict_entry);
 				demarshal_metadata (&dict_entry, soundmenu);
 			}
@@ -420,6 +421,58 @@ next_button_handler(GtkButton *button, SoundmenuPlugin    *soundmenu)
 {
 	send_message (soundmenu, "Next");
 }
+/*
+ * First intent to set the volume.
+ * DBUS_TYPE_VARIANT is not implemented on dbus_message_append_args.
+ * I did not know implement a variant of double into a container.
+ * Any Help?????
+
+static gboolean
+panel_button_scrolled (GtkWidget        *widget,
+				GdkEventScroll   *event,
+				SoundmenuPlugin *soundmenu)
+{
+	DBusMessage *message = NULL;
+	DBusMessageIter value_iter, iter_dict_entry, variant;
+	gchar *destination = NULL;
+
+	const char * const interface_name = "org.mpris.MediaPlayer2.Player";
+	const char * const query = "Volume";
+
+	switch (event->direction)
+	{
+	case GDK_SCROLL_UP:
+	case GDK_SCROLL_RIGHT:
+		soundmenu->volume += 0.02;
+		break;
+	case GDK_SCROLL_DOWN:
+	case GDK_SCROLL_LEFT:
+		soundmenu->volume -= 0.02;
+		break;
+	}
+
+	soundmenu->volume = CLAMP (soundmenu->volume, 0.0, 1.0);
+
+	destination = g_strdup_printf ("org.mpris.MediaPlayer2.%s", soundmenu->player);
+	message = dbus_message_new_method_call (destination, "/org/mpris/MediaPlayer2", "org.freedesktop.DBus.Properties", "Set");
+	dbus_message_append_args(message,
+				DBUS_TYPE_STRING, &interface_name,
+				DBUS_TYPE_STRING, &query,
+				DBUS_TYPE_VARIANT, &iter_dict_entry,
+				DBUS_TYPE_INVALID);
+	// FIXME: DBUS_TYPE_VARIANT not implemented, therefore you have to do in a container.
+	if(dbus_message_iter_open_container(&iter_dict_entry, DBUS_TYPE_VARIANT, DBUS_TYPE_DOUBLE_AS_STRING, &variant)) {
+		dbus_message_iter_append_basic(&variant, DBUS_TYPE_DOUBLE, &(soundmenu->volume));
+		dbus_message_iter_close_container(&iter_dict_entry, &variant);
+	}
+
+	dbus_connection_send (soundmenu->connection, message, NULL);
+		
+	dbus_message_unref (message);
+	g_free(destination);
+
+	return TRUE;
+} */
 
 /* Sound menu plugin construct */
 
@@ -610,6 +663,11 @@ soundmenu_new (XfcePanelPlugin *plugin)
 			G_CALLBACK(status_get_tooltip_cb), soundmenu);
 	g_signal_connect(G_OBJECT(next_button), "query-tooltip",
 			G_CALLBACK(status_get_tooltip_cb), soundmenu);
+
+	/* FIXME:
+	 * See comments in the function panel_button_scrolled.
+	g_signal_connect (G_OBJECT (play_button), "scroll-event",
+			G_CALLBACK (panel_button_scrolled), soundmenu);*/
 
 	soundmenu->prev_button = prev_button;
 	soundmenu->play_button = play_button;

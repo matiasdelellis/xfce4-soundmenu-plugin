@@ -1,4 +1,10 @@
-V0.2.git
+V0.2.2
+Parse and show volume on tooltips.
+Set tooltips dynamically.
+Get Volume, Metadata and Volume on-demand.
+So.. get all when you add the plugin or set another player.
+
+V0.2.0
 Parse metadata info.
 Show basic metadata in a tooltip on the control buttons.
 
@@ -18,4 +24,4 @@ and written with the excuse to learn dbus thank to http://www.aliov.org/?page_id
 
 For now it is just an experiment, but it works. :)
 
-Rergards.
+Regards.

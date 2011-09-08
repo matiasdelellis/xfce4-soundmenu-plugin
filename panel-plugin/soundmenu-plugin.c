@@ -32,6 +32,10 @@
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib-lowlevel.h>
 
+#ifdef HAVE_LIBKEYBINDER
+#include <keybinder.h>
+#endif
+
 #include "soundmenu-plugin.h"
 #include "soundmenu-dialogs.h"
 
@@ -421,6 +425,44 @@ next_button_handler(GtkButton *button, SoundmenuPlugin    *soundmenu)
 {
 	send_message (soundmenu, "Next");
 }
+
+#ifdef HAVE_LIBKEYBINDER
+void keybind_play_handler (const char *keystring, SoundmenuPlugin *soundmenu)
+{
+	send_message (soundmenu, "PlayPause");
+}
+void keybind_stop_handler (const char *keystring, SoundmenuPlugin *soundmenu)
+{
+	send_message (soundmenu, "Stop");
+}
+void keybind_prev_handler (const char *keystring, SoundmenuPlugin *soundmenu)
+{
+	send_message (soundmenu, "Previous");
+}
+void keybind_next_handler (const char *keystring, SoundmenuPlugin *soundmenu)
+{
+	send_message (soundmenu, "Next");
+}
+
+void init_keybinder(SoundmenuPlugin *soundmenu)
+{
+	keybinder_init ();
+
+	keybinder_bind("XF86AudioPlay", (KeybinderHandler) keybind_play_handler, soundmenu);
+	keybinder_bind("XF86AudioStop", (KeybinderHandler) keybind_stop_handler, soundmenu);
+	keybinder_bind("XF86AudioPrev", (KeybinderHandler) keybind_prev_handler, soundmenu);
+	keybinder_bind("XF86AudioNext", (KeybinderHandler) keybind_next_handler, soundmenu);
+}
+
+void uninit_keybinder(SoundmenuPlugin *soundmenu)
+{
+	keybinder_unbind("XF86AudioPlay", (KeybinderHandler) keybind_play_handler);
+	keybinder_unbind("XF86AudioStop", (KeybinderHandler) keybind_stop_handler);
+	keybinder_unbind("XF86AudioPrev", (KeybinderHandler) keybind_prev_handler);
+	keybinder_unbind("XF86AudioNext", (KeybinderHandler) keybind_next_handler);
+}
+#endif
+
 /*
  * First intent to set the volume.
  * DBUS_TYPE_VARIANT is not implemented on dbus_message_append_args.
@@ -460,6 +502,7 @@ panel_button_scrolled (GtkWidget        *widget,
 				DBUS_TYPE_STRING, &query,
 				DBUS_TYPE_VARIANT, &iter_dict_entry,
 				DBUS_TYPE_INVALID);
+
 	// FIXME: DBUS_TYPE_VARIANT not implemented, therefore you have to do in a container.
 	if(dbus_message_iter_open_container(&iter_dict_entry, DBUS_TYPE_VARIANT, DBUS_TYPE_DOUBLE_AS_STRING, &variant)) {
 		dbus_message_iter_append_basic(&variant, DBUS_TYPE_DOUBLE, &(soundmenu->volume));
@@ -703,6 +746,10 @@ soundmenu_free (XfcePanelPlugin *plugin,
 {
 	GtkWidget *dialog;
 
+	#ifdef HAVE_LIBKEYBINDER
+	uninit_keybinder(soundmenu);
+	#endif
+
 	/* check if the dialog is still open. if so, destroy it */
 	dialog = g_object_get_data (G_OBJECT (plugin), "dialog");
 	if (G_UNLIKELY (dialog != NULL))
@@ -786,6 +833,10 @@ soundmenu_construct (XfcePanelPlugin *plugin)
 
 	g_signal_connect (G_OBJECT (plugin), "orientation-changed",
 				G_CALLBACK (soundmenu_orientation_changed), soundmenu);
+
+	#ifdef HAVE_LIBKEYBINDER
+	init_keybinder(soundmenu);
+	#endif
 
 	/* show the configure menu item and connect signal */
 	xfce_panel_plugin_menu_show_configure (plugin);

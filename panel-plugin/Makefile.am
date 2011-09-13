@@ -16,6 +16,8 @@ plugindir = \
 xfce4_soundmenu_plugin_SOURCES = \
 	soundmenu-plugin.c \
 	soundmenu-plugin.h \
+	soundmenu-mpris2.c \
+	soundmenu-mpris2.h \
 	soundmenu-dialogs.c \
 	soundmenu-dialogs.h
 

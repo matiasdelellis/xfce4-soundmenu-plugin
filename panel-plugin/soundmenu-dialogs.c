@@ -96,7 +96,7 @@ soundmenu_configure_response (GtkWidget    *dialog,
 		/* destroy the properties dialog */
 		gtk_widget_destroy (dialog);
 	}
-	update_player_status (soundmenu);
+	mpris2_get_player_status (soundmenu);
 
 	if (soundmenu->clastfm->session_id == NULL)
 		init_lastfm(soundmenu);
@@ -250,8 +250,6 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 	/* show the entire dialog */
 	gtk_widget_show_all(dialog);
 }
-
-
 
 void
 soundmenu_about (XfcePanelPlugin *plugin)

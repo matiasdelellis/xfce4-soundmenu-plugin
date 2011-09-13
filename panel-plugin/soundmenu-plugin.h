@@ -118,8 +118,8 @@ typedef struct
 }
 SoundmenuPlugin;
 
-Metadata *malloc_metadata();
-void free_metadata(Metadata *m);
+void
+suondmenu_update_state(gchar *state, SoundmenuPlugin *soundmenu);
 
 void
 soundmenu_save (XfcePanelPlugin *plugin,

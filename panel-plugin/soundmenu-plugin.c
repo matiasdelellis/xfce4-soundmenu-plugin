@@ -20,29 +20,15 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
-
-#include <gtk/gtk.h>
-#include <glib.h>
-#include <libxfce4util/libxfce4util.h>
-#include <libxfce4panel/xfce-panel-plugin.h>
-#include <libxfce4panel/xfce-hvbox.h>
-#include <dbus/dbus.h>
-#include <dbus/dbus-glib-lowlevel.h>
-
-#ifdef HAVE_LIBKEYBINDER
-#include <keybinder.h>
-#endif
 
 #include "soundmenu-plugin.h"
 #include "soundmenu-dialogs.h"
+#include "soundmenu-lastfm.h"
 
 /* default settings */
 #define DEFAULT_PLAYER "pragha"
-#define DEFAULT_SETTING2 1
 #define DEFAULT_SHOW_STOP TRUE
+#define DEFAULT_LASTFM FALSE
 
 /* prototypes */
 
@@ -105,7 +91,12 @@ update_state(gchar *state, SoundmenuPlugin *soundmenu)
 	else {
 		soundmenu->state = ST_STOPPED;
 	}
+
 	play_button_toggle_state(soundmenu);
+	#ifdef HAVE_LIBCLASTFM
+	if (soundmenu->clastfm->lastfm_support)
+		update_lastfm(soundmenu);
+	#endif
 }
 
 Metadata *malloc_metadata()
@@ -237,7 +228,7 @@ demarshal_metadata (DBusMessageIter *args, SoundmenuPlugin *soundmenu)	// arg in
 	
 	} while (dbus_message_iter_next(&dict_entry));
 
-	metadata->length = length;
+	metadata->length = length / 1000000l;
 	metadata->trackNumber = trackNumber;
 
 	free_metadata(soundmenu->metadata);
@@ -283,6 +274,10 @@ dbus_filter (DBusConnection *connection, DBusMessage *message, void *user_data)
 				/* Ignore inferface string and send the pointer to metadata. */
 				dbus_message_iter_next(&dict_entry);
 				demarshal_metadata (&dict_entry, soundmenu);
+				#ifdef HAVE_LIBCLASTFM
+				if (soundmenu->clastfm->lastfm_support)
+					update_lastfm(soundmenu);
+				#endif
 			}
 		} while (dbus_message_iter_next(&dict));
 
@@ -544,8 +539,21 @@ soundmenu_save (XfcePanelPlugin *plugin,
 		if (soundmenu->player)
 			xfce_rc_write_entry    (rc, "player", soundmenu->player);
 
-		xfce_rc_write_int_entry  (rc, "setting2", soundmenu->setting2);
 		xfce_rc_write_bool_entry (rc, "show_stop", soundmenu->show_stop);
+
+		#ifdef HAVE_LIBCLASTFM
+		xfce_rc_write_bool_entry (rc, "use_lastfm", soundmenu->clastfm->lastfm_support);
+		if(soundmenu->clastfm->lastfm_support) {
+			if (soundmenu->clastfm->lastfm_user)
+				xfce_rc_write_entry(rc, "lastfm_user", soundmenu->clastfm->lastfm_user);
+			if (soundmenu->clastfm->lastfm_pass)
+				xfce_rc_write_entry(rc, "lastfm_pass", soundmenu->clastfm->lastfm_pass);
+		}
+		else {
+			xfce_rc_delete_entry(rc, "lastfm_user", TRUE);
+			xfce_rc_delete_entry(rc, "lastfm_pass", TRUE);
+		}
+		#endif
 
 		/* close the rc file */
 		xfce_rc_close (rc);
@@ -557,7 +565,6 @@ soundmenu_read (SoundmenuPlugin *soundmenu)
 {
 	XfceRc      *rc;
 	gchar       *file;
-	const gchar *value;
 
 	/* get the plugin config file location */
 	file = xfce_panel_plugin_save_location (soundmenu->plugin, TRUE);
@@ -571,12 +578,17 @@ soundmenu_read (SoundmenuPlugin *soundmenu)
 
 		if (G_LIKELY (rc != NULL)) {
 			/* read the settings */
-			value = xfce_rc_read_entry (rc, "player", DEFAULT_PLAYER);
-			soundmenu->player = g_strdup (value);
+			soundmenu->player = g_strdup (xfce_rc_read_entry (rc, "player", "pragha"));
 
-			soundmenu->setting2 = xfce_rc_read_int_entry (rc, "setting2", DEFAULT_SETTING2);
-			soundmenu->show_stop = xfce_rc_read_bool_entry (rc, "show_stop", DEFAULT_SHOW_STOP);
+			soundmenu->show_stop = xfce_rc_read_bool_entry (rc, "show_stop", FALSE);
 
+			#ifdef HAVE_LIBCLASTFM
+			soundmenu->clastfm->lastfm_support = xfce_rc_read_bool_entry (rc, "use_lastfm", DEFAULT_LASTFM);
+			soundmenu->clastfm->lastfm_user = g_strdup(xfce_rc_read_entry (rc, "lastfm_user", NULL));
+			soundmenu->clastfm->lastfm_pass = g_strdup(xfce_rc_read_entry (rc, "lastfm_pass", NULL));
+			/* Also init session id */
+			soundmenu->clastfm->session_id = NULL;
+			#endif
 			soundmenu->state = ST_STOPPED;
 
 			/* cleanup */
@@ -591,8 +603,14 @@ soundmenu_read (SoundmenuPlugin *soundmenu)
 	DBG ("Applying default settings");
 
 	soundmenu->player = g_strdup (DEFAULT_PLAYER);
-	soundmenu->setting2 = DEFAULT_SETTING2;
-	soundmenu->show_stop = DEFAULT_SHOW_STOP;
+	soundmenu->show_stop = FALSE;
+	#ifdef HAVE_LIBCLASTFM
+	/* Read lastfm support and init session id */
+	soundmenu->clastfm->lastfm_support = DEFAULT_LASTFM;
+	soundmenu->clastfm->lastfm_user = NULL;
+	soundmenu->clastfm->lastfm_pass = NULL;
+	soundmenu->clastfm->session_id = NULL;
+	#endif
 	soundmenu->state = ST_STOPPED;
 }
 
@@ -608,12 +626,25 @@ soundmenu_new (XfcePanelPlugin *plugin)
 
 	/* allocate memory for the plugin structure */
 	soundmenu = panel_slice_new0 (SoundmenuPlugin);
-
-	/* pointer to plugin */
 	soundmenu->plugin = plugin;
+
+	#ifdef HAVE_LIBCLASTFM
+	soundmenu->clastfm = g_slice_new0(struct con_lastfm);
+	#endif
+
+	metadata = malloc_metadata();
+	soundmenu->metadata = metadata;
 
 	/* read the user settings */
 	soundmenu_read (soundmenu);
+
+	/* Init the services */
+	#ifdef HAVE_LIBKEYBINDER
+	init_keybinder(soundmenu);
+	#endif
+	#ifdef HAVE_LIBCLASTFM
+	init_lastfm(soundmenu);
+	#endif
 
 	/* get the current orientation */
 	orientation = xfce_panel_plugin_get_orientation (plugin);
@@ -717,9 +748,6 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	soundmenu->stop_button = stop_button;
 	soundmenu->next_button = next_button;
 
-	metadata = malloc_metadata();
-	soundmenu->metadata = metadata;
-
 	/* Soundmenu dbus helpers */
 
 	connection = dbus_bus_get (DBUS_BUS_SESSION, NULL);
@@ -734,7 +762,7 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	dbus_connection_setup_with_g_main (connection, NULL);
 
 	soundmenu->connection = connection;
-	
+
 	update_player_status (soundmenu);
 
 	return soundmenu;
@@ -748,6 +776,16 @@ soundmenu_free (XfcePanelPlugin *plugin,
 
 	#ifdef HAVE_LIBKEYBINDER
 	uninit_keybinder(soundmenu);
+	#endif
+
+	#ifdef HAVE_LIBCLASTFM
+	if (soundmenu->clastfm->session_id)
+		LASTFM_dinit(soundmenu->clastfm->session_id);
+	g_slice_free(struct con_lastfm, soundmenu->clastfm);
+	if (G_LIKELY (soundmenu->clastfm->lastfm_user != NULL))
+		g_free (soundmenu->clastfm->lastfm_user);
+	if (G_LIKELY (soundmenu->clastfm->lastfm_pass != NULL))
+		g_free (soundmenu->clastfm->lastfm_pass);
 	#endif
 
 	/* check if the dialog is still open. if so, destroy it */
@@ -833,10 +871,6 @@ soundmenu_construct (XfcePanelPlugin *plugin)
 
 	g_signal_connect (G_OBJECT (plugin), "orientation-changed",
 				G_CALLBACK (soundmenu_orientation_changed), soundmenu);
-
-	#ifdef HAVE_LIBKEYBINDER
-	init_keybinder(soundmenu);
-	#endif
 
 	/* show the configure menu item and connect signal */
 	xfce_panel_plugin_menu_show_configure (plugin);

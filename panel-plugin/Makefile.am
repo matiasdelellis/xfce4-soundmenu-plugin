@@ -19,6 +19,13 @@ xfce4_soundmenu_plugin_SOURCES = \
 	soundmenu-dialogs.c \
 	soundmenu-dialogs.h
 
+if HAVE_LIBCLASTFM
+xfce4_soundmenu_plugin_SOURCES += \
+	soundmenu-lastfm.c \
+	soundmenu-lastfm.h
+
+endif
+
 xfce4_soundmenu_plugin_CFLAGS = \
 	$(DBUS_GLIB_CFLAGS) \
 	$(LIBXFCE4UTIL_CFLAGS) \
@@ -31,6 +38,16 @@ xfce4_soundmenu_plugin_LDADD = \
 	$(LIBXFCE4UTIL_LIBS) \
 	$(LIBXFCE4UI_LIBS) \
 	$(LIBXFCE4PANEL_LIBS)
+
+if HAVE_LIBKEYBINDER
+xfce4_soundmenu_plugin_CFLAGS += $(LIBKEYBINDER_CFLAGS)
+xfce4_soundmenu_plugin_LDADD += $(LIBKEYBINDER_LIBS)
+endif
+
+if HAVE_LIBCLASTFM
+xfce4_soundmenu_plugin_CFLAGS += $(LIBCLASTFM_CFLAGS)
+xfce4_soundmenu_plugin_LDADD += $(LIBCLASTFM_LIBS)
+endif
 
 #
 # Desktop file

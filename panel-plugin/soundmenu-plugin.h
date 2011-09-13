@@ -20,6 +20,30 @@
 #ifndef __SOUNDMENU_H__
 #define __SOUNDMENU_H__
 
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+
+#include <gtk/gtk.h>
+#include <glib.h>
+#include <libxfce4util/libxfce4util.h>
+#include <libxfce4panel/xfce-panel-plugin.h>
+#include <libxfce4panel/xfce-hvbox.h>
+#include <dbus/dbus.h>
+#include <dbus/dbus-glib-lowlevel.h>
+
+#ifdef HAVE_LIBCLASTFM
+#include <clastfm.h>
+#include <pthread.h>
+#endif
+
+#ifdef HAVE_LIBKEYBINDER
+#include <keybinder.h>
+#endif
+
+#define LASTFM_API_KEY             "ecdc2d21dbfe1139b1f0da35daca9309"
+#define LASTFM_SECRET              "f3498ce387f30eeae8ea1b1023afb32b"
+
 G_BEGIN_DECLS
 
 typedef struct {
@@ -32,6 +56,24 @@ typedef struct {
 	unsigned int trackNumber;
 	char *arturl;
 } Metadata;
+
+
+#ifdef HAVE_LIBCLASTFM
+struct lastfm_pref {
+	GtkWidget *lastfm_w;
+	GtkWidget *lastfm_uname_w;
+	GtkWidget *lastfm_pass_w;
+};
+
+struct con_lastfm {
+	gboolean lastfm_support;
+	gchar *lastfm_user;
+	gchar *lastfm_pass;
+	LASTFM_SESSION *session_id;
+	gint lastfm_handler_id;
+	time_t playback_started;
+};
+#endif
 
 enum player_state {
 	ST_PLAYING = 1,
@@ -55,6 +97,10 @@ typedef struct
 
 	/* Helper to obtain player name of preferences */
 	GtkWidget	*w_player;
+	#ifdef HAVE_LIBCLASTFM
+	struct lastfm_pref lw;
+	struct con_lastfm *clastfm;
+	#endif
 
 	/* Player states */
 	enum player_state state;

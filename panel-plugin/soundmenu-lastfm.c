@@ -27,7 +27,7 @@
 
 #ifdef HAVE_LIBCLASTFM
 /* Handler for 'Artist info' action in the Tools menu */
-/*void *do_lastfm_get_artist_info (gpointer data)
+void lastfm_artist_info_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 {
 	GtkWidget *dialog;
 	GtkTextBuffer *buffer;
@@ -38,23 +38,17 @@
 	GtkWidget *view, *frame, *scrolled;
 	gint i, result;
 
-	SoundmenuPlugin *soundmenu = data;
+	if(soundmenu->state == ST_STOPPED)
+		return;
+
+	if (soundmenu->clastfm->session_id == NULL) {
+		g_critical("No connection Last.fm has been established.");
+		return;
+	}
 
 	LASTFM_ARTIST_INFO *artist = NULL;
 
-	gdk_threads_enter ();
-
-	gdk_threads_leave ();
-
 	artist = LASTFM_artist_get_info (soundmenu->clastfm->session_id, soundmenu->metadata->artist, NULL);
-
-	gdk_threads_enter ();
-
-	if(!artist) {
-		//set_status_message(_("Artist information not found on Last.fm."), soundmenu);
-		gdk_threads_leave ();
-		return NULL;
-	}
 
 	view = gtk_text_view_new ();
 	gtk_text_view_set_editable (GTK_TEXT_VIEW (view), FALSE);
@@ -110,7 +104,7 @@
 	}
 
 	dialog = xfce_titled_dialog_new_with_buttons (_("Lastfm artist info"),
-							GTK_WINDOW (gtk_widget_get_toplevel (GTK_WIDGET (soundmenu->plugin))),
+							NULL,
 							GTK_DIALOG_DESTROY_WITH_PARENT | GTK_DIALOG_NO_SEPARATOR,
 							GTK_STOCK_CLOSE, GTK_RESPONSE_OK,
 							NULL);
@@ -126,8 +120,8 @@
 	result = gtk_dialog_run(GTK_DIALOG(dialog));
 	switch (result) {
 		case GTK_RESPONSE_HELP:
-			wiki = g_strdup_printf("http://www.lastfm.es/music/%s/+wiki", artist->name);
-			//open_url (soundmenu, wiki);
+			wiki = g_strdup_printf("exo-open --launch WebBrowser http://www.lastfm.es/music/%s/+wiki", artist->name);
+			g_spawn_command_line_async (wiki, NULL);
 			g_free (wiki);
 			break;
 		case GTK_RESPONSE_OK:
@@ -137,26 +131,11 @@
 	}
 
 	gtk_widget_destroy(dialog);
-	gdk_threads_leave ();
 
 	LASTFM_free_artist_info(artist);
 
-	return NULL;
+	return;
 }
-
-void lastfm_artist_info_action (GtkAction *action, SoundmenuPlugin *soundmenu)
-{
-	pthread_t tid;
-
-	if(soundmenu->state == ST_STOPPED)
-		return;
-
-	if (soundmenu->clastfm->session_id == NULL) {
-		//set_status_message(_("No connection Last.fm has been established."), soundmenu);
-		return;
-	}
-	pthread_create(&tid, NULL, do_lastfm_get_artist_info, soundmenu);
-}*/
 
 void *do_lastfm_love (gpointer data)
 {
@@ -175,7 +154,7 @@ void *do_lastfm_love (gpointer data)
 	return NULL;
 }
 
-void lastfm_track_love_action (GtkAction *action, SoundmenuPlugin *soundmenu)
+void lastfm_track_love_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 {
 	pthread_t tid;
 
@@ -207,7 +186,7 @@ void *do_lastfm_unlove (gpointer data)
 	return NULL;
 }
 
-void lastfm_track_unlove_action (GtkAction *action, SoundmenuPlugin *soundmenu)
+void lastfm_track_unlove_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 {
 	pthread_t tid;
 

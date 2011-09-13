@@ -265,6 +265,37 @@ soundmenu_read (SoundmenuPlugin *soundmenu)
 	soundmenu->state = ST_STOPPED;
 }
 
+#ifdef HAVE_LIBCLASTFM
+void
+soundmenu_add_lastfm_menu_item (SoundmenuPlugin *soundmenu)
+{
+	GtkWidget *submenu, *item;
+
+	item = gtk_menu_item_new_with_mnemonic (_("Last.fm"));
+	xfce_panel_plugin_menu_insert_item (soundmenu->plugin, GTK_MENU_ITEM(item));
+	gtk_widget_show (item);
+
+	submenu = gtk_menu_new ();
+	gtk_menu_item_set_submenu (GTK_MENU_ITEM (item), submenu);
+
+	item = gtk_menu_item_new_with_label (_("Love"));
+	g_signal_connect (G_OBJECT (item), "activate", G_CALLBACK (lastfm_track_love_action), soundmenu);
+	gtk_menu_append (GTK_MENU(submenu), item);
+	item = gtk_menu_item_new_with_label (_("Unlove"));
+	g_signal_connect (G_OBJECT (item), "activate", G_CALLBACK (lastfm_track_unlove_action), soundmenu);
+	gtk_menu_append (GTK_MENU(submenu), item);
+
+	item = gtk_separator_menu_item_new ();
+	gtk_menu_append (GTK_MENU (submenu), item);
+
+	item = gtk_menu_item_new_with_label (_("Get artist info"));
+	g_signal_connect (G_OBJECT (item), "activate", G_CALLBACK (lastfm_artist_info_action), soundmenu);
+	gtk_menu_append (GTK_MENU (submenu), item);
+
+	gtk_widget_show_all (submenu);
+}
+#endif
+
 static SoundmenuPlugin *
 soundmenu_new (XfcePanelPlugin *plugin)
 {
@@ -398,6 +429,11 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	soundmenu->play_button = play_button;
 	soundmenu->stop_button = stop_button;
 	soundmenu->next_button = next_button;
+
+	/* Add lastfm menu in panel plugin */
+	#ifdef HAVE_LIBCLASTFM
+	soundmenu_add_lastfm_menu_item(soundmenu);
+	#endif
 
 	/* Soundmenu dbus helpers */
 

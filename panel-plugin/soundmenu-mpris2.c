@@ -22,6 +22,11 @@
 #endif
 
 #include "soundmenu-plugin.h"
+#include "soundmenu-dialogs.h"
+#include "soundmenu-lastfm.h"
+#include "soundmenu-mpris2.h"
+#include "soundmenu-utils.h"
+#include "soundmenu-related.h"
 
 #define WAIT_UPDATE 5
 

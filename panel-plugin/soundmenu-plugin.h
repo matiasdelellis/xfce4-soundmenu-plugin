@@ -32,13 +32,18 @@
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib-lowlevel.h>
 
+#include <pthread.h>
+
 #ifdef HAVE_LIBCLASTFM
 #include <clastfm.h>
-#include <pthread.h>
 #endif
 
 #ifdef HAVE_LIBKEYBINDER
 #include <keybinder.h>
+#endif
+
+#ifdef HAVE_LIBGLYR
+#include <glyr/glyr.h>
 #endif
 
 #define LASTFM_API_KEY             "ecdc2d21dbfe1139b1f0da35daca9309"
@@ -119,7 +124,7 @@ typedef struct
 SoundmenuPlugin;
 
 void
-suondmenu_update_state(gchar *state, SoundmenuPlugin *soundmenu);
+soundmenu_update_state(gchar *state, SoundmenuPlugin *soundmenu);
 
 void
 soundmenu_save (XfcePanelPlugin *plugin,

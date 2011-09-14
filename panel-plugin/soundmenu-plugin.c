@@ -25,6 +25,8 @@
 #include "soundmenu-dialogs.h"
 #include "soundmenu-lastfm.h"
 #include "soundmenu-mpris2.h"
+#include "soundmenu-utils.h"
+#include "soundmenu-related.h"
 
 /* default settings */
 #define DEFAULT_PLAYER "pragha"
@@ -58,17 +60,17 @@ gboolean status_get_tooltip_cb (GtkWidget        *widget,
 					GtkTooltip       *tooltip,
 					SoundmenuPlugin *soundmenu)
 {
-	gchar *markup_text = NULL;
+	gchar *markup_text = NULL, *length = NULL;
 
-	gint volume = (soundmenu->volume*100);
+	length = convert_length_str(soundmenu->metadata->length);
 
 	if (soundmenu->state == ST_STOPPED)
 		markup_text = g_strdup_printf("%s", _("Stopped"));
 	else {
-		markup_text = g_markup_printf_escaped(_("<b>%s</b> (Volume: %d%%)\nby %s in %s"),
+		markup_text = g_markup_printf_escaped(_("<b>%s</b> (%s)\nby %s in %s"),
 						(soundmenu->metadata->title && strlen(soundmenu->metadata->title)) ?
 						soundmenu->metadata->title : soundmenu->metadata->url,
-						volume,
+						length,
 						(soundmenu->metadata->artist && strlen(soundmenu->metadata->artist)) ?
 						soundmenu->metadata->artist : _("Unknown Artist"),
 						(soundmenu->metadata->album && strlen(soundmenu->metadata->album)) ?
@@ -78,6 +80,7 @@ gboolean status_get_tooltip_cb (GtkWidget        *widget,
 	gtk_tooltip_set_markup (tooltip, markup_text);
 
 	g_free(markup_text);
+	g_free(length);
 
 	return TRUE;
 }
@@ -296,6 +299,20 @@ soundmenu_add_lastfm_menu_item (SoundmenuPlugin *soundmenu)
 }
 #endif
 
+#ifdef HAVE_LIBGLYR
+void
+soundmenu_add_lyrics_menu_item (SoundmenuPlugin *soundmenu)
+{
+	GtkWidget *item;
+
+	item = gtk_menu_item_new_with_mnemonic (_("Search lyrics"));
+	g_signal_connect (G_OBJECT (item), "activate", G_CALLBACK (soundmenu_search_lyric_dialog), soundmenu);
+	gtk_widget_show (item);
+
+	xfce_panel_plugin_menu_insert_item (soundmenu->plugin, GTK_MENU_ITEM(item));
+}
+#endif
+
 static SoundmenuPlugin *
 soundmenu_new (XfcePanelPlugin *plugin)
 {
@@ -430,9 +447,12 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	soundmenu->stop_button = stop_button;
 	soundmenu->next_button = next_button;
 
-	/* Add lastfm menu in panel plugin */
+	/* Add lastfm menu  and search lyrics in panel plugin */
 	#ifdef HAVE_LIBCLASTFM
 	soundmenu_add_lastfm_menu_item(soundmenu);
+	#endif
+	#ifdef HAVE_LIBGLYR
+	soundmenu_add_lyrics_menu_item (soundmenu);
 	#endif
 
 	/* Soundmenu dbus helpers */

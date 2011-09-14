@@ -85,6 +85,12 @@ XDT_CHECK_OPTIONAL_PACKAGE([LIBCLASTFM],
                        [libclastfm], [0.4],
                        [libclastfm],
                        [libclastfm library], [yes])
+dnl Check libglyr
+LIBGLYR_FOUND="no"
+XDT_CHECK_OPTIONAL_PACKAGE([LIBGLYR],
+                       [libglyr], [0.8.5],
+                       [libglyr],
+                       [libglyr library], [yes])
 
 dnl ***********************************
 dnl *** Check for debugging support ***
@@ -123,6 +129,7 @@ echo "  Prefix.....................................................: ${prefix}"
 echo "  Debug Support..............................................: $enable_debug"
 echo "  Global keyboard shortcuts support..........................: $LIBKEYBINDER_FOUND"
 echo "  Lastfm support (Need http://liblastfm.sourceforge.net 0.4).: $LIBCLASTFM_FOUND"
+echo "  Use libglyr to search lyrics...............................: $LIBGLYR_FOUND"
 echo
 
 

@@ -19,13 +19,16 @@ xfce4_soundmenu_plugin_SOURCES = \
 	soundmenu-mpris2.c \
 	soundmenu-mpris2.h \
 	soundmenu-dialogs.c \
-	soundmenu-dialogs.h
+	soundmenu-dialogs.h \
+	soundmenu-utils.c \
+	soundmenu-utils.h \
+	soundmenu-related.c \
+	soundmenu-related.h
 
 if HAVE_LIBCLASTFM
 xfce4_soundmenu_plugin_SOURCES += \
 	soundmenu-lastfm.c \
 	soundmenu-lastfm.h
-
 endif
 
 xfce4_soundmenu_plugin_CFLAGS = \
@@ -49,6 +52,11 @@ endif
 if HAVE_LIBCLASTFM
 xfce4_soundmenu_plugin_CFLAGS += $(LIBCLASTFM_CFLAGS)
 xfce4_soundmenu_plugin_LDADD += $(LIBCLASTFM_LIBS)
+endif
+
+if HAVE_LIBGLYR
+xfce4_soundmenu_plugin_CFLAGS += $(LIBGLYR_CFLAGS)
+xfce4_soundmenu_plugin_LDADD += $(LIBGLYR_LIBS)
 endif
 
 #

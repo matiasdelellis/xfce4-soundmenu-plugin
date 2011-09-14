@@ -31,6 +31,7 @@
 /* default settings */
 #define DEFAULT_PLAYER "pragha"
 #define DEFAULT_SHOW_STOP TRUE
+#define DEFAULT_GLOBAL_KEYS TRUE
 #define DEFAULT_LASTFM FALSE
 
 /* prototypes */
@@ -147,17 +148,15 @@ void keybind_next_handler (const char *keystring, SoundmenuPlugin *soundmenu)
 	mpris2_send_message (soundmenu, "Next");
 }
 
-void init_keybinder(SoundmenuPlugin *soundmenu)
+void keybinder_bind_keys(SoundmenuPlugin *soundmenu)
 {
-	keybinder_init ();
-
 	keybinder_bind("XF86AudioPlay", (KeybinderHandler) keybind_play_handler, soundmenu);
 	keybinder_bind("XF86AudioStop", (KeybinderHandler) keybind_stop_handler, soundmenu);
 	keybinder_bind("XF86AudioPrev", (KeybinderHandler) keybind_prev_handler, soundmenu);
 	keybinder_bind("XF86AudioNext", (KeybinderHandler) keybind_next_handler, soundmenu);
 }
 
-void uninit_keybinder(SoundmenuPlugin *soundmenu)
+void keybinder_unbind_keys(SoundmenuPlugin *soundmenu)
 {
 	keybinder_unbind("XF86AudioPlay", (KeybinderHandler) keybind_play_handler);
 	keybinder_unbind("XF86AudioStop", (KeybinderHandler) keybind_stop_handler);
@@ -194,7 +193,9 @@ soundmenu_save (XfcePanelPlugin *plugin,
 			xfce_rc_write_entry    (rc, "player", soundmenu->player);
 
 		xfce_rc_write_bool_entry (rc, "show_stop", soundmenu->show_stop);
-
+		#ifdef HAVE_LIBKEYBINDER
+		xfce_rc_write_bool_entry (rc, "use_global_keys", soundmenu->use_global_keys);
+		#endif
 		#ifdef HAVE_LIBCLASTFM
 		xfce_rc_write_bool_entry (rc, "use_lastfm", soundmenu->clastfm->lastfm_support);
 		if(soundmenu->clastfm->lastfm_support) {
@@ -235,7 +236,9 @@ soundmenu_read (SoundmenuPlugin *soundmenu)
 			soundmenu->player = g_strdup (xfce_rc_read_entry (rc, "player", "pragha"));
 
 			soundmenu->show_stop = xfce_rc_read_bool_entry (rc, "show_stop", FALSE);
-
+			#ifdef HAVE_LIBKEYBINDER
+			soundmenu->use_global_keys = xfce_rc_read_bool_entry (rc, "use_global_keys", DEFAULT_GLOBAL_KEYS);
+			#endif
 			#ifdef HAVE_LIBCLASTFM
 			soundmenu->clastfm->lastfm_support = xfce_rc_read_bool_entry (rc, "use_lastfm", DEFAULT_LASTFM);
 			soundmenu->clastfm->lastfm_user = g_strdup(xfce_rc_read_entry (rc, "lastfm_user", NULL));
@@ -258,6 +261,9 @@ soundmenu_read (SoundmenuPlugin *soundmenu)
 
 	soundmenu->player = g_strdup (DEFAULT_PLAYER);
 	soundmenu->show_stop = FALSE;
+	#ifdef HAVE_LIBKEYBINDER
+	soundmenu->use_global_keys = DEFAULT_GLOBAL_KEYS;
+	#endif
 	#ifdef HAVE_LIBCLASTFM
 	/* Read lastfm support and init session id */
 	soundmenu->clastfm->lastfm_support = DEFAULT_LASTFM;
@@ -339,7 +345,9 @@ soundmenu_new (XfcePanelPlugin *plugin)
 
 	/* Init the services */
 	#ifdef HAVE_LIBKEYBINDER
-	init_keybinder(soundmenu);
+	keybinder_init ();
+	if (soundmenu->use_global_keys)
+		keybinder_bind_keys(soundmenu);
 	#endif
 	#ifdef HAVE_LIBCLASTFM
 	init_lastfm(soundmenu);
@@ -482,7 +490,7 @@ soundmenu_free (XfcePanelPlugin *plugin,
 	GtkWidget *dialog;
 
 	#ifdef HAVE_LIBKEYBINDER
-	uninit_keybinder(soundmenu);
+	keybinder_unbind_keys(soundmenu);
 	#endif
 
 	#ifdef HAVE_LIBCLASTFM

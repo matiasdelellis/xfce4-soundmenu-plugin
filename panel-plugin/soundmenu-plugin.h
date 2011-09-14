@@ -118,8 +118,8 @@ typedef struct
 
 	/* soundmenu settings */
 	gchar			*player;
-	gint			setting2;
 	gboolean		show_stop;
+	gboolean		use_global_keys;
 }
 SoundmenuPlugin;
 
@@ -129,6 +129,9 @@ soundmenu_update_state(gchar *state, SoundmenuPlugin *soundmenu);
 void
 soundmenu_save (XfcePanelPlugin *plugin,
              SoundmenuPlugin    *soundmenu);
+
+void keybinder_bind_keys(SoundmenuPlugin *soundmenu);
+void keybinder_unbind_keys(SoundmenuPlugin *soundmenu);
 
 G_END_DECLS
 

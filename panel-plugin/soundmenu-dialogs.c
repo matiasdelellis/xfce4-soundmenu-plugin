@@ -113,6 +113,18 @@ toggle_show_stop(GtkToggleButton *button, SoundmenuPlugin    *soundmenu)
 		gtk_widget_hide(soundmenu->stop_button);
 }
 
+#ifdef HAVE_LIBKEYBINDER
+static void
+toggle_use_global_keys_check(GtkToggleButton *button, SoundmenuPlugin    *soundmenu)
+{
+	soundmenu->use_global_keys = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button));
+	if (soundmenu->use_global_keys)
+		keybinder_bind_keys(soundmenu);
+	else
+		keybinder_unbind_keys(soundmenu);
+}
+#endif
+
 #ifdef HAVE_LIBCLASTFM
 static void
 toggle_lastfm(GtkToggleButton *button, SoundmenuPlugin    *soundmenu)
@@ -139,6 +151,9 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 	GtkWidget *dialog;
 	GtkWidget *pref_table, *player_label, *player_entry, *show_stop_check;
 
+	#ifdef HAVE_LIBKEYBINDER
+	GtkWidget *use_global_keys_check;
+	#endif
 	#ifdef HAVE_LIBCLASTFM
 	GtkWidget *support_lastfm, *lastfm_label_user, *lastfm_entry_user, *lastfm_label_pass, *lastfm_entry_pass;
 	#endif
@@ -148,18 +163,18 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 
 	/* create the dialog */
 	dialog = xfce_titled_dialog_new_with_buttons (_("Sound menu Plugin"),
-								GTK_WINDOW (gtk_widget_get_toplevel (GTK_WIDGET (plugin))),
-								GTK_DIALOG_DESTROY_WITH_PARENT | GTK_DIALOG_NO_SEPARATOR,
-								GTK_STOCK_HELP, GTK_RESPONSE_HELP,
-								GTK_STOCK_CLOSE, GTK_RESPONSE_OK,
-								NULL);
+							GTK_WINDOW (gtk_widget_get_toplevel (GTK_WIDGET (plugin))),
+							GTK_DIALOG_DESTROY_WITH_PARENT | GTK_DIALOG_NO_SEPARATOR,
+							GTK_STOCK_HELP, GTK_RESPONSE_HELP,
+							GTK_STOCK_CLOSE, GTK_RESPONSE_OK,
+							NULL);
 	/* center dialog on the screen */
 	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER);
 
 	/* set dialog icon */
 	gtk_window_set_icon_name (GTK_WINDOW (dialog), "xfce4-settings");
 
-	pref_table = gtk_table_new(5, 2, FALSE);
+	pref_table = gtk_table_new(6, 2, FALSE);
  	gtk_table_set_col_spacings(GTK_TABLE(pref_table), 5);
  	gtk_table_set_row_spacings(GTK_TABLE(pref_table), 2);
 
@@ -176,6 +191,14 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 	g_signal_connect (G_OBJECT(show_stop_check), "toggled",
 				G_CALLBACK(toggle_show_stop), soundmenu);
 
+	#ifdef HAVE_LIBKEYBINDER
+	use_global_keys_check = gtk_check_button_new_with_label(_("Use multimedia keys"));
+	if(soundmenu->use_global_keys)
+		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(use_global_keys_check), TRUE);
+	g_signal_connect (G_OBJECT(use_global_keys_check), "toggled",
+				G_CALLBACK(toggle_use_global_keys_check), soundmenu);
+	#endif
+
 	support_lastfm = gtk_check_button_new_with_label(_("Scroble on last.fm"));
 	g_signal_connect (G_OBJECT(support_lastfm), "toggled",
 				G_CALLBACK(toggle_lastfm), soundmenu);
@@ -189,12 +212,14 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 		gtk_entry_set_text(GTK_ENTRY(lastfm_entry_user), soundmenu->clastfm->lastfm_user);
 	soundmenu->lw.lastfm_uname_w = lastfm_entry_user;
 
-	lastfm_label_pass = gtk_label_new(_("Lastfm passware"));
+	lastfm_label_pass = gtk_label_new(_("Lastfm password"));
 	gtk_misc_set_alignment(GTK_MISC (lastfm_label_pass), 0, 0);
 
 	lastfm_entry_pass = gtk_entry_new();
 	if (G_LIKELY (soundmenu->clastfm->lastfm_pass != NULL))
 		gtk_entry_set_text(GTK_ENTRY(lastfm_entry_pass), soundmenu->clastfm->lastfm_pass);
+	gtk_entry_set_visibility(GTK_ENTRY(lastfm_entry_pass), FALSE);
+	gtk_entry_set_invisible_char(GTK_ENTRY(lastfm_entry_pass), '*');
 	soundmenu->lw.lastfm_pass_w = lastfm_entry_pass;
 
 	gtk_table_attach(GTK_TABLE (pref_table), player_label,
@@ -210,35 +235,42 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 			0, 2, 1, 2,
 			GTK_FILL, GTK_SHRINK,
 			0, 0);
-
-	gtk_table_attach(GTK_TABLE (pref_table), support_lastfm,
+	#ifdef HAVE_LIBKEYBINDER
+	gtk_table_attach(GTK_TABLE (pref_table), use_global_keys_check,
 			0, 2, 2, 3,
+			GTK_FILL, GTK_SHRINK,
+			0, 0);
+	#endif
+
+	#ifdef HAVE_LIBCLASTFM
+	gtk_table_attach(GTK_TABLE (pref_table), support_lastfm,
+			0, 2, 3, 4,
 			GTK_FILL, GTK_SHRINK,
 			0, 0);
 
 	gtk_table_attach(GTK_TABLE (pref_table), lastfm_label_user,
-			0, 1, 3, 4,
-			GTK_FILL, GTK_SHRINK,
-			0, 0);
-	gtk_table_attach(GTK_TABLE (pref_table), lastfm_entry_user,
-			1, 2, 3, 4,
-			GTK_FILL|GTK_EXPAND, GTK_SHRINK,
-			0, 0);
-
-	gtk_table_attach(GTK_TABLE (pref_table), lastfm_label_pass,
 			0, 1, 4, 5,
 			GTK_FILL, GTK_SHRINK,
 			0, 0);
-	gtk_table_attach(GTK_TABLE (pref_table), lastfm_entry_pass,
+	gtk_table_attach(GTK_TABLE (pref_table), lastfm_entry_user,
 			1, 2, 4, 5,
 			GTK_FILL|GTK_EXPAND, GTK_SHRINK,
 			0, 0);
 
-	gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), pref_table, TRUE, TRUE, 0);
+	gtk_table_attach(GTK_TABLE (pref_table), lastfm_label_pass,
+			0, 1, 5, 6,
+			GTK_FILL, GTK_SHRINK,
+			0, 0);
+	gtk_table_attach(GTK_TABLE (pref_table), lastfm_entry_pass,
+			1, 2, 5, 6,
+			GTK_FILL|GTK_EXPAND, GTK_SHRINK,
+			0, 0);
+	#endif
+
+	gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), pref_table, TRUE, TRUE, 6);
 
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(support_lastfm), soundmenu->clastfm->lastfm_support);
 
- 
 	/* link the dialog to the plugin, so we can destroy it when the plugin
 	* is closed, but the dialog is still open */
 	g_object_set_data (G_OBJECT (plugin), "dialog", dialog);

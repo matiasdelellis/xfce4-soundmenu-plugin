@@ -1,3 +1,6 @@
 panel-plugin/soundmenu-plugin.c
 panel-plugin/soundmenu-dialogs.c
+panel-plugin/soundmenu-lastfm.c
+panel-plugin/soundmenu-related.c
 panel-plugin/soundmenu.desktop.in.in
+panel-plugin/soundmenu-utils.c

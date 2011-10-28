@@ -77,7 +77,8 @@ void soundmenu_search_lyric_dialog (GtkWidget *widget, SoundmenuPlugin *soundmen
 
 	title_header = g_strdup_printf(_("%s by %s"), soundmenu->metadata->title, soundmenu->metadata->artist);
 
-	dialog = xfce_titled_dialog_new_with_buttons (title_header, NULL,
+	dialog = xfce_titled_dialog_new_with_buttons (title_header,
+						      GTK_WINDOW (gtk_widget_get_toplevel (GTK_WIDGET (soundmenu->plugin))),
 						      GTK_DIALOG_DESTROY_WITH_PARENT | GTK_DIALOG_NO_SEPARATOR,
 						      GTK_STOCK_CLOSE, GTK_RESPONSE_OK,
 						      NULL);
@@ -157,7 +158,8 @@ void soundmenu_search_artistinfo_dialog (GtkWidget *widget, SoundmenuPlugin *sou
 
 	gtk_text_buffer_set_text (buffer, head->data, -1);
 
-	dialog = xfce_titled_dialog_new_with_buttons (soundmenu->metadata->artist, NULL,
+	dialog = xfce_titled_dialog_new_with_buttons (soundmenu->metadata->artist,
+						      GTK_WINDOW (gtk_widget_get_toplevel (GTK_WIDGET (soundmenu->plugin))),
 						      GTK_DIALOG_DESTROY_WITH_PARENT | GTK_DIALOG_NO_SEPARATOR,
 						      GTK_STOCK_CLOSE, GTK_RESPONSE_OK,
 						      NULL);
@@ -166,7 +168,7 @@ void soundmenu_search_artistinfo_dialog (GtkWidget *widget, SoundmenuPlugin *sou
 
 	gtk_window_set_icon_name (GTK_WINDOW (dialog), "xfce4-soundmenu-plugin");
 
-	subtitle_header = g_strdup_printf(_("Artist information hanks to %s"), head->prov);
+	subtitle_header = g_strdup_printf(_("Artist information thanks to %s"), head->prov);
 	xfce_titled_dialog_set_subtitle (dialog, (const gchar *)subtitle_header);
 
 	gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), frame, TRUE, TRUE, 0);

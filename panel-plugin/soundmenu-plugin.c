@@ -347,9 +347,9 @@ soundmenu_new (XfcePanelPlugin *plugin)
 		keybinder_bind_keys(soundmenu);
 	#endif
 	#ifdef HAVE_LIBCLASTFM
-	just_init_lastfm(soundmenu);
+	init_lastfm_idle_timeout(soundmenu);
 	#endif
-	#ifdef HAVE_LIBGLYR	
+	#ifdef HAVE_LIBGLYR
 	init_glyr_related(soundmenu);
 	#endif
 

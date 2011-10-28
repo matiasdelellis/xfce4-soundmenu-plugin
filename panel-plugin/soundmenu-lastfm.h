@@ -26,4 +26,8 @@ void lastfm_track_unlove_action (GtkWidget *widget, SoundmenuPlugin    *soundmen
 gboolean lastfm_love_handler (SoundmenuPlugin  *soundmenu);
 gboolean lastfm_scrob_handler (SoundmenuPlugin  *soundmenu);
 gboolean lastfm_now_playing_handler (gpointer data);
+
 void update_lastfm (SoundmenuPlugin    *soundmenu);
+
+gint init_lastfm_idle_timeout(SoundmenuPlugin *soundmenu);
+gint just_init_lastfm (SoundmenuPlugin *soundmenu);

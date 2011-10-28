@@ -212,32 +212,74 @@ void update_lastfm (SoundmenuPlugin *soundmenu)
 			lastfm_now_playing_handler, soundmenu, NULL);
 }
 
-void *do_init_lastfm (gpointer data)
+/* When just run soundmenu init lastfm with a timeuout of 30 sec. */
+
+void do_init_lastfm (SoundmenuPlugin *soundmenu)
 {
 	gint rv;
 
-	SoundmenuPlugin *soundmenu = data;
-
 	soundmenu->clastfm->session_id = LASTFM_init(LASTFM_API_KEY, LASTFM_SECRET);
 
-	rv = LASTFM_login (soundmenu->clastfm->session_id, soundmenu->clastfm->lastfm_user, soundmenu->clastfm->lastfm_pass);
+	if (soundmenu->clastfm->session_id != NULL) {
+		if((strlen(soundmenu->clastfm->lastfm_user) != 0) &&
+		   (strlen(soundmenu->clastfm->lastfm_pass) != 0)) {
+			rv = LASTFM_login (soundmenu->clastfm->session_id,
+					   soundmenu->clastfm->lastfm_user,
+					   soundmenu->clastfm->lastfm_pass);
 
-	if(rv != LASTFM_STATUS_OK) {
-		LASTFM_dinit(soundmenu->clastfm->session_id);
-		soundmenu->clastfm->session_id = NULL;
+			if(rv != LASTFM_STATUS_OK) {
+				LASTFM_dinit(soundmenu->clastfm->session_id);
+				soundmenu->clastfm->session_id = NULL;
 
-		g_critical("Unable to login on Lastfm");
+				g_critical("Unable to login on Lastfm");
+			}
+		}
 	}
+	else {
+		g_critical("Failure to init libclastfm");
+	}
+}
+
+/* When just init the soundmenu plugin init lastfm with a timeuout of 30 sec. */
+
+gboolean do_init_lastfm_idle_timeout (gpointer data)
+{
+	SoundmenuPlugin *soundmenu = data;
+
+	do_init_lastfm(soundmenu);
+
+	return FALSE;
+}
+
+gint init_lastfm_idle_timeout(SoundmenuPlugin *soundmenu)
+{
+	if (soundmenu->clastfm->lastfm_support)
+		gdk_threads_add_timeout_seconds_full(
+					G_PRIORITY_DEFAULT_IDLE, 30,
+					do_init_lastfm_idle_timeout, soundmenu, NULL);
+
+	return 0;
+}
+
+/* Init lastfm with a simple thread when change preferences */
+
+void *do_init_lastfm_idle (gpointer data)
+{
+	SoundmenuPlugin *soundmenu = data;
+
+	do_init_lastfm(soundmenu);
 
 	return NULL;
 }
 
-gint init_lastfm (SoundmenuPlugin *soundmenu)
+gint just_init_lastfm (SoundmenuPlugin *soundmenu)
 {
 	pthread_t tid;
-	if (soundmenu->clastfm->lastfm_support) {
-		pthread_create (&tid, NULL, do_init_lastfm, soundmenu);
-	}
+
+	if (soundmenu->clastfm->lastfm_support)
+		pthread_create (&tid, NULL, do_init_lastfm_idle, soundmenu);
+
 	return 0;
 }
+
 #endif

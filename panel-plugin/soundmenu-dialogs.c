@@ -100,7 +100,7 @@ soundmenu_configure_response (GtkWidget    *dialog,
 	mpris2_get_player_status (soundmenu);
 	#ifdef HAVE_LIBCLASTFM
 	if (soundmenu->clastfm->session_id == NULL)
-		init_lastfm(soundmenu);
+		just_init_lastfm(soundmenu);
 	#endif
 }
 

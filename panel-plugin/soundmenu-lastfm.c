@@ -26,117 +26,6 @@
 #define WAIT_UPDATE 5
 
 #ifdef HAVE_LIBCLASTFM
-/* Handler for 'Artist info' action in the Tools menu */
-void lastfm_artist_info_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
-{
-	GtkWidget *dialog;
-	GtkTextBuffer *buffer;
-	GtkTextIter iter;
-	GtkTextTag *btag;
-	gchar *value = NULL, *playcount = NULL, *wiki = NULL;
-	gchar *summary_helper = NULL, *summary = NULL;
-	GtkWidget *view, *frame, *scrolled;
-	gint i, result;
-
-	if(soundmenu->state == ST_STOPPED)
-		return;
-
-	if (soundmenu->clastfm->session_id == NULL) {
-		g_critical("No connection Last.fm has been established.");
-		return;
-	}
-
-	LASTFM_ARTIST_INFO *artist = NULL;
-
-	artist = LASTFM_artist_get_info (soundmenu->clastfm->session_id, soundmenu->metadata->artist, NULL);
-
-	view = gtk_text_view_new ();
-	gtk_text_view_set_editable (GTK_TEXT_VIEW (view), FALSE);
-	gtk_text_view_set_cursor_visible (GTK_TEXT_VIEW (view), FALSE);
-	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW (view), GTK_WRAP_WORD);
-
-	frame = gtk_frame_new (NULL);
-	scrolled = gtk_scrolled_window_new (NULL, NULL);
-
-	gtk_container_add (GTK_CONTAINER (scrolled), view);
-	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled),
-					GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-
-	gtk_container_set_border_width (GTK_CONTAINER (frame), 8);
-	gtk_frame_set_shadow_type (GTK_FRAME (frame), GTK_SHADOW_IN);
-	gtk_container_add (GTK_CONTAINER (frame), scrolled);
-
-	buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (view));
-	gtk_text_buffer_get_iter_at_offset (GTK_TEXT_BUFFER (buffer), &iter, 0);
-
-	btag = gtk_text_buffer_create_tag (buffer, NULL, "weight", PANGO_WEIGHT_BOLD, NULL);
-
-	playcount = g_strdup_printf("%d", artist->playcount);
-	gtk_text_buffer_insert_with_tags(GTK_TEXT_BUFFER(buffer), &iter, _("Playcount:"), -1, btag, NULL);
-	value = g_strdup_printf (" %s\n\n", playcount);
-	gtk_text_buffer_insert(GTK_TEXT_BUFFER(buffer), &iter, value, -1);
-	g_free (playcount);
-	g_free (value);
-
-	gtk_text_buffer_insert_with_tags(GTK_TEXT_BUFFER(buffer), &iter, _("Summary:"), -1, btag, NULL);
-
-	if(artist->summary && strncmp (artist->summary, "<![CDATA[", 9) == 0) {
-		summary_helper = artist->summary + 9;
-		summary = g_strndup (summary_helper, strlen (summary_helper) - 3);
-	}
-	else {
-		summary = g_strdup(artist->summary);
-	}
-
-	value = g_strdup_printf (" %s\n\n", summary);
-	gtk_text_buffer_insert(GTK_TEXT_BUFFER(buffer), &iter, value, -1);
-	g_free (summary);
-	g_free (value);
-
-	if(artist->similar != NULL) {
-		gtk_text_buffer_insert_with_tags(GTK_TEXT_BUFFER(buffer), &iter, _("Similar artists:"), -1, btag, NULL);
-
-		for(i=0; artist->similar[i]; i++){
-			value = g_strdup_printf ("\n\t%i: %s", i, artist->similar[i]);
-			gtk_text_buffer_insert(GTK_TEXT_BUFFER(buffer), &iter, value, -1);
-			g_free (value);
-		}
-	}
-
-	dialog = xfce_titled_dialog_new_with_buttons (_("Lastfm artist info"),
-							NULL,
-							GTK_DIALOG_DESTROY_WITH_PARENT | GTK_DIALOG_NO_SEPARATOR,
-							GTK_STOCK_CLOSE, GTK_RESPONSE_OK,
-							NULL);
-
-	gtk_dialog_add_button(GTK_DIALOG(dialog), _("View more..."), GTK_RESPONSE_HELP);
-
-	gtk_window_set_default_size(GTK_WINDOW (dialog), 450, 350);
-
-	gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), frame, TRUE, TRUE, 0);
-
-	gtk_widget_show_all(dialog);
-
-	result = gtk_dialog_run(GTK_DIALOG(dialog));
-	switch (result) {
-		case GTK_RESPONSE_HELP:
-			wiki = g_strdup_printf("exo-open --launch WebBrowser http://www.lastfm.es/music/%s/+wiki", artist->name);
-			g_spawn_command_line_async (wiki, NULL);
-			g_free (wiki);
-			break;
-		case GTK_RESPONSE_OK:
-			break;
-		default:
-			break;
-	}
-
-	gtk_widget_destroy(dialog);
-
-	LASTFM_free_artist_info(artist);
-
-	return;
-}
-
 void *do_lastfm_love (gpointer data)
 {
 	gint rv;
@@ -278,7 +167,8 @@ gboolean lastfm_now_playing_handler (gpointer data)
 		return FALSE;
 	}
 
-	if ((NULL == soundmenu->metadata->artist) || (NULL == soundmenu->metadata->title))
+	if ((strlen(soundmenu->metadata->artist) == 0) ||
+	    (strlen(soundmenu->metadata->title) == 0))
 		return FALSE;
 
 	/* Firt update now playing on lastfm */
@@ -297,7 +187,7 @@ gboolean lastfm_now_playing_handler (gpointer data)
 		length = 240 - WAIT_UPDATE;
 	}
 	else {
-		length = soundmenu->metadata->length / 2;
+		length = (soundmenu->metadata->length / 2) - WAIT_UPDATE;
 	}
 
 	soundmenu->clastfm->lastfm_handler_id = gdk_threads_add_timeout_seconds_full(

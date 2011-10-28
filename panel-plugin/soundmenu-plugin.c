@@ -294,13 +294,6 @@ soundmenu_add_lastfm_menu_item (SoundmenuPlugin *soundmenu)
 	g_signal_connect (G_OBJECT (item), "activate", G_CALLBACK (lastfm_track_unlove_action), soundmenu);
 	gtk_menu_append (GTK_MENU(submenu), item);
 
-	item = gtk_separator_menu_item_new ();
-	gtk_menu_append (GTK_MENU (submenu), item);
-
-	item = gtk_menu_item_new_with_label (_("Get artist info"));
-	g_signal_connect (G_OBJECT (item), "activate", G_CALLBACK (lastfm_artist_info_action), soundmenu);
-	gtk_menu_append (GTK_MENU (submenu), item);
-
 	gtk_widget_show_all (submenu);
 }
 #endif
@@ -314,7 +307,11 @@ soundmenu_add_lyrics_menu_item (SoundmenuPlugin *soundmenu)
 	item = gtk_menu_item_new_with_mnemonic (_("Search lyrics"));
 	g_signal_connect (G_OBJECT (item), "activate", G_CALLBACK (soundmenu_search_lyric_dialog), soundmenu);
 	gtk_widget_show (item);
+	xfce_panel_plugin_menu_insert_item (soundmenu->plugin, GTK_MENU_ITEM(item));
 
+	item = gtk_menu_item_new_with_mnemonic (_("Search artist info"));
+	g_signal_connect (G_OBJECT (item), "activate", G_CALLBACK (soundmenu_search_artistinfo_dialog), soundmenu);
+	gtk_widget_show (item);
 	xfce_panel_plugin_menu_insert_item (soundmenu->plugin, GTK_MENU_ITEM(item));
 }
 #endif
@@ -350,7 +347,10 @@ soundmenu_new (XfcePanelPlugin *plugin)
 		keybinder_bind_keys(soundmenu);
 	#endif
 	#ifdef HAVE_LIBCLASTFM
-	init_lastfm(soundmenu);
+	just_init_lastfm(soundmenu);
+	#endif
+	#ifdef HAVE_LIBGLYR	
+	init_glyr_related(soundmenu);
 	#endif
 
 	/* get the current orientation */
@@ -502,7 +502,9 @@ soundmenu_free (XfcePanelPlugin *plugin,
 	if (G_LIKELY (soundmenu->clastfm->lastfm_pass != NULL))
 		g_free (soundmenu->clastfm->lastfm_pass);
 	#endif
-
+	#ifdef HAVE_LIBGLYR	
+	uninit_glyr_related(soundmenu);
+	#endif
 	/* check if the dialog is still open. if so, destroy it */
 	dialog = g_object_get_data (G_OBJECT (plugin), "dialog");
 	if (G_UNLIKELY (dialog != NULL))

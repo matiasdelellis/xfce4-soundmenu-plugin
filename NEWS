@@ -1,3 +1,11 @@
+V0.2.4.1
+Fix compile without libclastfm.
+
+V0.2.4
+Registrer multimedia keys when keybinder is abiable.
+Lastfm support when libclasfm is abiable. Scroble, love, unlove and get artist info.
+Search Lyrics and Artist information dialog when libglyr is abiable. Soon, search more information related to the current song.
+
 V0.2.2
 Parse and show volume on tooltips.
 Set tooltips dynamically.

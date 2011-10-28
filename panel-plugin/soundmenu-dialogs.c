@@ -50,7 +50,7 @@ soundmenu_configure_response (GtkWidget    *dialog,
 		result = g_spawn_command_line_async ("exo-open --launch WebBrowser " PLUGIN_WEBSITE, NULL);
 
 		if (G_UNLIKELY (result == FALSE))
-			g_warning (_("Unable to open the following url: %s"), PLUGIN_WEBSITE);
+			g_warning ("Unable to open the following url: %s", PLUGIN_WEBSITE);
 	}
 	else
 	{
@@ -73,7 +73,7 @@ soundmenu_configure_response (GtkWidget    *dialog,
 			dbus_bus_add_match (soundmenu->connection, rule, NULL);
 			g_free(rule);
 		}
-
+		#ifdef HAVE_LIBCLASTFM
 		soundmenu->clastfm->lastfm_support = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(soundmenu->lw.lastfm_w));
 
 		if (G_LIKELY (soundmenu->clastfm->lastfm_user != NULL))
@@ -83,6 +83,7 @@ soundmenu_configure_response (GtkWidget    *dialog,
 		if (G_LIKELY (soundmenu->clastfm->lastfm_pass != NULL))
 			g_free (soundmenu->clastfm->lastfm_pass);
 		soundmenu->clastfm->lastfm_pass = g_strdup(gtk_entry_get_text(GTK_ENTRY(soundmenu->lw.lastfm_pass_w)));
+		#endif
 
 		/* remove the dialog data from the plugin */
 		g_object_set_data (G_OBJECT (soundmenu->plugin), "dialog", NULL);
@@ -97,9 +98,10 @@ soundmenu_configure_response (GtkWidget    *dialog,
 		gtk_widget_destroy (dialog);
 	}
 	mpris2_get_player_status (soundmenu);
-
+	#ifdef HAVE_LIBCLASTFM
 	if (soundmenu->clastfm->session_id == NULL)
 		init_lastfm(soundmenu);
+	#endif
 }
 
 static void
@@ -199,12 +201,13 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 				G_CALLBACK(toggle_use_global_keys_check), soundmenu);
 	#endif
 
-	support_lastfm = gtk_check_button_new_with_label(_("Scroble on last.fm"));
+	#ifdef HAVE_LIBCLASTFM
+	support_lastfm = gtk_check_button_new_with_label(_("Scrobble on Last.fm"));
 	g_signal_connect (G_OBJECT(support_lastfm), "toggled",
 				G_CALLBACK(toggle_lastfm), soundmenu);
 	soundmenu->lw.lastfm_w = support_lastfm;
 
-	lastfm_label_user = gtk_label_new(_("Lastfm user"));
+	lastfm_label_user = gtk_label_new(_("Last.fm user"));
 	gtk_misc_set_alignment(GTK_MISC (lastfm_label_user), 0, 0);
 
 	lastfm_entry_user = gtk_entry_new();
@@ -212,7 +215,7 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 		gtk_entry_set_text(GTK_ENTRY(lastfm_entry_user), soundmenu->clastfm->lastfm_user);
 	soundmenu->lw.lastfm_uname_w = lastfm_entry_user;
 
-	lastfm_label_pass = gtk_label_new(_("Lastfm password"));
+	lastfm_label_pass = gtk_label_new(_("Last.fm password"));
 	gtk_misc_set_alignment(GTK_MISC (lastfm_label_pass), 0, 0);
 
 	lastfm_entry_pass = gtk_entry_new();
@@ -221,6 +224,7 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 	gtk_entry_set_visibility(GTK_ENTRY(lastfm_entry_pass), FALSE);
 	gtk_entry_set_invisible_char(GTK_ENTRY(lastfm_entry_pass), '*');
 	soundmenu->lw.lastfm_pass_w = lastfm_entry_pass;
+	#endif
 
 	gtk_table_attach(GTK_TABLE (pref_table), player_label,
 			0, 1, 0, 1,
@@ -269,7 +273,9 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 
 	gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), pref_table, TRUE, TRUE, 6);
 
+	#ifdef HAVE_LIBCLASTFM
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(support_lastfm), soundmenu->clastfm->lastfm_support);
+	#endif
 
 	/* link the dialog to the plugin, so we can destroy it when the plugin
 	* is closed, but the dialog is still open */
@@ -291,5 +297,5 @@ soundmenu_about (XfcePanelPlugin *plugin)
 	result = g_spawn_command_line_async ("exo-open --launch WebBrowser " PLUGIN_WEBSITE, NULL);
 
 	if (G_UNLIKELY (result == FALSE))
-		g_warning (_("Unable to open the following url: %s"), PLUGIN_WEBSITE);
+		g_warning ("Unable to open the following url: %s", PLUGIN_WEBSITE);
 }

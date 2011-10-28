@@ -22,7 +22,6 @@
 
 void lastfm_track_love_action(GtkWidget *widget, SoundmenuPlugin    *soundmenu);
 void lastfm_track_unlove_action (GtkWidget *widget, SoundmenuPlugin    *soundmenu);
-void lastfm_artist_info_action(GtkWidget *widget, SoundmenuPlugin    *soundmenu);
 
 gboolean lastfm_love_handler (SoundmenuPlugin  *soundmenu);
 gboolean lastfm_scrob_handler (SoundmenuPlugin  *soundmenu);

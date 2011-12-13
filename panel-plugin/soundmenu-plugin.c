@@ -233,7 +233,7 @@ soundmenu_read (SoundmenuPlugin *soundmenu)
 
 		if (G_LIKELY (rc != NULL)) {
 			/* read the settings */
-			soundmenu->player = g_strdup (xfce_rc_read_entry (rc, "player", "pragha"));
+			soundmenu->player = g_strdup (xfce_rc_read_entry (rc, "player", DEFAULT_PLAYER));
 
 			soundmenu->show_stop = xfce_rc_read_bool_entry (rc, "show_stop", FALSE);
 			#ifdef HAVE_LIBKEYBINDER
@@ -513,15 +513,13 @@ soundmenu_free (XfcePanelPlugin *plugin,
 	/* destroy the panel widgets */
 	gtk_widget_destroy (soundmenu->hvbox);
 
-	if (G_LIKELY (soundmenu->player != NULL))
-		g_free (soundmenu->player);
-
 	/* cleanup the metadata and settings */
 	if (G_LIKELY (soundmenu->player != NULL))
 		g_free (soundmenu->player);
 	if (G_LIKELY (soundmenu->dbus_name != NULL))
 		g_free (soundmenu->dbus_name);
-	free_metadata(soundmenu->metadata);
+	if (G_LIKELY (soundmenu->metadata != NULL))
+		free_metadata(soundmenu->metadata);
 
 	/* free the plugin structure */
 	panel_slice_free (SoundmenuPlugin, soundmenu);

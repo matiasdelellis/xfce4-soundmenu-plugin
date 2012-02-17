@@ -105,6 +105,22 @@ soundmenu_configure_response (GtkWidget    *dialog,
 }
 
 static void
+refresh_player (GtkEntry        *player_entry,
+		gint             position,
+		GdkEventButton  *event,
+		SoundmenuPlugin *soundmenu)
+{
+	gchar *player = NULL;
+
+        if (position == GTK_ENTRY_ICON_SECONDARY) {
+		player = mpris2_get_player(soundmenu);
+        	gtk_entry_set_text(GTK_ENTRY(soundmenu->w_player), player);
+		//g_free(player);
+        }
+}
+
+
+static void
 toggle_show_stop(GtkToggleButton *button, SoundmenuPlugin    *soundmenu)
 {
 	soundmenu->show_stop = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button));
@@ -185,6 +201,9 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 
 	player_entry = gtk_entry_new();
 	gtk_entry_set_text(GTK_ENTRY(player_entry), soundmenu->player);
+        gtk_entry_set_icon_from_stock (GTK_ENTRY(player_entry), GTK_ENTRY_ICON_SECONDARY, GTK_STOCK_REFRESH);
+        g_signal_connect (G_OBJECT(player_entry), "icon-press",
+			  G_CALLBACK (refresh_player), soundmenu);
 	soundmenu->w_player = player_entry;
 
 	show_stop_check = gtk_check_button_new_with_label(_("Show stop button"));

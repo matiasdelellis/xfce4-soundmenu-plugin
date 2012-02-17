@@ -233,8 +233,11 @@ soundmenu_read (SoundmenuPlugin *soundmenu)
 
 		if (G_LIKELY (rc != NULL)) {
 			/* read the settings */
-			soundmenu->player = g_strdup (xfce_rc_read_entry (rc, "player", DEFAULT_PLAYER));
-
+			soundmenu->player = g_strdup (xfce_rc_read_entry (rc, "player", NULL));
+			if (soundmenu->player == NULL)
+				soundmenu->player = mpris2_get_player(soundmenu);
+			if (soundmenu->player == NULL)
+				soundmenu->player = g_strdup (DEFAULT_PLAYER);
 			soundmenu->show_stop = xfce_rc_read_bool_entry (rc, "show_stop", FALSE);
 			#ifdef HAVE_LIBKEYBINDER
 			soundmenu->use_global_keys = xfce_rc_read_bool_entry (rc, "use_global_keys", DEFAULT_GLOBAL_KEYS);
@@ -259,7 +262,9 @@ soundmenu_read (SoundmenuPlugin *soundmenu)
 	/* something went wrong, apply default values */
 	DBG ("Applying default settings");
 
-	soundmenu->player = g_strdup (DEFAULT_PLAYER);
+	soundmenu->player = mpris2_get_player(soundmenu);
+	if (soundmenu->player == NULL)
+		soundmenu->player = g_strdup (DEFAULT_PLAYER);
 	soundmenu->show_stop = FALSE;
 	#ifdef HAVE_LIBKEYBINDER
 	soundmenu->use_global_keys = DEFAULT_GLOBAL_KEYS;
@@ -336,6 +341,10 @@ soundmenu_new (XfcePanelPlugin *plugin)
 
 	metadata = malloc_metadata();
 	soundmenu->metadata = metadata;
+
+	/* Init dbus connection */
+	connection = dbus_bus_get (DBUS_BUS_SESSION, NULL);
+	soundmenu->connection = connection;
 
 	/* read the user settings */
 	soundmenu_read (soundmenu);
@@ -465,8 +474,6 @@ soundmenu_new (XfcePanelPlugin *plugin)
 
 	/* Soundmenu dbus helpers */
 
-	connection = dbus_bus_get (DBUS_BUS_SESSION, NULL);
-
 	soundmenu->dbus_name = g_strdup_printf("org.mpris.MediaPlayer2.%s", soundmenu->player);
 
 	rule = g_strdup_printf ("type='signal', sender='%s'", soundmenu->dbus_name);
@@ -476,7 +483,7 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	dbus_connection_add_filter (connection, mpris2_dbus_filter, soundmenu, NULL);
 	dbus_connection_setup_with_g_main (connection, NULL);
 
-	soundmenu->connection = connection;
+
 
 	mpris2_get_player_status (soundmenu);
 

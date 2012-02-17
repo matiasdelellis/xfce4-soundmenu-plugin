@@ -38,4 +38,5 @@ void mpris2_send_message (SoundmenuPlugin *soundmenu, const char *msg);
 void mpris2_get_playbackstatus (SoundmenuPlugin *soundmenu);
 void mpris2_get_metadata (SoundmenuPlugin *soundmenu);
 void mpris2_get_volume (SoundmenuPlugin *soundmenu);
+gchar * mpris2_get_player (SoundmenuPlugin *soundmenu);
 void mpris2_get_player_status (SoundmenuPlugin *soundmenu);

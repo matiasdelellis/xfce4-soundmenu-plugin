@@ -361,6 +361,9 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	#ifdef HAVE_LIBGLYR
 	init_glyr_related(soundmenu);
 	#endif
+	#ifdef HAVE_LIBNOTIFY
+	notify_init ("xfce4-soundmenu-plugin");
+	#endif
 
 	/* get the current orientation */
 	orientation = xfce_panel_plugin_get_orientation (plugin);
@@ -507,8 +510,11 @@ soundmenu_free (XfcePanelPlugin *plugin,
 	if (G_LIKELY (soundmenu->clastfm->lastfm_pass != NULL))
 		g_free (soundmenu->clastfm->lastfm_pass);
 	#endif
-	#ifdef HAVE_LIBGLYR	
+	#ifdef HAVE_LIBGLYR
 	uninit_glyr_related(soundmenu);
+	#endif
+	#ifdef HAVE_LIBNOTIFY
+	notify_uninit();
 	#endif
 	/* check if the dialog is still open. if so, destroy it */
 	dialog = g_object_get_data (G_OBJECT (plugin), "dialog");

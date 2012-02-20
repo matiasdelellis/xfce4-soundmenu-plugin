@@ -23,10 +23,6 @@
 
 #include "soundmenu-plugin.h"
 
-#ifdef HAVE_LIBGLYR
-#include <glyr/glyr.h>
-#endif
-
 void soundmenu_search_lyric_dialog (GtkWidget *widget, SoundmenuPlugin *soundmenu);
 void soundmenu_search_artistinfo_dialog (GtkWidget *widget, SoundmenuPlugin *soundmenu);
 

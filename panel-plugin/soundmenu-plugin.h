@@ -46,6 +46,10 @@
 #include <glyr/glyr.h>
 #endif
 
+#ifdef HAVE_LIBNOTIFY
+#include <libnotify/notify.h>
+#endif
+
 #define LASTFM_API_KEY             "ecdc2d21dbfe1139b1f0da35daca9309"
 #define LASTFM_SECRET              "f3498ce387f30eeae8ea1b1023afb32b"
 

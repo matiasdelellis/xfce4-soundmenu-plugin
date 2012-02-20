@@ -16,11 +16,15 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
- 
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
-
+ 
 #include "soundmenu-plugin.h"
 #include "soundmenu-dialogs.h"
 #include "soundmenu-lastfm.h"
@@ -49,10 +53,15 @@ void
 remove_watch_cursor_on_thread(gchar *message, SoundmenuPlugin *soundmenu)
 {
 	gdk_threads_enter ();
-	if(message != NULL);
-		// FIXME: When use libnotify show a notification with errors, etc.
-		//set_status_message(message, cwin);
 	gdk_window_set_cursor(GDK_WINDOW(soundmenu->hvbox->window), NULL);
+	#ifdef HAVE_LIBNOTIFY
+	NotifyNotification *notify = NULL;
+	if(message != NULL) {
+		notify = notify_notification_new(_("Sound menu Plugin"), message, "xfce4-soundmenu-plugin");
+		if (!notify_notification_show (notify, NULL))
+			g_warning("Failed to send notification: %s", message);
+	}
+	#endif
 	gdk_threads_leave ();
 }
 

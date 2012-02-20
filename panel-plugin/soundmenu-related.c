@@ -23,6 +23,10 @@
 
 #include "soundmenu-plugin.h"
 
+#ifdef HAVE_LIBGLYR
+#include <glyr/glyr.h>
+#endif
+
 #define ISO_639_1 _("en")
 
 #ifdef HAVE_LIBGLYR
@@ -123,18 +127,19 @@ get_related_info_idle_func (gpointer data)
 
 	head = glyr_get(&glyr_info->query, &error, NULL);
 
-	remove_watch_cursor_on_thread(NULL, glyr_info->soundmenu);
-
 	if(head != NULL) {
 		glyr_info->head = head;
+		remove_watch_cursor_on_thread(NULL, glyr_info->soundmenu);
 		gdk_threads_add_idle(show_generic_related_text_info_dialog, glyr_info);
+
 	}
 	else {
-		g_warning("Error searching lyrics: %s", glyr_strerror(error));
+		remove_watch_cursor_on_thread((glyr_info->query.type == GLYR_GET_LYRICS) ? _("Lyrics not found.") : _("Artist information not found."),
+					       glyr_info->soundmenu);
+		g_warning("Error searching song info: %s", glyr_strerror(error));
 		glyr_query_destroy(&glyr_info->query);
 		g_slice_free(glyr_struct, glyr_info);
 	}
-
 	return NULL;
 }
 

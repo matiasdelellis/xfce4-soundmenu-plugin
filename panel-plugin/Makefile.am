@@ -59,6 +59,11 @@ xfce4_soundmenu_plugin_CFLAGS += $(LIBGLYR_CFLAGS)
 xfce4_soundmenu_plugin_LDADD += $(LIBGLYR_LIBS)
 endif
 
+if HAVE_LIBNOTIFY
+xfce4_soundmenu_plugin_CFLAGS += $(LIBNOTIFY_CFLAGS)
+xfce4_soundmenu_plugin_LDADD += $(LIBNOTIFY_LIBS)
+endif
+
 #
 # Desktop file
 #

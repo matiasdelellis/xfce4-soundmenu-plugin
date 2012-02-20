@@ -31,6 +31,31 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Set and remove the watch cursor to suggest background work.*/
+
+void
+set_watch_cursor_on_thread(SoundmenuPlugin *soundmenu)
+{
+	GdkCursor *cursor;
+
+	gdk_threads_enter ();
+	cursor = gdk_cursor_new(GDK_WATCH);
+	gdk_window_set_cursor(GDK_WINDOW(soundmenu->hvbox->window), cursor);
+	gdk_cursor_unref(cursor);
+	gdk_threads_leave ();
+}
+
+void
+remove_watch_cursor_on_thread(gchar *message, SoundmenuPlugin *soundmenu)
+{
+	gdk_threads_enter ();
+	if(message != NULL);
+		// FIXME: When use libnotify show a notification with errors, etc.
+		//set_status_message(message, cwin);
+	gdk_window_set_cursor(GDK_WINDOW(soundmenu->hvbox->window), NULL);
+	gdk_threads_leave ();
+}
+
 gchar* convert_length_str(gint length)
 {
 	static gchar *str, tmp[24];

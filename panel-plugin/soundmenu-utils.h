@@ -17,4 +17,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+void set_watch_cursor_on_thread(SoundmenuPlugin *soundmenu);
+void remove_watch_cursor_on_thread(gchar *message, SoundmenuPlugin *soundmenu);
+
 gchar* convert_length_str(gint length);

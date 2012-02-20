@@ -483,8 +483,6 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	dbus_connection_add_filter (connection, mpris2_dbus_filter, soundmenu, NULL);
 	dbus_connection_setup_with_g_main (connection, NULL);
 
-
-
 	mpris2_get_player_status (soundmenu);
 
 	return soundmenu;

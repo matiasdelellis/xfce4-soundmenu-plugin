@@ -17,15 +17,12 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #include "soundmenu-plugin.h"
-
-#ifdef HAVE_LIBGLYR
-#include <glyr/glyr.h>
-#endif
+#include "soundmenu-dialogs.h"
+#include "soundmenu-lastfm.h"
+#include "soundmenu-mpris2.h"
+#include "soundmenu-utils.h"
+#include "soundmenu-related.h"
 
 #define ISO_639_1 _("en")
 
@@ -87,7 +84,7 @@ show_generic_related_text_info_dialog (gpointer data)
 						      GTK_STOCK_CLOSE, GTK_RESPONSE_OK,
 						      NULL);
 
-	xfce_titled_dialog_set_subtitle (dialog, (const gchar *)subtitle_header);
+	xfce_titled_dialog_set_subtitle (XFCE_TITLED_DIALOG(dialog), (const gchar *)subtitle_header);
 
 	gtk_window_set_icon_name (GTK_WINDOW (dialog), "xfce4-soundmenu-plugin");
 	gtk_window_set_default_size(GTK_WINDOW (dialog), 450, 350);

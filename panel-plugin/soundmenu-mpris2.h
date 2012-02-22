@@ -17,12 +17,6 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
-#include "soundmenu-plugin.h"
-
 Metadata *malloc_metadata();
 void free_metadata(Metadata *m);
 

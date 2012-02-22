@@ -17,23 +17,12 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
-#include <dbus/dbus.h>
-#include <dbus/dbus-glib.h>
-#include <dbus/dbus-glib-lowlevel.h>
- 
 #include "soundmenu-plugin.h"
 #include "soundmenu-dialogs.h"
 #include "soundmenu-lastfm.h"
 #include "soundmenu-mpris2.h"
 #include "soundmenu-utils.h"
 #include "soundmenu-related.h"
-
-#include <stdio.h>
-#include <string.h>
 
 /* Set and remove the watch cursor to suggest background work.*/
 

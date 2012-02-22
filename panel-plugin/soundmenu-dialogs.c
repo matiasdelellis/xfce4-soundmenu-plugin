@@ -17,18 +17,6 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
-#include <string.h>
-#include <gtk/gtk.h>
-#include <dbus/dbus.h>
-#include <dbus/dbus-glib.h>
-#include <dbus/dbus-glib-lowlevel.h>
-
-#include <libxfce4ui/libxfce4ui.h>
-#include <libxfce4panel/xfce-panel-plugin.h>
 
 #include "soundmenu-plugin.h"
 #include "soundmenu-dialogs.h"
@@ -115,7 +103,6 @@ refresh_player (GtkEntry        *player_entry,
         if (position == GTK_ENTRY_ICON_SECONDARY) {
 		player = mpris2_get_player(soundmenu);
         	gtk_entry_set_text(GTK_ENTRY(soundmenu->w_player), player);
-		//g_free(player);
         }
 }
 

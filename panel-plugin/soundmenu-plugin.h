@@ -17,6 +17,10 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #ifndef __SOUNDMENU_H__
 #define __SOUNDMENU_H__
 
@@ -26,13 +30,13 @@
 
 #include <gtk/gtk.h>
 #include <glib.h>
-#include <libxfce4util/libxfce4util.h>
-#include <libxfce4panel/xfce-panel-plugin.h>
-#include <libxfce4panel/xfce-hvbox.h>
 #include <dbus/dbus.h>
+#include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
-
-#include <pthread.h>
+#include <libxfce4ui/libxfce4ui.h>
+#include <libxfce4panel/xfce-panel-plugin.h>
+#include <libxfce4util/libxfce4util.h>
+#include <libxfce4panel/xfce-hvbox.h>
 
 #ifdef HAVE_LIBCLASTFM
 #include <clastfm.h>

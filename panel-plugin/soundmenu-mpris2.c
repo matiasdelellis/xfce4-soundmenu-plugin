@@ -17,18 +17,12 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #include "soundmenu-plugin.h"
 #include "soundmenu-dialogs.h"
 #include "soundmenu-lastfm.h"
 #include "soundmenu-mpris2.h"
 #include "soundmenu-utils.h"
 #include "soundmenu-related.h"
-
-#define WAIT_UPDATE 5
 
 Metadata *malloc_metadata()
 {
@@ -241,7 +235,7 @@ mpris2_get_player (SoundmenuPlugin *soundmenu)
 	DBusError d_error;
 	DBusMessageIter dict, list;
 	DBusMessage *reply_msg = NULL, *message = NULL;
-	char *str_buf = NULL, *player = NULL;
+	gchar *str_buf = NULL, *player = NULL;
 
 	dbus_error_init(&d_error);
 
@@ -256,11 +250,8 @@ mpris2_get_player (SoundmenuPlugin *soundmenu)
 		dbus_message_iter_get_basic(&dict, (void*) &str_buf);
 		if (g_str_has_prefix(str_buf, "org.mpris.MediaPlayer2.")) {
 			player = g_strdup(str_buf + 23);
-			g_print(player);
-			//g_free(str_buf);
 			break;
 		}
-		//g_free(str_buf);
 	} while (dbus_message_iter_next(&dict));
 
 	return player;

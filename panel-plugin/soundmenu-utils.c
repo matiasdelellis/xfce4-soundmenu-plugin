@@ -24,6 +24,49 @@
 #include "soundmenu-utils.h"
 #include "soundmenu-related.h"
 
+/* Functions to check the network manager status. */
+
+static NMState
+dbus_check_nm_status (DBusConnection *connection)
+{
+	DBusMessage *message, *reply;
+	DBusError error;
+	dbus_uint32_t state;
+	
+	message = dbus_message_new_method_call (NM_DBUS_SERVICE, NM_DBUS_PATH,
+						NM_DBUS_INTERFACE, "state");
+	if (!message)
+		return NM_STATE_UNKNOWN;
+
+	dbus_error_init (&error);
+	reply = dbus_connection_send_with_reply_and_block (connection, message,
+							   -1, &error);
+	dbus_message_unref (message);
+	if (!reply)
+		return NM_STATE_UNKNOWN;
+
+	if (!dbus_message_get_args (reply, NULL, DBUS_TYPE_UINT32, &state,
+				    DBUS_TYPE_INVALID))
+		return NM_STATE_UNKNOWN;
+
+	return state;
+}
+
+gboolean
+nm_is_online (DBusConnection *connection)
+{
+	NMState state;
+
+	state = dbus_check_nm_status (connection);
+
+	if (state == NM_STATE_CONNECTED_LOCAL ||
+	    state == NM_STATE_CONNECTED_SITE ||
+	    state == NM_STATE_CONNECTED_GLOBAL)
+		return TRUE;
+	else
+		return FALSE;
+}
+
 /* Set and remove the watch cursor to suggest background work.*/
 
 void

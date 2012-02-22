@@ -352,7 +352,10 @@ soundmenu_new (XfcePanelPlugin *plugin)
 		keybinder_bind_keys(soundmenu);
 	#endif
 	#ifdef HAVE_LIBCLASTFM
-	init_lastfm_idle_timeout(soundmenu);
+	if (nm_is_online (connection) == TRUE)
+		init_lastfm_idle_timeout(soundmenu);
+	else
+		just_init_lastfm(soundmenu);
 	#endif
 	#ifdef HAVE_LIBGLYR
 	init_glyr_related(soundmenu);

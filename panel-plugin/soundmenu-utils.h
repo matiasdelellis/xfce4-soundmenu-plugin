@@ -17,6 +17,24 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#define NM_DBUS_SERVICE		"org.freedesktop.NetworkManager"
+#define NM_DBUS_PATH		"/org/freedesktop/NetworkManager"
+#define NM_DBUS_INTERFACE	"org.freedesktop.NetworkManager"
+
+typedef enum {
+        NM_STATE_UNKNOWN          = 0,
+        NM_STATE_ASLEEP           = 10,
+        NM_STATE_DISCONNECTED     = 20,
+        NM_STATE_DISCONNECTING    = 30,
+        NM_STATE_CONNECTING       = 40,
+        NM_STATE_CONNECTED_LOCAL  = 50,
+        NM_STATE_CONNECTED_SITE   = 60,
+        NM_STATE_CONNECTED_GLOBAL = 70
+} NMState;
+
+static NMState dbus_check_nm_status (DBusConnection *connection);
+gboolean nm_is_online (DBusConnection *connection);
+
 void set_watch_cursor_on_thread(SoundmenuPlugin *soundmenu);
 void remove_watch_cursor_on_thread(gchar *message, SoundmenuPlugin *soundmenu);
 

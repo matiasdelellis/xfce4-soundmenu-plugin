@@ -33,7 +33,7 @@ typedef enum {
 } NMState;
 
 static NMState dbus_check_nm_status (DBusConnection *connection);
-gboolean nm_is_online (DBusConnection *connection);
+gboolean nm_is_online ();
 
 void set_watch_cursor_on_thread(SoundmenuPlugin *soundmenu);
 void remove_watch_cursor_on_thread(gchar *message, SoundmenuPlugin *soundmenu);

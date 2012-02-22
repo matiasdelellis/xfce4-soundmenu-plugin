@@ -53,18 +53,30 @@ dbus_check_nm_status (DBusConnection *connection)
 }
 
 gboolean
-nm_is_online (DBusConnection *connection)
+nm_is_online ()
 {
+	DBusConnection *connection;
+	DBusError error;
 	NMState state;
 
+	dbus_error_init (&error);
+	connection = dbus_bus_get (DBUS_BUS_SYSTEM, &error);
+	if (connection == NULL) {
+		g_critical("Error connecting to DBUS_BUS_SYSTEM to get nm status: %s", error.message);
+		dbus_error_free (&error);
+		return FALSE;
+	}
+
 	state = dbus_check_nm_status (connection);
+
+	dbus_connection_unref(connection);
 
 	if (state == NM_STATE_CONNECTED_LOCAL ||
 	    state == NM_STATE_CONNECTED_SITE ||
 	    state == NM_STATE_CONNECTED_GLOBAL)
 		return TRUE;
-	else
-		return FALSE;
+
+	return FALSE;
 }
 
 /* Set and remove the watch cursor to suggest background work.*/
@@ -76,7 +88,7 @@ set_watch_cursor_on_thread(SoundmenuPlugin *soundmenu)
 
 	gdk_threads_enter ();
 	cursor = gdk_cursor_new(GDK_WATCH);
-	gdk_window_set_cursor(GDK_WINDOW(soundmenu->hvbox->window), cursor);
+	gdk_window_set_cursor(GDK_WINDOW(gtk_widget_get_toplevel (GTK_WIDGET (soundmenu->plugin))->window), cursor);
 	gdk_cursor_unref(cursor);
 	gdk_threads_leave ();
 }
@@ -85,7 +97,7 @@ void
 remove_watch_cursor_on_thread(gchar *message, SoundmenuPlugin *soundmenu)
 {
 	gdk_threads_enter ();
-	gdk_window_set_cursor(GDK_WINDOW(soundmenu->hvbox->window), NULL);
+	gdk_window_set_cursor(GDK_WINDOW(gtk_widget_get_toplevel (GTK_WIDGET (soundmenu->plugin))->window), NULL);
 	#ifdef HAVE_LIBNOTIFY
 	NotifyNotification *notify = NULL;
 	if(message != NULL) {

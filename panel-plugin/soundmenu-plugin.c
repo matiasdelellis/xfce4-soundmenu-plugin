@@ -25,6 +25,7 @@
 #include "soundmenu-related.h"
 
 /* default settings */
+
 #define DEFAULT_PLAYER "pragha"
 #define DEFAULT_SHOW_STOP TRUE
 #define DEFAULT_GLOBAL_KEYS TRUE
@@ -230,10 +231,6 @@ soundmenu_read (SoundmenuPlugin *soundmenu)
 		if (G_LIKELY (rc != NULL)) {
 			/* read the settings */
 			soundmenu->player = g_strdup (xfce_rc_read_entry (rc, "player", NULL));
-			if (soundmenu->player == NULL)
-				soundmenu->player = mpris2_get_player(soundmenu);
-			if (soundmenu->player == NULL)
-				soundmenu->player = g_strdup (DEFAULT_PLAYER);
 			soundmenu->show_stop = xfce_rc_read_bool_entry (rc, "show_stop", FALSE);
 			#ifdef HAVE_LIBKEYBINDER
 			soundmenu->use_global_keys = xfce_rc_read_bool_entry (rc, "use_global_keys", DEFAULT_GLOBAL_KEYS);
@@ -258,9 +255,7 @@ soundmenu_read (SoundmenuPlugin *soundmenu)
 	/* something went wrong, apply default values */
 	DBG ("Applying default settings");
 
-	soundmenu->player = mpris2_get_player(soundmenu);
-	if (soundmenu->player == NULL)
-		soundmenu->player = g_strdup (DEFAULT_PLAYER);
+	soundmenu->player = NULL;
 	soundmenu->show_stop = FALSE;
 	#ifdef HAVE_LIBKEYBINDER
 	soundmenu->use_global_keys = DEFAULT_GLOBAL_KEYS;
@@ -323,9 +318,7 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	SoundmenuPlugin   *soundmenu;
 	GtkOrientation orientation;
 	GtkWidget *play_button, *stop_button, *prev_button, *next_button;
-	DBusConnection *connection;
 	Metadata *metadata;
-	gchar *rule = NULL;
 
 	/* allocate memory for the plugin structure */
 	soundmenu = panel_slice_new0 (SoundmenuPlugin);
@@ -338,31 +331,8 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	metadata = malloc_metadata();
 	soundmenu->metadata = metadata;
 
-	/* Init dbus connection */
-	connection = dbus_bus_get (DBUS_BUS_SESSION, NULL);
-	soundmenu->connection = connection;
-
 	/* read the user settings */
 	soundmenu_read (soundmenu);
-
-	/* Init the services */
-	#ifdef HAVE_LIBKEYBINDER
-	keybinder_init ();
-	if (soundmenu->use_global_keys)
-		keybinder_bind_keys(soundmenu);
-	#endif
-	#ifdef HAVE_LIBCLASTFM
-	if (nm_is_online (connection) == TRUE)
-		init_lastfm_idle_timeout(soundmenu);
-	else
-		just_init_lastfm(soundmenu);
-	#endif
-	#ifdef HAVE_LIBGLYR
-	init_glyr_related(soundmenu);
-	#endif
-	#ifdef HAVE_LIBNOTIFY
-	notify_init ("xfce4-soundmenu-plugin");
-	#endif
 
 	/* get the current orientation */
 	orientation = xfce_panel_plugin_get_orientation (plugin);
@@ -466,15 +436,34 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	soundmenu->stop_button = stop_button;
 	soundmenu->next_button = next_button;
 
-	/* Add lastfm menu  and search lyrics in panel plugin */
-	#ifdef HAVE_LIBCLASTFM
-	soundmenu_add_lastfm_menu_item(soundmenu);
-	#endif
-	#ifdef HAVE_LIBGLYR
-	soundmenu_add_lyrics_menu_item (soundmenu);
-	#endif
+	return soundmenu;
+}
 
-	/* Soundmenu dbus helpers */
+void init_soundmenu_plugin(SoundmenuPlugin *soundmenu)
+{
+	DBusConnection *connection;
+	DBusError error;
+	gchar *rule = NULL;
+
+	/* Init dbus connection. */
+
+	dbus_error_init (&error);
+
+	connection = dbus_bus_get (DBUS_BUS_SESSION, &error);
+	if (connection == NULL) {
+		g_critical("Error connecting to DBUS_BUS_SESSION: %s", error.message);
+		dbus_error_free (&error);
+	}
+	soundmenu->connection = connection;
+
+	/* If no has a player selected, search it with dbus. */
+
+	if (soundmenu->player == NULL)
+		soundmenu->player = mpris2_get_player(soundmenu);
+	if (soundmenu->player == NULL)
+		soundmenu->player = g_strdup (DEFAULT_PLAYER);
+
+	/* Configure rules according to player selected. */
 
 	soundmenu->dbus_name = g_strdup_printf("org.mpris.MediaPlayer2.%s", soundmenu->player);
 
@@ -485,9 +474,38 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	dbus_connection_add_filter (connection, mpris2_dbus_filter, soundmenu, NULL);
 	dbus_connection_setup_with_g_main (connection, NULL);
 
+	/* Init the goodies services .*/
+
+	#ifdef HAVE_LIBKEYBINDER
+	keybinder_init ();
+	if (soundmenu->use_global_keys)
+		keybinder_bind_keys(soundmenu);
+	#endif
+	#ifdef HAVE_LIBCLASTFM
+	if (nm_is_online () == TRUE)
+		init_lastfm_idle_timeout(soundmenu);
+	else
+		just_init_lastfm(soundmenu);
+	#endif
+	#ifdef HAVE_LIBGLYR
+	init_glyr_related(soundmenu);
+	#endif
+	#ifdef HAVE_LIBNOTIFY
+	notify_init ("xfce4-soundmenu-plugin");
+	#endif
+
+	/* Get status of current player. */
+
 	mpris2_get_player_status (soundmenu);
 
-	return soundmenu;
+	/* Add lastfm and glyr options in panel plugin. */
+
+	#ifdef HAVE_LIBCLASTFM
+	soundmenu_add_lastfm_menu_item(soundmenu);
+	#endif
+	#ifdef HAVE_LIBGLYR
+	soundmenu_add_lyrics_menu_item (soundmenu);
+	#endif
 }
 
 static void
@@ -515,6 +533,7 @@ soundmenu_free (XfcePanelPlugin *plugin,
 	#ifdef HAVE_LIBNOTIFY
 	notify_uninit();
 	#endif
+
 	/* check if the dialog is still open. if so, destroy it */
 	dialog = g_object_get_data (G_OBJECT (plugin), "dialog");
 	if (G_UNLIKELY (dialog != NULL))
@@ -608,4 +627,7 @@ soundmenu_construct (XfcePanelPlugin *plugin)
 
 	g_signal_connect (G_OBJECT (plugin), "about",
 				G_CALLBACK (soundmenu_about), NULL);
+
+	/* Init dbus, services, get player status, etc. */
+	init_soundmenu_plugin(soundmenu);
 }

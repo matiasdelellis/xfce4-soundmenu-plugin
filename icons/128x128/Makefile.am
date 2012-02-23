@@ -1,6 +1,6 @@
 # $Id$
 
-iconsdir = $(datadir)/icons/hicolor/48x48/apps
+iconsdir = $(datadir)/icons/hicolor/128x128/apps
 icons_DATA =								\
 	xfce4-soundmenu-plugin.png
 

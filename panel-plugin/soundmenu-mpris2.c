@@ -187,7 +187,6 @@ mpris2_dbus_filter (DBusConnection *connection, DBusMessage *message, void *user
 			if (0 == g_ascii_strcasecmp (str_buf, "PlaybackStatus"))
 			{
 				get_meta_item_str (&dict_entry, &state);
-				soundmenu_update_state (state, soundmenu);
 			}
 			else if (0 == g_ascii_strcasecmp (str_buf, "Volume"))
 			{
@@ -205,6 +204,8 @@ mpris2_dbus_filter (DBusConnection *connection, DBusMessage *message, void *user
 				#endif
 			}
 		} while (dbus_message_iter_next(&dict));
+
+		soundmenu_update_state (state, soundmenu);
 
 		return DBUS_HANDLER_RESULT_HANDLED;
 	}

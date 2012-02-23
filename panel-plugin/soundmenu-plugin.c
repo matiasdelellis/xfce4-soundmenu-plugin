@@ -40,7 +40,66 @@ soundmenu_construct (XfcePanelPlugin *plugin);
 
 XFCE_PANEL_PLUGIN_REGISTER_EXTERNAL (soundmenu_construct);
 
+gboolean
+album_art_frame_press_callback (GtkWidget      *event_box,
+				GdkEventButton *event,
+				SoundmenuPlugin *soundmenu)
+{
+	gchar *command = NULL;
+	gboolean result;
+
+	if ((soundmenu->metadata->arturl != NULL) &&
+	   (event->type==GDK_2BUTTON_PRESS || event->type==GDK_3BUTTON_PRESS)) {
+	   	command = g_strdup_printf("exo-open \"%s\"", soundmenu->metadata->arturl);
+		result = g_spawn_command_line_async (command, NULL);
+		g_free(command);
+		if (G_UNLIKELY (result == FALSE))
+			g_warning ("Unable to show the current album art: %s", soundmenu->metadata->arturl);
+	}
+	return TRUE;
+}
+
 /* Function to update the soundmenu state */
+
+void update_panel_album_art(SoundmenuPlugin *soundmenu)
+{
+	GdkPixbuf *album_art = NULL, *scaled_album_art, *scaled_frame = NULL, *frame = NULL;
+	gint width, height;
+	GError *error = NULL;
+
+	if(soundmenu->state == ST_PAUSED)
+		return;
+
+	gtk_widget_get_size_request (GTK_WIDGET(soundmenu->play_button), &width, &height);
+
+	frame = gdk_pixbuf_new_from_file (BASEICONDIR"/128x128/apps/xfce4-soundmenu-plugin.png", &error);
+
+	if ((soundmenu->state != ST_STOPPED) &&
+	     soundmenu->metadata->arturl != NULL) {
+		/* FIXME: Why not work if open the file scaled at 112x112?.
+		 * istead use escale simple */
+		album_art = gdk_pixbuf_new_from_file_at_size (soundmenu->metadata->arturl,
+							      256, 256, &error);
+		if (album_art) {
+			scaled_album_art = gdk_pixbuf_scale_simple (album_art, 112, 112, GDK_INTERP_BILINEAR);
+			gdk_pixbuf_copy_area(scaled_album_art, 0 ,0 ,112 ,112, frame, 12, 8);
+			g_object_unref(G_OBJECT(scaled_album_art));
+			g_object_unref(G_OBJECT(album_art));
+		}
+	}
+	scaled_frame = gdk_pixbuf_scale_simple (frame,
+						soundmenu->size_request,
+						soundmenu->size_request,
+						GDK_INTERP_BILINEAR);
+
+	if (soundmenu->album_art)
+		gtk_image_clear(GTK_IMAGE(soundmenu->album_art));
+
+	gtk_image_set_from_pixbuf(GTK_IMAGE(soundmenu->album_art), scaled_frame);
+
+	g_object_unref(G_OBJECT(scaled_frame));
+	g_object_unref(G_OBJECT(frame));
+}
 
 void
 play_button_toggle_state (SoundmenuPlugin *soundmenu)
@@ -77,6 +136,9 @@ gboolean status_get_tooltip_cb (GtkWidget        *widget,
 
 	gtk_tooltip_set_markup (tooltip, markup_text);
 
+	if (soundmenu->album_art && (gtk_image_get_storage_type(GTK_IMAGE(soundmenu->album_art)) == GTK_IMAGE_PIXBUF))
+		gtk_tooltip_set_icon (tooltip, gtk_image_get_pixbuf(GTK_IMAGE(soundmenu->album_art)));
+
 	g_free(markup_text);
 	g_free(length);
 
@@ -93,7 +155,7 @@ soundmenu_update_state(gchar *state, SoundmenuPlugin *soundmenu)
 	else {
 		soundmenu->state = ST_STOPPED;
 	}
-
+	update_panel_album_art(soundmenu);
 	play_button_toggle_state(soundmenu);
 	#ifdef HAVE_LIBCLASTFM
 	if (soundmenu->clastfm->lastfm_support)
@@ -189,6 +251,7 @@ soundmenu_save (XfcePanelPlugin *plugin,
 		if (soundmenu->player)
 			xfce_rc_write_entry    (rc, "player", soundmenu->player);
 
+		xfce_rc_write_bool_entry (rc, "show_album_art", soundmenu->show_album_art);
 		xfce_rc_write_bool_entry (rc, "show_stop", soundmenu->show_stop);
 		#ifdef HAVE_LIBKEYBINDER
 		xfce_rc_write_bool_entry (rc, "use_global_keys", soundmenu->use_global_keys);
@@ -231,6 +294,7 @@ soundmenu_read (SoundmenuPlugin *soundmenu)
 		if (G_LIKELY (rc != NULL)) {
 			/* read the settings */
 			soundmenu->player = g_strdup (xfce_rc_read_entry (rc, "player", NULL));
+			soundmenu->show_album_art = xfce_rc_read_bool_entry (rc, "show_album_art", FALSE);
 			soundmenu->show_stop = xfce_rc_read_bool_entry (rc, "show_stop", FALSE);
 			#ifdef HAVE_LIBKEYBINDER
 			soundmenu->use_global_keys = xfce_rc_read_bool_entry (rc, "use_global_keys", DEFAULT_GLOBAL_KEYS);
@@ -256,6 +320,7 @@ soundmenu_read (SoundmenuPlugin *soundmenu)
 	DBG ("Applying default settings");
 
 	soundmenu->player = NULL;
+	soundmenu->show_album_art = FALSE;
 	soundmenu->show_stop = FALSE;
 	#ifdef HAVE_LIBKEYBINDER
 	soundmenu->use_global_keys = DEFAULT_GLOBAL_KEYS;
@@ -317,7 +382,7 @@ soundmenu_new (XfcePanelPlugin *plugin)
 {
 	SoundmenuPlugin   *soundmenu;
 	GtkOrientation orientation;
-	GtkWidget *play_button, *stop_button, *prev_button, *next_button;
+	GtkWidget *album_art_event_box, *album_art, *play_button, *stop_button, *prev_button, *next_button;
 	Metadata *metadata;
 
 	/* allocate memory for the plugin structure */
@@ -343,6 +408,10 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	gtk_widget_show (soundmenu->hvbox);
 
 	/* some soundmenu widgets */
+
+	album_art_event_box = gtk_event_box_new ();
+	album_art = gtk_image_new ();
+	gtk_container_add (GTK_CONTAINER (album_art_event_box), album_art);
 
 	prev_button = gtk_button_new();
 	play_button = gtk_button_new();
@@ -378,6 +447,9 @@ soundmenu_new (XfcePanelPlugin *plugin)
 			     soundmenu->image_play);
 
 	gtk_box_pack_start(GTK_BOX(soundmenu->hvbox),
+			   GTK_WIDGET(album_art_event_box),
+			   FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(soundmenu->hvbox),
 			   GTK_WIDGET(prev_button),
 			   FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(soundmenu->hvbox),
@@ -390,6 +462,9 @@ soundmenu_new (XfcePanelPlugin *plugin)
 			   GTK_WIDGET(next_button),
 			   FALSE, FALSE, 0);
 
+	gtk_widget_show(album_art_event_box);
+	if(soundmenu->show_album_art)
+		gtk_widget_show(album_art);
 	gtk_widget_show(prev_button);
 	gtk_widget_show(play_button);
 	if(soundmenu->show_stop)
@@ -397,7 +472,8 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	gtk_widget_show(next_button);
 
 	/* Signal handlers */
-
+	g_signal_connect (G_OBJECT (album_art_event_box), "button_press_event",
+			  G_CALLBACK (album_art_frame_press_callback), soundmenu);
 	g_signal_connect(G_OBJECT(prev_button), "clicked",
 			 G_CALLBACK(prev_button_handler), soundmenu);
 	g_signal_connect(G_OBJECT(play_button), "clicked",
@@ -412,11 +488,14 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	xfce_panel_plugin_add_action_widget (plugin, stop_button);
 	xfce_panel_plugin_add_action_widget (plugin, next_button);
 
+	g_object_set (G_OBJECT(album_art), "has-tooltip", TRUE, NULL);
 	g_object_set (G_OBJECT(prev_button), "has-tooltip", TRUE, NULL);
 	g_object_set (G_OBJECT(play_button), "has-tooltip", TRUE, NULL);
 	g_object_set (G_OBJECT(stop_button), "has-tooltip", TRUE, NULL);
 	g_object_set (G_OBJECT(next_button), "has-tooltip", TRUE, NULL);
 
+	g_signal_connect(G_OBJECT(album_art), "query-tooltip",
+			G_CALLBACK(status_get_tooltip_cb), soundmenu);
 	g_signal_connect(G_OBJECT(prev_button), "query-tooltip",
 			G_CALLBACK(status_get_tooltip_cb), soundmenu);
 	g_signal_connect(G_OBJECT(play_button), "query-tooltip",
@@ -431,10 +510,13 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	g_signal_connect (G_OBJECT (play_button), "scroll-event",
 			G_CALLBACK (panel_button_scrolled), soundmenu);*/
 
+	soundmenu->album_art = album_art;
 	soundmenu->prev_button = prev_button;
 	soundmenu->play_button = play_button;
 	soundmenu->stop_button = stop_button;
 	soundmenu->next_button = next_button;
+
+	soundmenu->size_request = 24;
 
 	return soundmenu;
 }
@@ -582,6 +664,10 @@ soundmenu_size_changed (XfcePanelPlugin *plugin,
 		gtk_widget_set_size_request (GTK_WIDGET (plugin), -1, size);
 	else
 		gtk_widget_set_size_request (GTK_WIDGET (plugin), size, -1);
+
+	soundmenu->size_request = size;
+
+	update_panel_album_art(soundmenu);
 
 	/* we handled the orientation */
 	return TRUE;

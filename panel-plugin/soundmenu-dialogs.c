@@ -106,6 +106,16 @@ refresh_player (GtkEntry        *player_entry,
         }
 }
 
+static void
+toggle_show_album_art(GtkToggleButton *button, SoundmenuPlugin    *soundmenu)
+{
+	soundmenu->show_album_art = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button));
+
+	if(soundmenu->show_album_art)
+		gtk_widget_show(soundmenu->album_art);
+	else
+		gtk_widget_hide(soundmenu->album_art);
+}
 
 static void
 toggle_show_stop(GtkToggleButton *button, SoundmenuPlugin    *soundmenu)
@@ -154,7 +164,7 @@ soundmenu_configure (XfcePanelPlugin *plugin,
                   SoundmenuPlugin    *soundmenu)
 {
 	GtkWidget *dialog;
-	GtkWidget *pref_table, *player_label, *player_entry, *show_stop_check;
+	GtkWidget *pref_table, *player_label, *player_entry, *show_album_art_check, *show_stop_check;
 
 	#ifdef HAVE_LIBKEYBINDER
 	GtkWidget *use_global_keys_check;
@@ -179,7 +189,7 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 	/* set dialog icon */
 	gtk_window_set_icon_name (GTK_WINDOW (dialog), "xfce4-settings");
 
-	pref_table = gtk_table_new(6, 2, FALSE);
+	pref_table = gtk_table_new(7, 2, FALSE);
  	gtk_table_set_col_spacings(GTK_TABLE(pref_table), 5);
  	gtk_table_set_row_spacings(GTK_TABLE(pref_table), 2);
 
@@ -192,6 +202,12 @@ soundmenu_configure (XfcePanelPlugin *plugin,
         g_signal_connect (G_OBJECT(player_entry), "icon-press",
 			  G_CALLBACK (refresh_player), soundmenu);
 	soundmenu->w_player = player_entry;
+
+	show_album_art_check = gtk_check_button_new_with_label(_("Show the cover art on the panel"));
+	if(soundmenu->show_album_art)
+		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(show_album_art_check), TRUE);
+	g_signal_connect (G_OBJECT(show_album_art_check), "toggled",
+				G_CALLBACK(toggle_show_album_art), soundmenu);
 
 	show_stop_check = gtk_check_button_new_with_label(_("Show stop button"));
 	if(soundmenu->show_stop)
@@ -241,38 +257,44 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 			GTK_FILL|GTK_EXPAND, GTK_SHRINK,
 			0, 0);
 
-	gtk_table_attach(GTK_TABLE (pref_table), show_stop_check,
+	gtk_table_attach(GTK_TABLE (pref_table), show_album_art_check,
 			0, 2, 1, 2,
 			GTK_FILL, GTK_SHRINK,
 			0, 0);
+
+	gtk_table_attach(GTK_TABLE (pref_table), show_stop_check,
+			0, 2, 2, 3,
+			GTK_FILL, GTK_SHRINK,
+			0, 0);
+
 	#ifdef HAVE_LIBKEYBINDER
 	gtk_table_attach(GTK_TABLE (pref_table), use_global_keys_check,
-			0, 2, 2, 3,
+			0, 2, 3, 4,
 			GTK_FILL, GTK_SHRINK,
 			0, 0);
 	#endif
 
 	#ifdef HAVE_LIBCLASTFM
 	gtk_table_attach(GTK_TABLE (pref_table), support_lastfm,
-			0, 2, 3, 4,
+			0, 2, 4, 5,
 			GTK_FILL, GTK_SHRINK,
 			0, 0);
 
 	gtk_table_attach(GTK_TABLE (pref_table), lastfm_label_user,
-			0, 1, 4, 5,
+			0, 1, 5, 6,
 			GTK_FILL, GTK_SHRINK,
 			0, 0);
 	gtk_table_attach(GTK_TABLE (pref_table), lastfm_entry_user,
-			1, 2, 4, 5,
+			1, 2, 5, 6,
 			GTK_FILL|GTK_EXPAND, GTK_SHRINK,
 			0, 0);
 
 	gtk_table_attach(GTK_TABLE (pref_table), lastfm_label_pass,
-			0, 1, 5, 6,
+			0, 1, 7, 8,
 			GTK_FILL, GTK_SHRINK,
 			0, 0);
 	gtk_table_attach(GTK_TABLE (pref_table), lastfm_entry_pass,
-			1, 2, 5, 6,
+			1, 2, 7, 8,
 			GTK_FILL|GTK_EXPAND, GTK_SHRINK,
 			0, 0);
 	#endif

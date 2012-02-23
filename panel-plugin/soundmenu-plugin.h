@@ -101,6 +101,7 @@ typedef struct
 
 	/* panel widgets */
 	GtkWidget		*hvbox;
+	GtkWidget		*album_art;
 	GtkWidget		*prev_button;
 	GtkWidget		*play_button;
 	GtkWidget		*stop_button;
@@ -116,9 +117,9 @@ typedef struct
 	#endif
 
 	/* Player states */
-	enum player_state state;
+	enum player_state	state;
 	Metadata		*metadata;
-	gdouble		volume;
+	gdouble			volume;
 
 	/* Dbus conecction */
 	DBusConnection 	*connection;
@@ -126,8 +127,11 @@ typedef struct
 
 	/* soundmenu settings */
 	gchar			*player;
+	gboolean		show_album_art;
 	gboolean		show_stop;
 	gboolean		use_global_keys;
+	gint 			size_request;
+
 }
 SoundmenuPlugin;
 

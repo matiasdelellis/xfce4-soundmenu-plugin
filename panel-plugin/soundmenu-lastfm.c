@@ -17,16 +17,12 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #include "soundmenu-plugin.h"
 
 #define WAIT_UPDATE 5
 
 #ifdef HAVE_LIBCLASTFM
-void *do_lastfm_love (gpointer data)
+gboolean do_lastfm_love (gpointer data)
 {
 	gint rv;
 
@@ -40,13 +36,11 @@ void *do_lastfm_love (gpointer data)
 		g_critical("Love song on Last.fm failed");
 	}
 
-	return NULL;
+	return FALSE;
 }
 
 void lastfm_track_love_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 {
-	pthread_t tid;
-
 	if(soundmenu->state == ST_STOPPED)
 		return;
 
@@ -55,10 +49,10 @@ void lastfm_track_love_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 		return;
 	}
 
-	pthread_create(&tid, NULL, do_lastfm_love, soundmenu);
+	gdk_threads_add_idle(do_lastfm_love, soundmenu);
 }
 
-void *do_lastfm_unlove (gpointer data)
+gboolean do_lastfm_unlove (gpointer data)
 {
 	gint rv;
 
@@ -72,13 +66,11 @@ void *do_lastfm_unlove (gpointer data)
 		g_critical("Unlove song on Last.fm failed");
 	}
 
-	return NULL;
+	return FALSE;
 }
 
 void lastfm_track_unlove_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 {
-	pthread_t tid;
-
 	if(soundmenu->state == ST_STOPPED)
 		return;
 
@@ -87,14 +79,22 @@ void lastfm_track_unlove_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 		return;
 	}
 
-	pthread_create(&tid, NULL, do_lastfm_unlove, soundmenu);
+	gdk_threads_add_idle(do_lastfm_unlove, soundmenu);
 }
 
-void *do_lastfm_scrob (gpointer data)
+gboolean lastfm_scrob_handler(gpointer data)
 {
 	gint rv;
 
 	SoundmenuPlugin *soundmenu = data;
+
+	if(soundmenu->state == ST_STOPPED)
+		return FALSE;
+
+	if (soundmenu->clastfm->session_id == NULL) {
+		g_critical("No connection Last.fm has been established.");
+		return FALSE;
+	}
 
 	rv = LASTFM_track_scrobble (soundmenu->clastfm->session_id,
 		soundmenu->metadata->title,
@@ -108,29 +108,10 @@ void *do_lastfm_scrob (gpointer data)
 	if (rv != 0)
 		g_critical("Last.fm submission failed");
 
-	return NULL;
-}
-
-gboolean lastfm_scrob_handler(gpointer data)
-{
-	pthread_t tid;
-
-	SoundmenuPlugin *soundmenu = data;
-
-	if(soundmenu->state == ST_STOPPED)
-		return FALSE;
-
-	if (soundmenu->clastfm->session_id == NULL) {
-		g_critical("No connection Last.fm has been established.");
-		return FALSE;
-	}
-
-	pthread_create(&tid, NULL, do_lastfm_scrob, soundmenu);
-
 	return FALSE;
 }
 
-void *do_lastfm_now_playing (gpointer data)
+gboolean do_lastfm_now_playing (gpointer data)
 {
 	gint rv;
 
@@ -149,12 +130,11 @@ void *do_lastfm_now_playing (gpointer data)
 	if (rv != 0) {
 		g_critical("Update current song on Last.fm failed");
 	}
-	return NULL;
+	return FALSE;
 }
 
 gboolean lastfm_now_playing_handler (gpointer data)
 {
-	pthread_t tid;
 	int length = 0;
 
 	SoundmenuPlugin *soundmenu = data;
@@ -172,7 +152,7 @@ gboolean lastfm_now_playing_handler (gpointer data)
 		return FALSE;
 
 	/* Firt update now playing on lastfm */
-	pthread_create(&tid, NULL, do_lastfm_now_playing, soundmenu);
+	gdk_threads_add_idle(do_lastfm_now_playing, soundmenu);
 
 	/* Kick the lastfm scrobbler on
 	 * Note: Only scrob if tracks is more than 30s.
@@ -214,9 +194,11 @@ void update_lastfm (SoundmenuPlugin *soundmenu)
 
 /* When just run soundmenu init lastfm with a timeuout of 30 sec. */
 
-void do_init_lastfm (SoundmenuPlugin *soundmenu)
+gboolean do_init_lastfm_idle (gpointer data)
 {
 	gint rv;
+
+	SoundmenuPlugin *soundmenu = data;
 
 	soundmenu->clastfm->session_id = LASTFM_init(LASTFM_API_KEY, LASTFM_SECRET);
 
@@ -238,46 +220,28 @@ void do_init_lastfm (SoundmenuPlugin *soundmenu)
 	else {
 		g_critical("Failure to init libclastfm");
 	}
-}
-
-/* When just init the soundmenu plugin init lastfm with a timeuout of 30 sec. */
-
-gboolean do_init_lastfm_idle_timeout (gpointer data)
-{
-	SoundmenuPlugin *soundmenu = data;
-
-	do_init_lastfm(soundmenu);
 
 	return FALSE;
 }
+
+/* When just init the soundmenu plugin init lastfm with a timeuout of 30 sec. */
 
 gint init_lastfm_idle_timeout(SoundmenuPlugin *soundmenu)
 {
 	if (soundmenu->clastfm->lastfm_support)
 		gdk_threads_add_timeout_seconds_full(
 					G_PRIORITY_DEFAULT_IDLE, 30,
-					do_init_lastfm_idle_timeout, soundmenu, NULL);
+					do_init_lastfm_idle, soundmenu, NULL);
 
 	return 0;
 }
 
-/* Init lastfm with a simple thread when change preferences */
-
-void *do_init_lastfm_idle (gpointer data)
-{
-	SoundmenuPlugin *soundmenu = data;
-
-	do_init_lastfm(soundmenu);
-
-	return NULL;
-}
+/* Init lastfm with a simple thread when change preferences or init plugin with internet online. */
 
 gint just_init_lastfm (SoundmenuPlugin *soundmenu)
 {
-	pthread_t tid;
-
 	if (soundmenu->clastfm->lastfm_support)
-		pthread_create (&tid, NULL, do_init_lastfm_idle, soundmenu);
+		gdk_threads_add_idle (do_init_lastfm_idle, soundmenu);
 
 	return 0;
 }

@@ -146,7 +146,7 @@ mpris2_demarshal_metadata (DBusMessageIter *args, SoundmenuPlugin *soundmenu)	//
 			/* (Integer) Not use useCount */
 		else if (0 == g_ascii_strcasecmp (str_buf, "xesam:userRating"));
 			/* (Float) Not use userRating */
-		else if (0 == g_ascii_strcasecmp (str_buf, "mpris:arturl"))
+		else if (0 == g_ascii_strcasecmp (str_buf, "mpris:artUrl"))
 			get_meta_item_str(&variant, &metadata->arturl);
 		else
 			DBG ("New metadata message: %s. (Investigate)\n", str_buf);

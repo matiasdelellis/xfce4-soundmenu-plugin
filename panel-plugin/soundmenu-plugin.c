@@ -40,6 +40,8 @@ soundmenu_construct (XfcePanelPlugin *plugin);
 
 XFCE_PANEL_PLUGIN_REGISTER_EXTERNAL (soundmenu_construct);
 
+/* Open the image when double click.. */
+
 gboolean
 album_art_frame_press_callback (GtkWidget      *event_box,
 				GdkEventButton *event,
@@ -64,28 +66,28 @@ album_art_frame_press_callback (GtkWidget      *event_box,
 void update_panel_album_art(SoundmenuPlugin *soundmenu)
 {
 	GdkPixbuf *album_art = NULL, *scaled_album_art, *scaled_frame = NULL, *frame = NULL;
-	gint width, height;
-	GError *error = NULL;
+	gchar *arturl_filename = NULL;
 
 	if(soundmenu->state == ST_PAUSED)
 		return;
 
-	gtk_widget_get_size_request (GTK_WIDGET(soundmenu->play_button), &width, &height);
-
-	frame = gdk_pixbuf_new_from_file (BASEICONDIR"/128x128/apps/xfce4-soundmenu-plugin.png", &error);
+	frame = gdk_pixbuf_new_from_file (BASEICONDIR"/128x128/apps/xfce4-soundmenu-plugin.png", NULL);
 
 	if ((soundmenu->state != ST_STOPPED) &&
 	     soundmenu->metadata->arturl != NULL) {
-		/* FIXME: Why not work if open the file scaled at 112x112?.
-		 * istead use escale simple */
-		album_art = gdk_pixbuf_new_from_file_at_size (soundmenu->metadata->arturl,
-							      256, 256, &error);
+	     	arturl_filename = g_filename_from_uri(soundmenu->metadata->arturl, NULL, NULL);
+
+		/* FIXME: Why not work if open the file scaled at 112x112
+		 * istead use escale before.? */
+		album_art = gdk_pixbuf_new_from_file_at_size (arturl_filename,
+							      256, 256, NULL);
 		if (album_art) {
 			scaled_album_art = gdk_pixbuf_scale_simple (album_art, 112, 112, GDK_INTERP_BILINEAR);
 			gdk_pixbuf_copy_area(scaled_album_art, 0 ,0 ,112 ,112, frame, 12, 8);
 			g_object_unref(G_OBJECT(scaled_album_art));
 			g_object_unref(G_OBJECT(album_art));
 		}
+		g_free(arturl_filename);
 	}
 	scaled_frame = gdk_pixbuf_scale_simple (frame,
 						soundmenu->size_request,

@@ -147,8 +147,8 @@ gboolean lastfm_now_playing_handler (gpointer data)
 		return FALSE;
 	}
 
-	if ((strlen(soundmenu->metadata->artist) == 0) ||
-	    (strlen(soundmenu->metadata->title) == 0))
+	if ((soundmenu->metadata->artist == NULL) || (soundmenu->metadata->title == NULL) ||
+	    (strlen(soundmenu->metadata->artist) == 0) || (strlen(soundmenu->metadata->title) == 0))
 		return FALSE;
 
 	/* Firt update now playing on lastfm */
@@ -198,20 +198,20 @@ gboolean do_init_lastfm_idle (gpointer data)
 {
 	gint rv;
 
-	SoundmenuPlugin *soundmenu = data;
+	struct con_lastfm *clastfm = data;
 
-	soundmenu->clastfm->session_id = LASTFM_init(LASTFM_API_KEY, LASTFM_SECRET);
+	clastfm->session_id = LASTFM_init(LASTFM_API_KEY, LASTFM_SECRET);
 
-	if (soundmenu->clastfm->session_id != NULL) {
-		if((strlen(soundmenu->clastfm->lastfm_user) != 0) &&
-		   (strlen(soundmenu->clastfm->lastfm_pass) != 0)) {
-			rv = LASTFM_login (soundmenu->clastfm->session_id,
-					   soundmenu->clastfm->lastfm_user,
-					   soundmenu->clastfm->lastfm_pass);
+	if (clastfm->session_id != NULL) {
+		if((strlen(clastfm->lastfm_user) != 0) &&
+		   (strlen(clastfm->lastfm_pass) != 0)) {
+			rv = LASTFM_login (clastfm->session_id,
+					   clastfm->lastfm_user,
+					   clastfm->lastfm_pass);
 
 			if(rv != LASTFM_STATUS_OK) {
-				LASTFM_dinit(soundmenu->clastfm->session_id);
-				soundmenu->clastfm->session_id = NULL;
+				LASTFM_dinit(clastfm->session_id);
+				clastfm->session_id = NULL;
 
 				g_critical("Unable to login on Lastfm");
 			}
@@ -231,7 +231,7 @@ gint init_lastfm_idle_timeout(SoundmenuPlugin *soundmenu)
 	if (soundmenu->clastfm->lastfm_support)
 		gdk_threads_add_timeout_seconds_full(
 					G_PRIORITY_DEFAULT_IDLE, 30,
-					do_init_lastfm_idle, soundmenu, NULL);
+					do_init_lastfm_idle, soundmenu->clastfm, NULL);
 
 	return 0;
 }
@@ -241,7 +241,7 @@ gint init_lastfm_idle_timeout(SoundmenuPlugin *soundmenu)
 gint just_init_lastfm (SoundmenuPlugin *soundmenu)
 {
 	if (soundmenu->clastfm->lastfm_support)
-		gdk_threads_add_idle (do_init_lastfm_idle, soundmenu);
+		gdk_threads_add_idle (do_init_lastfm_idle, soundmenu->clastfm);
 
 	return 0;
 }

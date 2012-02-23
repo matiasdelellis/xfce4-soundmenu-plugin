@@ -152,8 +152,8 @@ void soundmenu_search_lyric_dialog (GtkWidget *widget, SoundmenuPlugin *soundmen
 	if(soundmenu->state == ST_STOPPED)
 		return;
 
-	if ((strlen(soundmenu->metadata->artist) == 0) ||
-	    (strlen(soundmenu->metadata->title) == 0))
+	if ((soundmenu->metadata->artist == NULL) || (soundmenu->metadata->title == NULL) ||
+	    (strlen(soundmenu->metadata->artist) == 0) || (strlen(soundmenu->metadata->title) == 0))
 		return;
 
 	artist = g_strdup(soundmenu->metadata->artist);
@@ -183,7 +183,8 @@ void soundmenu_search_artistinfo_dialog (GtkWidget *widget, SoundmenuPlugin *sou
 	if(soundmenu->state == ST_STOPPED)
 		return;
 
-	if (strlen(soundmenu->metadata->artist) == 0)
+	if ((soundmenu->metadata->artist == NULL) ||
+	    (strlen(soundmenu->metadata->artist) == 0))
 		return;
 
 	artist = g_strdup(soundmenu->metadata->artist);

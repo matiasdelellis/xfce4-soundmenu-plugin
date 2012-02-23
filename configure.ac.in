@@ -120,8 +120,7 @@ AC_SUBST([PLATFORM_LDFLAGS])
 AC_OUTPUT([
 Makefile
 icons/Makefile
-icons/48x48/Makefile
-icons/scalable/Makefile
+icons/128x128/Makefile
 panel-plugin/Makefile
 po/Makefile.in
 ])

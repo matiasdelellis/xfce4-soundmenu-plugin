@@ -1,11 +1,11 @@
 TODO list for a "hypothetical" xfce4-soundmenu-plugin 1.0.
 
 Priorities
-* Check player status when add the plugin.
+* Check player status when add the plugin. FIXED.
 * Ping player to know that still runs.
 * Run player if not found.
 
 Goodies, but planed:
 * All volumes control. Master with gstreamer and playback with mpris2.
-* Add multimedia keys support. keybinder.
-* Scrobbling on lastfm. libclastfm.
+* Add multimedia keys support. keybinder. FIXED.
+* Scrobbling on lastfm. libclastfm. FIXED.

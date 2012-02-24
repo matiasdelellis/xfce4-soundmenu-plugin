@@ -5,8 +5,6 @@ A very basic xfce4-panel plugin to control any players MPRIS2 compatible
 Based on last xfce4-sample-plugin (http://git.xfce.org/panel-plugins/xfce4-sample-plugin)
 and written with the excuse to learn dbus thank to http://www.aliov.org/?page_id=47 :)
 
-For now it is just an experiment, but it works. :)
-
 Installation (FIXME)
 ============
 

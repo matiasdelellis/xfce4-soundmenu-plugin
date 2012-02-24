@@ -1,3 +1,16 @@
+V0.4.0
+You can show the cover art on the panel if it is informed by the player.
+Open the image when double click on panel image.
+Nos has a true xfce4-soundmenu-plugin icon.
+Check status of network manager when init the plugin. If is online, init lastfm, otherwise wait 30 seconds.
+Now depend of libnotify to show errors of glyr (And much more later.) when is available.
+Change/add/remove some functions to remove duplicate code. So, much better code, and no freeze never more the plugin when search info.
+When just add the plugin detect current player with dbus.
+Avoid use of posix pthread.. Use more gdk_threads..
+
+V0.2.4.2
+Fix double-free every time that logout.
+
 V0.2.4.1
 Fix compile without libclastfm.
 

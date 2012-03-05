@@ -100,7 +100,11 @@ remove_watch_cursor_on_thread(gchar *message, SoundmenuPlugin *soundmenu)
 	#ifdef HAVE_LIBNOTIFY
 	NotifyNotification *notify = NULL;
 	if(message != NULL) {
+		#if NOTIFY_CHECK_VERSION (0, 7, 0)
 		notify = notify_notification_new(_("Sound menu Plugin"), message, "xfce4-soundmenu-plugin");
+		#else
+		notify = notify_notification_new(_("Sound menu Plugin"), message, "xfce4-soundmenu-plugin", NULL);
+		#endif
 		if (!notify_notification_show (notify, NULL))
 			g_warning("Failed to send notification: %s", message);
 	}

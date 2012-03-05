@@ -12,7 +12,7 @@ plugin_PROGRAMS = \
 	xfce4-soundmenu-plugin
 
 plugindir = \
-	$(libexecdir)/xfce4/panel-plugins
+	$(libdir)/xfce4/panel/plugins
 
 xfce4_soundmenu_plugin_SOURCES = \
 	soundmenu-plugin.c \
@@ -69,7 +69,7 @@ endif
 # Desktop file
 #
 desktopdir =								\
-	$(datadir)/xfce4/panel-plugins
+	$(datadir)/xfce4/panel/plugins
 
 desktop_in_in_files =							\
 	soundmenu.desktop.in.in
@@ -78,7 +78,7 @@ desktop_in_files =							\
 	$(desktop_in_in_files:.desktop.in.in=.desktop.in)
 
 %.desktop.in: %.desktop.in.in
-	sed -e "s,\@libexecdir\@,$(libexecdir),g" < $< > $@
+	sed -e "s,\@libdir\@,$(libdir),g" < $< > $@
 
 desktop_DATA =								\
 	$(desktop_in_files:.desktop.in=.desktop)

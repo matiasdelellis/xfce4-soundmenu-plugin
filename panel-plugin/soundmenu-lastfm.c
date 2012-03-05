@@ -13,7 +13,7 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *  Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA.
  */
 
 #include "soundmenu-plugin.h"
@@ -124,7 +124,7 @@ gboolean do_lastfm_now_playing (gpointer data)
 		soundmenu->metadata->artist,
 		soundmenu->metadata->length,
 		soundmenu->metadata->trackNumber,
-		0);
+		0, NULL);
 
 	if (rv != 0) {
 		g_critical("Update current song on Last.fm failed");

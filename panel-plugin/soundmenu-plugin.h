@@ -101,6 +101,7 @@ typedef struct
 	/* panel widgets */
 	GtkWidget		*hvbox;
 	GtkWidget		*album_art;
+	GtkWidget		*ev_album_art;
 	GtkWidget		*prev_button;
 	GtkWidget		*play_button;
 	GtkWidget		*stop_button;

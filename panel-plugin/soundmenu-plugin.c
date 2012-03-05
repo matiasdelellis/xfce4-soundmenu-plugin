@@ -383,7 +383,7 @@ soundmenu_new (XfcePanelPlugin *plugin)
 {
 	SoundmenuPlugin   *soundmenu;
 	GtkOrientation orientation;
-	GtkWidget *album_art_event_box, *album_art, *play_button, *stop_button, *prev_button, *next_button;
+	GtkWidget *ev_album_art, *album_art, *play_button, *stop_button, *prev_button, *next_button;
 	Metadata *metadata;
 
 	/* allocate memory for the plugin structure */
@@ -410,9 +410,9 @@ soundmenu_new (XfcePanelPlugin *plugin)
 
 	/* some soundmenu widgets */
 
-	album_art_event_box = gtk_event_box_new ();
+	ev_album_art = gtk_event_box_new ();
 	album_art = gtk_image_new ();
-	gtk_container_add (GTK_CONTAINER (album_art_event_box), album_art);
+	gtk_container_add (GTK_CONTAINER (ev_album_art), album_art);
 
 	prev_button = gtk_button_new();
 	play_button = gtk_button_new();
@@ -448,7 +448,7 @@ soundmenu_new (XfcePanelPlugin *plugin)
 			     soundmenu->image_play);
 
 	gtk_box_pack_start(GTK_BOX(soundmenu->hvbox),
-			   GTK_WIDGET(album_art_event_box),
+			   GTK_WIDGET(ev_album_art),
 			   FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(soundmenu->hvbox),
 			   GTK_WIDGET(prev_button),
@@ -463,9 +463,9 @@ soundmenu_new (XfcePanelPlugin *plugin)
 			   GTK_WIDGET(next_button),
 			   FALSE, FALSE, 0);
 
-	gtk_widget_show(album_art_event_box);
+	gtk_widget_show(album_art);
 	if(soundmenu->show_album_art)
-		gtk_widget_show(album_art);
+		gtk_widget_show(ev_album_art);
 	gtk_widget_show(prev_button);
 	gtk_widget_show(play_button);
 	if(soundmenu->show_stop)
@@ -473,7 +473,8 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	gtk_widget_show(next_button);
 
 	/* Signal handlers */
-	g_signal_connect (G_OBJECT (album_art_event_box), "button_press_event",
+
+	g_signal_connect (G_OBJECT (ev_album_art), "button_press_event",
 			  G_CALLBACK (album_art_frame_press_callback), soundmenu);
 	g_signal_connect(G_OBJECT(prev_button), "clicked",
 			 G_CALLBACK(prev_button_handler), soundmenu);
@@ -512,6 +513,7 @@ soundmenu_new (XfcePanelPlugin *plugin)
 			G_CALLBACK (panel_button_scrolled), soundmenu);*/
 
 	soundmenu->album_art = album_art;
+	soundmenu->ev_album_art = ev_album_art;
 	soundmenu->prev_button = prev_button;
 	soundmenu->play_button = play_button;
 	soundmenu->stop_button = stop_button;

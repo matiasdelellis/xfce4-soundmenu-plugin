@@ -110,9 +110,9 @@ toggle_show_album_art(GtkToggleButton *button, SoundmenuPlugin    *soundmenu)
 	soundmenu->show_album_art = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button));
 
 	if(soundmenu->show_album_art)
-		gtk_widget_show(soundmenu->album_art);
+		gtk_widget_show(soundmenu->ev_album_art);
 	else
-		gtk_widget_hide(soundmenu->album_art);
+		gtk_widget_hide(soundmenu->ev_album_art);
 }
 
 static void

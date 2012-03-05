@@ -19,8 +19,7 @@
 #include "soundmenu-plugin.h"
 #include "soundmenu-dialogs.h"
 
-/* the website url */
-#define PLUGIN_WEBSITE "http://pragha.wikispaces.com/"
+#define PLUGIN_WEBSITE "https://github.com/matiasdelellis/xfce4-soundmenu-plugin/"
 
 static void
 soundmenu_configure_response (GtkWidget    *dialog,

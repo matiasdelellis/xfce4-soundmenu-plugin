@@ -37,7 +37,7 @@ soundmenu_construct (XfcePanelPlugin *plugin);
 
 /* register the plugin */
 
-XFCE_PANEL_PLUGIN_REGISTER_EXTERNAL (soundmenu_construct);
+XFCE_PANEL_PLUGIN_REGISTER (soundmenu_construct);
 
 /* Open the image when double click.. */
 

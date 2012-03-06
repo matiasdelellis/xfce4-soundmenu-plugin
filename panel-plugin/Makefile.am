@@ -8,13 +8,13 @@ INCLUDES = \
 #
 # Soundmenu plugin
 #
-plugin_PROGRAMS = \
-	xfce4-soundmenu-plugin
+plugin_LTLIBRARIES = \
+	libsoundmenu.la
 
 plugindir = \
 	$(libdir)/xfce4/panel/plugins
 
-xfce4_soundmenu_plugin_SOURCES = \
+libsoundmenu_la_SOURCES = \
 	soundmenu-plugin.c \
 	soundmenu-plugin.h \
 	soundmenu-mpris2.c \
@@ -27,42 +27,48 @@ xfce4_soundmenu_plugin_SOURCES = \
 	soundmenu-related.h
 
 if HAVE_LIBCLASTFM
-xfce4_soundmenu_plugin_SOURCES += \
+libsoundmenu_la_SOURCES += \
 	soundmenu-lastfm.c \
 	soundmenu-lastfm.h
 endif
 
-xfce4_soundmenu_plugin_CFLAGS = \
+libsoundmenu_la_CFLAGS = \
 	$(DBUS_GLIB_CFLAGS) \
 	$(LIBXFCE4UTIL_CFLAGS) \
 	$(LIBXFCE4UI_CFLAGS) \
 	$(LIBXFCE4PANEL_CFLAGS) \
 	$(PLATFORM_CFLAGS)
-	
-xfce4_soundmenu_plugin_LDADD = \
+
+libsoundmenu_la_LDFLAGS = 					\
+	-avoid-version 						\
+	-module 						\
+	-no-undefined 						\
+	-export-symbols-regex '^xfce_panel_module_(preinit|init|construct)'
+
+libsoundmenu_la_LIBADD = \
 	$(DBUS_GLIB_LIBS) \
 	$(LIBXFCE4UTIL_LIBS) \
 	$(LIBXFCE4UI_LIBS) \
 	$(LIBXFCE4PANEL_LIBS)
 
 if HAVE_LIBKEYBINDER
-xfce4_soundmenu_plugin_CFLAGS += $(LIBKEYBINDER_CFLAGS)
-xfce4_soundmenu_plugin_LDADD += $(LIBKEYBINDER_LIBS)
+libsoundmenu_la_CFLAGS += $(LIBKEYBINDER_CFLAGS)
+libsoundmenu_la_LIBADD += $(LIBKEYBINDER_LIBS)
 endif
 
 if HAVE_LIBCLASTFM
-xfce4_soundmenu_plugin_CFLAGS += $(LIBCLASTFM_CFLAGS)
-xfce4_soundmenu_plugin_LDADD += $(LIBCLASTFM_LIBS)
+libsoundmenu_la_CFLAGS += $(LIBCLASTFM_CFLAGS)
+libsoundmenu_la_LIBADD += $(LIBCLASTFM_LIBS)
 endif
 
 if HAVE_LIBGLYR
-xfce4_soundmenu_plugin_CFLAGS += $(LIBGLYR_CFLAGS)
-xfce4_soundmenu_plugin_LDADD += $(LIBGLYR_LIBS)
+libsoundmenu_la_CFLAGS += $(LIBGLYR_CFLAGS)
+libsoundmenu_la_LIBADD += $(LIBGLYR_LIBS)
 endif
 
 if HAVE_LIBNOTIFY
-xfce4_soundmenu_plugin_CFLAGS += $(LIBNOTIFY_CFLAGS)
-xfce4_soundmenu_plugin_LDADD += $(LIBNOTIFY_LIBS)
+libsoundmenu_la_CFLAGS += $(LIBNOTIFY_CFLAGS)
+libsoundmenu_la_LIBADD += $(LIBNOTIFY_LIBS)
 endif
 
 #

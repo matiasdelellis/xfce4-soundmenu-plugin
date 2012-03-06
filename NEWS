@@ -1,3 +1,18 @@
+V0.4.1
+Now is compiled as a module as recommended in the documentation.
+[PATCH] Use Xfce 4.8 locations for plugin and desktop file.
+[PATCH 2/3] Update FSFE address.
+[PATCH 3/3] Fix author name.
+PATCHS thanks to Christoph Wickert.
+Fix compile with libnotify <= 0.7
+Fix transparency issue when no show the cover art.
+Test some NULL string before use it.
+Change plugin website to github.
+Clean changelog. Update it whit make dist.
+Update es.po and pot file.
+
+NOTE: Lastfm scrobble now depend on libclastfm >= 0.5
+
 V0.4.0
 You can show the cover art on the panel if it is informed by the player.
 Open the image when double click on panel image.

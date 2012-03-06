@@ -9,7 +9,7 @@ dnl *** Version information ***
 dnl ***************************
 m4_define([soundmenu_version_major], [0])
 m4_define([soundmenu_version_minor], [4])
-m4_define([soundmenu_version_micro], [0])
+m4_define([soundmenu_version_micro], [1])
 m4_define([soundmenu_version], [soundmenu_version_major().soundmenu_version_minor().soundmenu_version_micro()])
 
 dnl ***************************
@@ -45,6 +45,12 @@ AC_PROG_INSTALL()
 AC_PROG_INTLTOOL()
 AC_PROG_LIBTOOL()
 
+dnl **************************
+dnl *** Initialize libtool ***
+dnl **************************
+LT_PREREQ([2.2.6])
+LT_INIT([disable-static])
+
 dnl **********************************
 dnl *** Check for standard headers ***
 dnl **********************************
@@ -76,19 +82,19 @@ XDT_CHECK_PACKAGE([LIBXFCE4PANEL], [libxfce4panel-1.0], [4.8.0])
 dnl Check global keyboard shortcuts support
 LIBKEYBINDER_FOUND="no"
 XDT_CHECK_OPTIONAL_PACKAGE([LIBKEYBINDER],
-                       [keybinder], [0.2.0],
+                       [keybinder], [0.2.2],
                        [keybinder],
                        [keybinder library], [yes])
 dnl Check libclastfm
 LIBCLASTFM_FOUND="no"
 XDT_CHECK_OPTIONAL_PACKAGE([LIBCLASTFM],
-                       [libclastfm], [0.4],
+                       [libclastfm], [0.5],
                        [libclastfm],
                        [libclastfm library], [yes])
 dnl Check libglyr
 LIBGLYR_FOUND="no"
 XDT_CHECK_OPTIONAL_PACKAGE([LIBGLYR],
-                       [libglyr], [0.8.5],
+                       [libglyr], [0.9.4],
                        [libglyr],
                        [libglyr library], [yes])
 
@@ -131,12 +137,12 @@ dnl ***************************
 echo
 echo "xfce4-soundmenu-plugin Build Configuration:"
 echo
-echo "  Prefix.....................................................: ${prefix}"
-echo "  Debug Support..............................................: $enable_debug"
-echo "  Global keyboard shortcuts support..........................: $LIBKEYBINDER_FOUND"
-echo "  Lastfm support (Need http://liblastfm.sourceforge.net 0.4).: $LIBCLASTFM_FOUND"
-echo "  Use libglyr to search lyrics...............................: $LIBGLYR_FOUND"
-echo "  Notification support.......................................: $LIBNOTIFY_FOUND"
+echo "  Plugin Dir: ${libdir}/xfce4/panel/plugins"
+echo "  Debug Support...............................................................: $enable_debug"
+echo "  Global keyboard shortcuts support...........................................: $LIBKEYBINDER_FOUND"
+echo "  Lastfm support (Need http://liblastfm.sourceforge.net >=0.5)................: $LIBCLASTFM_FOUND"
+echo "  Search lyrics and artist info( Need https://github.com/sahib/glyr >= 0.9.4).: $LIBGLYR_FOUND"
+echo "  Notification support........................................................: $LIBNOTIFY_FOUND"
 echo
 
 

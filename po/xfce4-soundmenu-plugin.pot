@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-06-06 20:32-0300\n"
+"POT-Creation-Date: 2012-03-06 11:59-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,41 +17,115 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../panel-plugin/soundmenu-plugin.c:75
+#: ../panel-plugin/soundmenu-plugin.c:126
 msgid "Stopped"
 msgstr ""
 
-#: ../panel-plugin/soundmenu-plugin.c:77
+#: ../panel-plugin/soundmenu-plugin.c:128
 #, c-format
 msgid ""
-"<b>%s</b> (Volume: %d%%)\n"
+"<b>%s</b> (%s)\n"
 "by %s in %s"
 msgstr ""
 
-#: ../panel-plugin/soundmenu-plugin.c:82
+#: ../panel-plugin/soundmenu-plugin.c:133
 msgid "Unknown Artist"
 msgstr ""
 
-#: ../panel-plugin/soundmenu-plugin.c:84
+#: ../panel-plugin/soundmenu-plugin.c:135
 msgid "Unknown Album"
 msgstr ""
 
-#: ../panel-plugin/soundmenu-dialogs.c:53
-#: ../panel-plugin/soundmenu-dialogs.c:163
-#, c-format
-msgid "Unable to open the following url: %s"
+#: ../panel-plugin/soundmenu-plugin.c:345
+msgid "Last.fm"
+msgstr ""
+
+#: ../panel-plugin/soundmenu-plugin.c:352
+msgid "Love"
+msgstr ""
+
+#: ../panel-plugin/soundmenu-plugin.c:355
+msgid "Unlove"
+msgstr ""
+
+#: ../panel-plugin/soundmenu-plugin.c:369
+msgid "Search lyrics"
+msgstr ""
+
+#: ../panel-plugin/soundmenu-plugin.c:374
+msgid "Search artist info"
 msgstr ""
 
 #. create the dialog
-#: ../panel-plugin/soundmenu-dialogs.c:114
+#: ../panel-plugin/soundmenu-dialogs.c:177
 #: ../panel-plugin/soundmenu.desktop.in.in.h:1
+#: ../panel-plugin/soundmenu-utils.c:104 ../panel-plugin/soundmenu-utils.c:106
 msgid "Sound menu Plugin"
 msgstr ""
 
-#: ../panel-plugin/soundmenu-dialogs.c:130
+#: ../panel-plugin/soundmenu-dialogs.c:193
+msgid "Player"
+msgstr ""
+
+#: ../panel-plugin/soundmenu-dialogs.c:203
+msgid "Show the cover art on the panel"
+msgstr ""
+
+#: ../panel-plugin/soundmenu-dialogs.c:209
 msgid "Show stop button"
+msgstr ""
+
+#: ../panel-plugin/soundmenu-dialogs.c:216
+msgid "Use multimedia keys"
+msgstr ""
+
+#: ../panel-plugin/soundmenu-dialogs.c:224
+msgid "Scrobble on Last.fm"
+msgstr ""
+
+#: ../panel-plugin/soundmenu-dialogs.c:229
+msgid "Last.fm user"
+msgstr ""
+
+#: ../panel-plugin/soundmenu-dialogs.c:237
+msgid "Last.fm password"
+msgstr ""
+
+#: ../panel-plugin/soundmenu-related.c:26
+msgid "en"
+msgstr ""
+
+#: ../panel-plugin/soundmenu-related.c:54
+#, c-format
+msgid "%s by %s"
+msgstr ""
+
+#: ../panel-plugin/soundmenu-related.c:55
+#, c-format
+msgid "Lyrics thanks to %s"
+msgstr ""
+
+#: ../panel-plugin/soundmenu-related.c:59
+#, c-format
+msgid "Artist information thanks to %s"
+msgstr ""
+
+#: ../panel-plugin/soundmenu-related.c:133
+msgid "Lyrics not found."
+msgstr ""
+
+#: ../panel-plugin/soundmenu-related.c:133
+msgid "Artist information not found."
 msgstr ""
 
 #: ../panel-plugin/soundmenu.desktop.in.in.h:2
 msgid "Sound menu plugin for the Xfce panel"
+msgstr ""
+
+#: ../panel-plugin/soundmenu-utils.c:126
+msgid "days"
+msgstr ""
+
+#: ../panel-plugin/soundmenu-utils.c:126
+msgid "day"
 msgstr ""

@@ -119,6 +119,9 @@ mpris2_demarshal_metadata (DBusMessageIter *args, SoundmenuPlugin *soundmenu)	//
 		dbus_message_iter_recurse(&dict_entry, &variant);
 		dbus_message_iter_get_basic(&variant, (void*) &str_buf);
 
+		if(str_buf == NULL)
+			continue;
+
 		if (0 == g_ascii_strcasecmp (str_buf, "mpris:trackid"))
 			get_meta_item_str(&variant, &metadata->trackid);
 		else if (0 == g_ascii_strcasecmp (str_buf, "xesam:url"))
@@ -183,6 +186,9 @@ mpris2_dbus_filter (DBusConnection *connection, DBusMessage *message, void *user
 			dbus_message_iter_recurse(&dict, &dict_entry);
 			dbus_message_iter_get_basic(&dict_entry, (void*) &str_buf);
 
+			if(str_buf == NULL)
+				continue;
+
 			if (0 == g_ascii_strcasecmp (str_buf, "PlaybackStatus"))
 			{
 				get_meta_item_str (&dict_entry, &state);
@@ -204,7 +210,8 @@ mpris2_dbus_filter (DBusConnection *connection, DBusMessage *message, void *user
 			}
 		} while (dbus_message_iter_next(&dict));
 
-		soundmenu_update_state (state, soundmenu);
+		if (state != NULL)
+			soundmenu_update_state (state, soundmenu);
 
 		return DBUS_HANDLER_RESULT_HANDLED;
 	}
@@ -262,7 +269,7 @@ mpris2_get_playbackstatus (SoundmenuPlugin *soundmenu)
 {
 	DBusMessage *message = NULL, *reply_message = NULL;
 	DBusMessageIter dict_entry, variant;
-	gchar *destination = NULL, *state= NULL;
+	gchar *destination = NULL, *state = NULL;
 
 	const char * const interface_name = "org.mpris.MediaPlayer2.Player";
 	const char * const query = "PlaybackStatus";
@@ -280,7 +287,8 @@ mpris2_get_playbackstatus (SoundmenuPlugin *soundmenu)
 		dbus_message_iter_recurse(&dict_entry, &variant);
 
 		dbus_message_iter_get_basic(&variant, (void*) &state);
-		soundmenu_update_state (state, soundmenu);
+		if(state != NULL)
+			soundmenu_update_state (state, soundmenu);
 	}
 
 	dbus_message_unref (message);

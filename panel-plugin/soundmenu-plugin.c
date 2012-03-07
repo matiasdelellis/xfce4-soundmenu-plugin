@@ -56,8 +56,10 @@ album_art_frame_press_callback (GtkWidget      *event_box,
 		g_free(command);
 		if (G_UNLIKELY (result == FALSE))
 			g_warning ("Unable to show the current album art: %s", soundmenu->metadata->arturl);
+		return TRUE;
+	} else {
+		return FALSE;
 	}
-	return TRUE;
 }
 
 /* Function to update the soundmenu state */

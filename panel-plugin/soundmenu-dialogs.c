@@ -120,7 +120,7 @@ toggle_show_stop(GtkToggleButton *button, SoundmenuPlugin    *soundmenu)
 	soundmenu->show_stop = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button));
 
 	if(soundmenu->show_stop)
-		gtk_widget_show(soundmenu->stop_button);
+		gtk_widget_show_all(soundmenu->stop_button);
 	else
 		gtk_widget_hide(soundmenu->stop_button);
 }

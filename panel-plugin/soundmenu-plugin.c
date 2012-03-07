@@ -107,10 +107,13 @@ void update_panel_album_art(SoundmenuPlugin *soundmenu)
 void
 play_button_toggle_state (SoundmenuPlugin *soundmenu)
 {
+	gtk_container_remove(GTK_CONTAINER(soundmenu->play_button),
+                       gtk_bin_get_child(GTK_BIN(soundmenu->play_button)));
 	if ((soundmenu->state == ST_PAUSED) || (soundmenu->state == ST_STOPPED))
-		gtk_button_set_image(GTK_BUTTON(soundmenu->play_button), soundmenu->image_play);
+		gtk_container_add(GTK_CONTAINER(soundmenu->play_button), soundmenu->image_play);
 	else
-		gtk_button_set_image(GTK_BUTTON(soundmenu->play_button), soundmenu->image_pause);
+		gtk_container_add(GTK_CONTAINER(soundmenu->play_button), soundmenu->image_pause);
+	gtk_widget_show_all(soundmenu->play_button);
 }
 
 gboolean status_get_tooltip_cb (GtkWidget        *widget,
@@ -384,7 +387,7 @@ static SoundmenuPlugin *
 soundmenu_new (XfcePanelPlugin *plugin)
 {
 	SoundmenuPlugin   *soundmenu;
-	GtkOrientation orientation;
+	GtkOrientation panel_orientation, orientation;
 	GtkWidget *ev_album_art, *album_art, *play_button, *stop_button, *prev_button, *next_button;
 	Metadata *metadata;
 
@@ -403,12 +406,22 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	soundmenu_read (soundmenu);
 
 	/* get the current orientation */
+#if LIBXFCE4PANEL_CHECK_VERSION (4,9,0)
+	orientation =
+		(xfce_panel_plugin_get_mode (plugin) == XFCE_PANEL_PLUGIN_MODE_VERTICAL) ?
+		GTK_ORIENTATION_VERTICAL : GTK_ORIENTATION_HORIZONTAL;
+#else
 	orientation = xfce_panel_plugin_get_orientation (plugin);
+#endif
+	panel_orientation = xfce_panel_plugin_get_orientation (plugin);
 
 	/* create some panel widgets */
 
-	soundmenu->hvbox = xfce_hvbox_new (orientation, FALSE, 2);
+	soundmenu->hvbox = xfce_hvbox_new (panel_orientation, FALSE, 2);
 	gtk_widget_show (soundmenu->hvbox);
+
+	soundmenu->hvbox_buttons = xfce_hvbox_new (orientation, FALSE, 0);
+	gtk_widget_show (soundmenu->hvbox_buttons);
 
 	/* some soundmenu widgets */
 
@@ -416,63 +429,56 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	album_art = gtk_image_new ();
 	gtk_container_add (GTK_CONTAINER (ev_album_art), album_art);
 
-	prev_button = gtk_button_new();
-	play_button = gtk_button_new();
-	stop_button = gtk_button_new();
-	next_button = gtk_button_new();
+	prev_button = xfce_panel_create_button();
+	play_button = xfce_panel_create_button();
+	stop_button = xfce_panel_create_button();
+	next_button = xfce_panel_create_button();
 
-	gtk_button_set_relief(GTK_BUTTON(prev_button), GTK_RELIEF_NONE);
-	gtk_button_set_relief(GTK_BUTTON(stop_button), GTK_RELIEF_NONE);
-	gtk_button_set_relief(GTK_BUTTON(next_button), GTK_RELIEF_NONE);
-	gtk_button_set_relief(GTK_BUTTON(play_button), GTK_RELIEF_NONE);
-
-	gtk_button_set_image(GTK_BUTTON(prev_button),
-			     gtk_image_new_from_stock(GTK_STOCK_MEDIA_PREVIOUS,
-						      GTK_ICON_SIZE_LARGE_TOOLBAR));
-	gtk_button_set_image(GTK_BUTTON(stop_button),
-			     gtk_image_new_from_stock(GTK_STOCK_MEDIA_STOP,
-						      GTK_ICON_SIZE_LARGE_TOOLBAR));
-	gtk_button_set_image(GTK_BUTTON(next_button),
-			     gtk_image_new_from_stock(GTK_STOCK_MEDIA_NEXT,
-						      GTK_ICON_SIZE_LARGE_TOOLBAR));
+	gtk_container_add(GTK_CONTAINER(prev_button),
+		xfce_panel_image_new_from_source("media-skip-backward"));
+	gtk_container_add(GTK_CONTAINER(stop_button),
+		xfce_panel_image_new_from_source("media-playback-stop"));
+	gtk_container_add(GTK_CONTAINER(next_button),
+		xfce_panel_image_new_from_source("media-skip-forward"));
 
 	soundmenu->image_pause =
-		gtk_image_new_from_stock(GTK_STOCK_MEDIA_PAUSE,
-					 GTK_ICON_SIZE_LARGE_TOOLBAR);
+		xfce_panel_image_new_from_source("media-playback-pause");
 	soundmenu->image_play =
-		gtk_image_new_from_stock(GTK_STOCK_MEDIA_PLAY,
-					 GTK_ICON_SIZE_LARGE_TOOLBAR);
+		xfce_panel_image_new_from_source("media-playback-start");
 
 	g_object_ref(soundmenu->image_play);
 	g_object_ref(soundmenu->image_pause);
 
-	gtk_button_set_image(GTK_BUTTON(play_button),
-			     soundmenu->image_play);
+	gtk_container_add(GTK_CONTAINER(play_button),
+		soundmenu->image_play);
 
 	gtk_box_pack_start(GTK_BOX(soundmenu->hvbox),
 			   GTK_WIDGET(ev_album_art),
 			   FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(soundmenu->hvbox),
+			   GTK_WIDGET(soundmenu->hvbox_buttons),
+			   FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(soundmenu->hvbox_buttons),
 			   GTK_WIDGET(prev_button),
-			   FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(soundmenu->hvbox),
+			   TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(soundmenu->hvbox_buttons),
 			   GTK_WIDGET(play_button),
-			   FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(soundmenu->hvbox),
+			   TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(soundmenu->hvbox_buttons),
 			   GTK_WIDGET(stop_button),
-			   FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(soundmenu->hvbox),
+			   TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(soundmenu->hvbox_buttons),
 			   GTK_WIDGET(next_button),
-			   FALSE, FALSE, 0);
+			   TRUE, TRUE, 0);
 
 	gtk_widget_show(album_art);
 	if(soundmenu->show_album_art)
 		gtk_widget_show(ev_album_art);
-	gtk_widget_show(prev_button);
-	gtk_widget_show(play_button);
+	gtk_widget_show_all(prev_button);
+	gtk_widget_show_all(play_button);
 	if(soundmenu->show_stop)
-		gtk_widget_show(stop_button);
-	gtk_widget_show(next_button);
+		gtk_widget_show_all(stop_button);
+	gtk_widget_show_all(next_button);
 
 	/* Signal handlers */
 
@@ -643,6 +649,65 @@ soundmenu_free (XfcePanelPlugin *plugin,
 
 
 
+static gboolean
+soundmenu_size_changed (XfcePanelPlugin *plugin,
+                     gint             panel_size,
+                     SoundmenuPlugin    *soundmenu)
+{
+	GtkOrientation panel_orientation;
+	gint           size = panel_size;
+
+	/* get the orientation of the plugin */
+	panel_orientation = xfce_panel_plugin_get_orientation (plugin);
+
+	/* set the widget size */
+	if (panel_orientation == GTK_ORIENTATION_HORIZONTAL)
+		gtk_widget_set_size_request (GTK_WIDGET (plugin), -1, panel_size);
+	else
+		gtk_widget_set_size_request (GTK_WIDGET (plugin), panel_size, -1);
+
+	soundmenu->size_request = size;
+
+	update_panel_album_art(soundmenu);
+
+#if !LIBXFCE4PANEL_CHECK_VERSION (4,9,0)
+	/* and an arbitrary button size cap for panels <=4.8 */
+	size = MIN (size, 24);
+#endif
+	gtk_widget_set_size_request (GTK_WIDGET (soundmenu->next_button), size, size);
+	gtk_widget_set_size_request (GTK_WIDGET (soundmenu->prev_button), size, size);
+	gtk_widget_set_size_request (GTK_WIDGET (soundmenu->stop_button), size, size);
+	gtk_widget_set_size_request (GTK_WIDGET (soundmenu->play_button), size, size);
+
+	/* we handled the orientation */
+	return TRUE;
+}
+
+
+
+#if LIBXFCE4PANEL_CHECK_VERSION (4,9,0)
+static void
+soundmenu_mode_changed (XfcePanelPlugin *plugin,
+                            XfcePanelPluginMode   mode,
+                            SoundmenuPlugin    *soundmenu)
+{
+	GtkOrientation panel_orientation, orientation;
+
+	orientation = (mode == XFCE_PANEL_PLUGIN_MODE_VERTICAL) ?
+		GTK_ORIENTATION_VERTICAL : GTK_ORIENTATION_HORIZONTAL;
+	panel_orientation = xfce_panel_plugin_get_orientation (plugin);
+
+	/* change the orienation of the box */
+	xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->hvbox), panel_orientation);
+	xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->hvbox_buttons), orientation);
+
+	/* update size after orientation change */
+	soundmenu_size_changed (plugin, xfce_panel_plugin_get_size (plugin), soundmenu);
+}
+
+
+
+#else
 static void
 soundmenu_orientation_changed (XfcePanelPlugin *plugin,
                             GtkOrientation   orientation,
@@ -650,33 +715,12 @@ soundmenu_orientation_changed (XfcePanelPlugin *plugin,
 {
 	/* change the orienation of the box */
 	xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->hvbox), orientation);
+	xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->hvbox_buttons), orientation);
+
+	/* update size after orientation change */
+	soundmenu_size_changed (plugin, xfce_panel_plugin_get_size (plugin), soundmenu);
 }
-
-
-
-static gboolean
-soundmenu_size_changed (XfcePanelPlugin *plugin,
-                     gint             size,
-                     SoundmenuPlugin    *soundmenu)
-{
-	GtkOrientation orientation;
-
-	/* get the orientation of the plugin */
-	orientation = xfce_panel_plugin_get_orientation (plugin);
-
-	/* set the widget size */
-	if (orientation == GTK_ORIENTATION_HORIZONTAL)
-		gtk_widget_set_size_request (GTK_WIDGET (plugin), -1, size);
-	else
-		gtk_widget_set_size_request (GTK_WIDGET (plugin), size, -1);
-
-	soundmenu->size_request = size;
-
-	update_panel_album_art(soundmenu);
-
-	/* we handled the orientation */
-	return TRUE;
-}
+#endif
 
 
 
@@ -704,8 +748,13 @@ soundmenu_construct (XfcePanelPlugin *plugin)
 	g_signal_connect (G_OBJECT (plugin), "size-changed",
 				G_CALLBACK (soundmenu_size_changed), soundmenu);
 
+#if LIBXFCE4PANEL_CHECK_VERSION (4,9,0)
+	g_signal_connect (G_OBJECT (plugin), "mode-changed",
+				G_CALLBACK (soundmenu_mode_changed), soundmenu);
+#else
 	g_signal_connect (G_OBJECT (plugin), "orientation-changed",
 				G_CALLBACK (soundmenu_orientation_changed), soundmenu);
+#endif
 
 	/* show the configure menu item and connect signal */
 	xfce_panel_plugin_menu_show_configure (plugin);

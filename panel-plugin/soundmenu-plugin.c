@@ -258,6 +258,7 @@ soundmenu_save (XfcePanelPlugin *plugin,
 			xfce_rc_write_entry    (rc, "player", soundmenu->player);
 
 		xfce_rc_write_bool_entry (rc, "show_album_art", soundmenu->show_album_art);
+		xfce_rc_write_bool_entry (rc, "show_tiny_album_art", soundmenu->show_tiny_album_art);
 		xfce_rc_write_bool_entry (rc, "show_stop", soundmenu->show_stop);
 		#ifdef HAVE_LIBKEYBINDER
 		xfce_rc_write_bool_entry (rc, "use_global_keys", soundmenu->use_global_keys);
@@ -301,6 +302,7 @@ soundmenu_read (SoundmenuPlugin *soundmenu)
 			/* read the settings */
 			soundmenu->player = g_strdup (xfce_rc_read_entry (rc, "player", NULL));
 			soundmenu->show_album_art = xfce_rc_read_bool_entry (rc, "show_album_art", FALSE);
+			soundmenu->show_tiny_album_art = xfce_rc_read_bool_entry (rc, "show_tiny_album_art", FALSE);
 			soundmenu->show_stop = xfce_rc_read_bool_entry (rc, "show_stop", FALSE);
 			#ifdef HAVE_LIBKEYBINDER
 			soundmenu->use_global_keys = xfce_rc_read_bool_entry (rc, "use_global_keys", DEFAULT_GLOBAL_KEYS);
@@ -327,6 +329,7 @@ soundmenu_read (SoundmenuPlugin *soundmenu)
 
 	soundmenu->player = NULL;
 	soundmenu->show_album_art = FALSE;
+	soundmenu->show_tiny_album_art = FALSE;
 	soundmenu->show_stop = FALSE;
 	#ifdef HAVE_LIBKEYBINDER
 	soundmenu->use_global_keys = DEFAULT_GLOBAL_KEYS;
@@ -669,18 +672,21 @@ soundmenu_size_changed (XfcePanelPlugin *plugin,
 	else
 		gtk_widget_set_size_request (GTK_WIDGET (plugin), panel_size, -1);
 
-
-	soundmenu->size_request = size;
-
-	update_panel_album_art(soundmenu);
+	soundmenu->size_request = panel_size;
 
 #if LIBXFCE4PANEL_CHECK_VERSION (4,9,0)
 	if (xfce_panel_plugin_get_mode (plugin) == XFCE_PANEL_PLUGIN_MODE_DESKBAR)
 	{
 		if (soundmenu->show_stop)
 			rows++;
+		if (soundmenu->show_album_art &&
+		    soundmenu->show_tiny_album_art)
+			rows++;
 
 		size = size / rows;
+
+		if (soundmenu->show_tiny_album_art)
+			soundmenu->size_request = size;
 	}
 #endif
 
@@ -688,6 +694,8 @@ soundmenu_size_changed (XfcePanelPlugin *plugin,
 	gtk_widget_set_size_request (GTK_WIDGET (soundmenu->prev_button), size, size);
 	gtk_widget_set_size_request (GTK_WIDGET (soundmenu->stop_button), size, size);
 	gtk_widget_set_size_request (GTK_WIDGET (soundmenu->play_button), size, size);
+
+	update_panel_album_art(soundmenu);
 
 	/* we handled the orientation */
 	return TRUE;
@@ -707,15 +715,24 @@ soundmenu_mode_changed (XfcePanelPlugin *plugin,
 		GTK_ORIENTATION_VERTICAL : GTK_ORIENTATION_HORIZONTAL;
 	panel_orientation = xfce_panel_plugin_get_orientation (plugin);
 
-	/* change the orienation of the box */
-	xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->hvbox), panel_orientation);
-	xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->hvbox_buttons), orientation);
+	if (mode == XFCE_PANEL_PLUGIN_MODE_DESKBAR)
+	{
+		if (soundmenu->show_tiny_album_art)
+			xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->hvbox), GTK_ORIENTATION_HORIZONTAL);
+		else
+			xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->hvbox), GTK_ORIENTATION_VERTICAL);
+
+		xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->hvbox_buttons), GTK_ORIENTATION_HORIZONTAL);
+	}
+	else
+	{
+		xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->hvbox), panel_orientation);
+		xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->hvbox_buttons), orientation);
+	}
 
 	/* update size after orientation change */
 	soundmenu_size_changed (plugin, xfce_panel_plugin_get_size (plugin), soundmenu);
 }
-
-
 
 #else
 static void
@@ -732,7 +749,12 @@ soundmenu_orientation_changed (XfcePanelPlugin *plugin,
 }
 #endif
 
+void soundmenu_update_layout_changes (SoundmenuPlugin    *soundmenu)
+{
+	/* Update orientations and size. */
 
+	soundmenu_mode_changed(soundmenu->plugin, xfce_panel_plugin_get_mode (soundmenu->plugin), soundmenu);
+}
 
 static void
 soundmenu_construct (XfcePanelPlugin *plugin)

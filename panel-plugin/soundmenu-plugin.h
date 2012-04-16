@@ -133,12 +133,16 @@ typedef struct
 	/* soundmenu settings */
 	gchar			*player;
 	gboolean		show_album_art;
+	gboolean		show_tiny_album_art;
 	gboolean		show_stop;
 	gboolean		use_global_keys;
 	gint 			size_request;
 
 }
 SoundmenuPlugin;
+
+void
+soundmenu_update_layout_changes (SoundmenuPlugin    *soundmenu);
 
 void
 soundmenu_update_state(gchar *state, SoundmenuPlugin *soundmenu);

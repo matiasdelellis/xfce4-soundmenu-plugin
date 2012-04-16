@@ -112,7 +112,20 @@ toggle_show_album_art(GtkToggleButton *button, SoundmenuPlugin    *soundmenu)
 		gtk_widget_show(soundmenu->ev_album_art);
 	else
 		gtk_widget_hide(soundmenu->ev_album_art);
+
+	soundmenu_update_layout_changes (soundmenu);
 }
+
+#if LIBXFCE4PANEL_CHECK_VERSION (4,9,0)
+static void
+toggle_show_tiny_album_art(GtkToggleButton *button, SoundmenuPlugin    *soundmenu)
+{
+	soundmenu->show_tiny_album_art = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button));
+
+	if(soundmenu->show_album_art)
+		soundmenu_update_layout_changes (soundmenu);
+}
+#endif
 
 static void
 toggle_show_stop(GtkToggleButton *button, SoundmenuPlugin    *soundmenu)
@@ -123,6 +136,8 @@ toggle_show_stop(GtkToggleButton *button, SoundmenuPlugin    *soundmenu)
 		gtk_widget_show_all(soundmenu->stop_button);
 	else
 		gtk_widget_hide(soundmenu->stop_button);
+
+	soundmenu_update_layout_changes (soundmenu);
 }
 
 #ifdef HAVE_LIBKEYBINDER
@@ -161,7 +176,7 @@ soundmenu_configure (XfcePanelPlugin *plugin,
                   SoundmenuPlugin    *soundmenu)
 {
 	GtkWidget *dialog;
-	GtkWidget *pref_table, *player_label, *player_entry, *show_album_art_check, *show_stop_check;
+	GtkWidget *pref_table, *player_label, *player_entry, *show_album_art_check, *show_tiny_album_art_check, *show_stop_check;
 
 	#ifdef HAVE_LIBKEYBINDER
 	GtkWidget *use_global_keys_check;
@@ -186,7 +201,7 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 	/* set dialog icon */
 	gtk_window_set_icon_name (GTK_WINDOW (dialog), "xfce4-settings");
 
-	pref_table = gtk_table_new(7, 2, FALSE);
+	pref_table = gtk_table_new(8, 2, FALSE);
  	gtk_table_set_col_spacings(GTK_TABLE(pref_table), 5);
  	gtk_table_set_row_spacings(GTK_TABLE(pref_table), 2);
 
@@ -205,6 +220,14 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(show_album_art_check), TRUE);
 	g_signal_connect (G_OBJECT(show_album_art_check), "toggled",
 				G_CALLBACK(toggle_show_album_art), soundmenu);
+
+	#if LIBXFCE4PANEL_CHECK_VERSION (4,9,0)
+	show_tiny_album_art_check = gtk_check_button_new_with_label(_("Show tiny cover art in deskbar panel mode"));
+	if(soundmenu->show_tiny_album_art)
+		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(show_tiny_album_art_check), TRUE);
+	g_signal_connect (G_OBJECT(show_tiny_album_art_check), "toggled",
+				G_CALLBACK(toggle_show_tiny_album_art), soundmenu);
+	#endif
 
 	show_stop_check = gtk_check_button_new_with_label(_("Show stop button"));
 	if(soundmenu->show_stop)
@@ -259,30 +282,37 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 			GTK_FILL, GTK_SHRINK,
 			0, 0);
 
-	gtk_table_attach(GTK_TABLE (pref_table), show_stop_check,
+	#if LIBXFCE4PANEL_CHECK_VERSION (4,9,0)
+	gtk_table_attach(GTK_TABLE (pref_table), show_tiny_album_art_check,
 			0, 2, 2, 3,
+			GTK_FILL, GTK_SHRINK,
+			0, 0);
+	#endif
+
+	gtk_table_attach(GTK_TABLE (pref_table), show_stop_check,
+			0, 2, 3, 4,
 			GTK_FILL, GTK_SHRINK,
 			0, 0);
 
 	#ifdef HAVE_LIBKEYBINDER
 	gtk_table_attach(GTK_TABLE (pref_table), use_global_keys_check,
-			0, 2, 3, 4,
+			0, 2, 4, 5,
 			GTK_FILL, GTK_SHRINK,
 			0, 0);
 	#endif
 
 	#ifdef HAVE_LIBCLASTFM
 	gtk_table_attach(GTK_TABLE (pref_table), support_lastfm,
-			0, 2, 4, 5,
+			0, 2, 5, 6,
 			GTK_FILL, GTK_SHRINK,
 			0, 0);
 
 	gtk_table_attach(GTK_TABLE (pref_table), lastfm_label_user,
-			0, 1, 5, 6,
+			0, 1, 6, 7,
 			GTK_FILL, GTK_SHRINK,
 			0, 0);
 	gtk_table_attach(GTK_TABLE (pref_table), lastfm_entry_user,
-			1, 2, 5, 6,
+			1, 2, 6, 7,
 			GTK_FILL|GTK_EXPAND, GTK_SHRINK,
 			0, 0);
 

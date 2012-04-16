@@ -91,8 +91,8 @@ void update_panel_album_art(SoundmenuPlugin *soundmenu)
 		g_free(arturl_filename);
 	}
 	scaled_frame = gdk_pixbuf_scale_simple (frame,
-						soundmenu->size_request,
-						soundmenu->size_request,
+						soundmenu->size_request - 2,
+						soundmenu->size_request - 2,
 						GDK_INTERP_BILINEAR);
 
 	if (soundmenu->album_art)
@@ -426,6 +426,8 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	/* some soundmenu widgets */
 
 	ev_album_art = gtk_event_box_new ();
+	gtk_event_box_set_visible_window(GTK_EVENT_BOX(ev_album_art), FALSE);
+
 	album_art = gtk_image_new ();
 	gtk_container_add (GTK_CONTAINER (ev_album_art), album_art);
 

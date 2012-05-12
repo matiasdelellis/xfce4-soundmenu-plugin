@@ -164,58 +164,49 @@ mpris2_demarshal_metadata (DBusMessageIter *args, SoundmenuPlugin *soundmenu)	//
 
 /* Basic dbus functions for interacting with MPRIS2*/
 
-DBusHandlerResult
-mpris2_dbus_filter (DBusConnection *connection, DBusMessage *message, void *user_data)
+void mpris2_dbus_filter (DBusMessage *message, SoundmenuPlugin *soundmenu)
 {
 	DBusMessageIter args, dict, dict_entry;
 	gchar *str_buf = NULL, *state = NULL;
 	gdouble volume = 0;
 
-	SoundmenuPlugin *soundmenu = user_data;
+	dbus_message_iter_init(message, &args);
 
-	if ( dbus_message_is_signal (message, "org.freedesktop.DBus.Properties", "PropertiesChanged" ) )
+	/* Ignore the interface_name*/
+	dbus_message_iter_next(&args);
+
+	dbus_message_iter_recurse(&args, &dict);
+	do
 	{
-		dbus_message_iter_init(message, &args);
+		dbus_message_iter_recurse(&dict, &dict_entry);
+		dbus_message_iter_get_basic(&dict_entry, (void*) &str_buf);
 
-		/* Ignore the interface_name*/
-		dbus_message_iter_next(&args);
+		if(str_buf == NULL)
+			continue;
 
-		dbus_message_iter_recurse(&args, &dict);
-		do
+		if (0 == g_ascii_strcasecmp (str_buf, "PlaybackStatus"))
 		{
-			dbus_message_iter_recurse(&dict, &dict_entry);
-			dbus_message_iter_get_basic(&dict_entry, (void*) &str_buf);
+			get_meta_item_str (&dict_entry, &state);
+		}
+		else if (0 == g_ascii_strcasecmp (str_buf, "Volume"))
+		{
+			get_meta_item_gint(&dict_entry, &volume);
+			soundmenu->volume = volume;
+		}
+		else if (0 == g_ascii_strcasecmp (str_buf, "Metadata"))
+		{
+			/* Ignore inferface string and send the pointer to metadata. */
+			dbus_message_iter_next(&dict_entry);
+			mpris2_demarshal_metadata (&dict_entry, soundmenu);
+			#ifdef HAVE_LIBCLASTFM
+			if (soundmenu->clastfm->lastfm_support)
+				update_lastfm(soundmenu);
+			#endif
+		}
+	} while (dbus_message_iter_next(&dict));
 
-			if(str_buf == NULL)
-				continue;
-
-			if (0 == g_ascii_strcasecmp (str_buf, "PlaybackStatus"))
-			{
-				get_meta_item_str (&dict_entry, &state);
-			}
-			else if (0 == g_ascii_strcasecmp (str_buf, "Volume"))
-			{
-				get_meta_item_gint(&dict_entry, &volume);
-				soundmenu->volume = volume;
-			}
-			else if (0 == g_ascii_strcasecmp (str_buf, "Metadata"))
-			{
-				/* Ignore inferface string and send the pointer to metadata. */
-				dbus_message_iter_next(&dict_entry);
-				mpris2_demarshal_metadata (&dict_entry, soundmenu);
-				#ifdef HAVE_LIBCLASTFM
-				if (soundmenu->clastfm->lastfm_support)
-					update_lastfm(soundmenu);
-				#endif
-			}
-		} while (dbus_message_iter_next(&dict));
-
-		if (state != NULL)
-			soundmenu_update_state (state, soundmenu);
-
-		return DBUS_HANDLER_RESULT_HANDLED;
-	}
-	return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+	if (state != NULL)
+		soundmenu_update_state (state, soundmenu);
 }
 
 void

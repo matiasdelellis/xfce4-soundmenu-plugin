@@ -26,7 +26,7 @@ static void get_meta_item_gint(DBusMessageIter *dict_entry, void *item);
 
 void mpris2_demarshal_metadata (DBusMessageIter *args, SoundmenuPlugin *soundmenu);
 
-DBusHandlerResult mpris2_dbus_filter (DBusConnection *connection, DBusMessage *message, void *user_data);
+void mpris2_dbus_filter (DBusMessage *message, SoundmenuPlugin *soundmenu);
 void mpris2_send_message (SoundmenuPlugin *soundmenu, const char *msg);
 
 void mpris2_get_playbackstatus (SoundmenuPlugin *soundmenu);

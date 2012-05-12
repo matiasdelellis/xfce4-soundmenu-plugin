@@ -17,6 +17,7 @@
  */
 
 #include "soundmenu-plugin.h"
+#include "soundmenu-dbus.h"
 #include "soundmenu-dialogs.h"
 #include "soundmenu-lastfm.h"
 #include "soundmenu-mpris2.h"
@@ -553,20 +554,9 @@ soundmenu_new (XfcePanelPlugin *plugin)
 
 void init_soundmenu_plugin(SoundmenuPlugin *soundmenu)
 {
-	DBusConnection *connection;
-	DBusError error;
-	gchar *rule = NULL;
+	/* Init dbus and configure filters. */
 
-	/* Init dbus connection. */
-
-	dbus_error_init (&error);
-
-	connection = dbus_bus_get (DBUS_BUS_SESSION, &error);
-	if (connection == NULL) {
-		g_critical("Error connecting to DBUS_BUS_SESSION: %s", error.message);
-		dbus_error_free (&error);
-	}
-	soundmenu->connection = connection;
+	init_dbus_session (soundmenu);
 
 	/* If no has a player selected, search it with dbus. */
 
@@ -575,18 +565,9 @@ void init_soundmenu_plugin(SoundmenuPlugin *soundmenu)
 	if (soundmenu->player == NULL)
 		soundmenu->player = g_strdup (DEFAULT_PLAYER);
 
+	/* Add a player icon to the plugin.*/
+
 	xfce_panel_image_set_from_source (XFCE_PANEL_IMAGE (soundmenu->image_player), soundmenu->player);
-
-	/* Configure rules according to player selected. */
-
-	soundmenu->dbus_name = g_strdup_printf("org.mpris.MediaPlayer2.%s", soundmenu->player);
-
-	rule = g_strdup_printf ("type='signal', sender='%s'", soundmenu->dbus_name);
-	dbus_bus_add_match (connection, rule, NULL);
-	g_free(rule);
-  
-	dbus_connection_add_filter (connection, mpris2_dbus_filter, soundmenu, NULL);
-	dbus_connection_setup_with_g_main (connection, NULL);
 
 	/* Init the goodies services .*/
 

@@ -391,7 +391,7 @@ soundmenu_new (XfcePanelPlugin *plugin)
 {
 	SoundmenuPlugin   *soundmenu;
 	GtkOrientation panel_orientation, orientation;
-	GtkWidget *ev_album_art, *album_art, *play_button, *stop_button, *prev_button, *next_button;
+	GtkWidget *ev_album_art, *album_art, *play_button, *stop_button, *prev_button, *next_button, *player_button;
 	Metadata *metadata;
 
 	/* allocate memory for the plugin structure */
@@ -438,6 +438,7 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	play_button = xfce_panel_create_button();
 	stop_button = xfce_panel_create_button();
 	next_button = xfce_panel_create_button();
+	player_button = xfce_panel_create_button();
 
 	gtk_container_add(GTK_CONTAINER(prev_button),
 		xfce_panel_image_new_from_source("media-skip-backward"));
@@ -450,12 +451,16 @@ soundmenu_new (XfcePanelPlugin *plugin)
 		xfce_panel_image_new_from_source("media-playback-pause");
 	soundmenu->image_play =
 		xfce_panel_image_new_from_source("media-playback-start");
+	soundmenu->image_player =
+		xfce_panel_image_new_from_source("xfce-multimedia");
 
 	g_object_ref(soundmenu->image_play);
 	g_object_ref(soundmenu->image_pause);
 
 	gtk_container_add(GTK_CONTAINER(play_button),
 		soundmenu->image_play);
+	gtk_container_add(GTK_CONTAINER(player_button),
+		soundmenu->image_player);
 
 	gtk_box_pack_start(GTK_BOX(soundmenu->hvbox),
 			   GTK_WIDGET(ev_album_art),
@@ -475,6 +480,9 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	gtk_box_pack_start(GTK_BOX(soundmenu->hvbox_buttons),
 			   GTK_WIDGET(next_button),
 			   TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(soundmenu->hvbox_buttons),
+			   GTK_WIDGET(player_button),
+			   TRUE, TRUE, 0);
 
 	gtk_widget_show(album_art);
 	if(soundmenu->show_album_art)
@@ -484,6 +492,7 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	if(soundmenu->show_stop)
 		gtk_widget_show_all(stop_button);
 	gtk_widget_show_all(next_button);
+	gtk_widget_show_all(player_button);
 
 	/* Signal handlers */
 
@@ -502,12 +511,14 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	xfce_panel_plugin_add_action_widget (plugin, play_button);
 	xfce_panel_plugin_add_action_widget (plugin, stop_button);
 	xfce_panel_plugin_add_action_widget (plugin, next_button);
+	xfce_panel_plugin_add_action_widget (plugin, player_button);
 
 	g_object_set (G_OBJECT(album_art), "has-tooltip", TRUE, NULL);
 	g_object_set (G_OBJECT(prev_button), "has-tooltip", TRUE, NULL);
 	g_object_set (G_OBJECT(play_button), "has-tooltip", TRUE, NULL);
 	g_object_set (G_OBJECT(stop_button), "has-tooltip", TRUE, NULL);
 	g_object_set (G_OBJECT(next_button), "has-tooltip", TRUE, NULL);
+	g_object_set (G_OBJECT(player_button), "has-tooltip", TRUE, NULL);
 
 	g_signal_connect(G_OBJECT(album_art), "query-tooltip",
 			G_CALLBACK(status_get_tooltip_cb), soundmenu);
@@ -518,6 +529,8 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	g_signal_connect(G_OBJECT(stop_button), "query-tooltip",
 			G_CALLBACK(status_get_tooltip_cb), soundmenu);
 	g_signal_connect(G_OBJECT(next_button), "query-tooltip",
+			G_CALLBACK(status_get_tooltip_cb), soundmenu);
+	g_signal_connect(G_OBJECT(player_button), "query-tooltip",
 			G_CALLBACK(status_get_tooltip_cb), soundmenu);
 
 	/* FIXME:
@@ -531,6 +544,7 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	soundmenu->play_button = play_button;
 	soundmenu->stop_button = stop_button;
 	soundmenu->next_button = next_button;
+	soundmenu->player_button = player_button;
 
 	soundmenu->size_request = 24;
 
@@ -560,6 +574,8 @@ void init_soundmenu_plugin(SoundmenuPlugin *soundmenu)
 		soundmenu->player = mpris2_get_player(soundmenu);
 	if (soundmenu->player == NULL)
 		soundmenu->player = g_strdup (DEFAULT_PLAYER);
+
+	xfce_panel_image_set_from_source (XFCE_PANEL_IMAGE (soundmenu->image_player), soundmenu->player);
 
 	/* Configure rules according to player selected. */
 
@@ -690,10 +706,11 @@ soundmenu_size_changed (XfcePanelPlugin *plugin,
 	}
 #endif
 
-	gtk_widget_set_size_request (GTK_WIDGET (soundmenu->next_button), size, size);
 	gtk_widget_set_size_request (GTK_WIDGET (soundmenu->prev_button), size, size);
 	gtk_widget_set_size_request (GTK_WIDGET (soundmenu->stop_button), size, size);
 	gtk_widget_set_size_request (GTK_WIDGET (soundmenu->play_button), size, size);
+	gtk_widget_set_size_request (GTK_WIDGET (soundmenu->next_button), size, size);
+	gtk_widget_set_size_request (GTK_WIDGET (soundmenu->player_button), size, size);
 
 	update_panel_album_art(soundmenu);
 

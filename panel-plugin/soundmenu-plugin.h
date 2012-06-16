@@ -111,8 +111,6 @@ typedef struct
 	GtkWidget		*play_button;
 	GtkWidget		*stop_button;
 	GtkWidget		*next_button;
-	GtkWidget		*player_button;
-	GtkWidget		*image_player;
 	GtkWidget		*image_pause;
 	GtkWidget		*image_play;
 

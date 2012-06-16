@@ -46,8 +46,6 @@ soundmenu_configure_response (GtkWidget    *dialog,
 				g_free (soundmenu->player);
 			soundmenu->player = player;
 
-			xfce_panel_image_set_from_source (XFCE_PANEL_IMAGE (soundmenu->image_player), player);
-
 			rule = g_strdup_printf ("type='signal', sender='%s'", soundmenu->dbus_name);
 			dbus_bus_remove_match (soundmenu->connection, rule, NULL);
 			g_free(rule);
@@ -59,9 +57,6 @@ soundmenu_configure_response (GtkWidget    *dialog,
 			rule = g_strdup_printf ("type='signal', sender='%s'", soundmenu->dbus_name);
 			dbus_bus_add_match (soundmenu->connection, rule, NULL);
 			g_free(rule);
-		}
-		else {
-			xfce_panel_image_set_from_source (XFCE_PANEL_IMAGE (soundmenu->image_player), "xfce-multimedia");
 		}
 		#ifdef HAVE_LIBCLASTFM
 		soundmenu->clastfm->lastfm_support = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(soundmenu->lw.lastfm_w));

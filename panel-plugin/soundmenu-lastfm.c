@@ -116,8 +116,6 @@ gboolean do_lastfm_now_playing (gpointer data)
 
 	SoundmenuPlugin *soundmenu = data;
 
-	LASTFM_ALBUM_INFO *album = NULL;
-
 	rv = LASTFM_track_update_now_playing (soundmenu->clastfm->session_id,
 		soundmenu->metadata->title,
 		soundmenu->metadata->album,

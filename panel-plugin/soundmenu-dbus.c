@@ -23,7 +23,7 @@ soundmenu_dbus_connection_filter (DBusConnection *connection, DBusMessage *messa
 {
 	SoundmenuPlugin *soundmenu = user_data;
 
-	if(dbus_message_is_signal(message, "org.freedesktop.DBus.Properties", "PropertiesChanged");
+	if(dbus_message_is_signal(message, "org.freedesktop.DBus.Properties", "PropertiesChanged"));
 	{
 		mpris2_dbus_filter (message, soundmenu);
 		return DBUS_HANDLER_RESULT_HANDLED;

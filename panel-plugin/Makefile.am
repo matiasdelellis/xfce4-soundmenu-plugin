@@ -24,14 +24,18 @@ libsoundmenu_la_SOURCES = \
 	soundmenu-dialogs.c \
 	soundmenu-dialogs.h \
 	soundmenu-utils.c \
-	soundmenu-utils.h \
-	soundmenu-related.c \
-	soundmenu-related.h
+	soundmenu-utils.h
 
 if HAVE_LIBCLASTFM
 libsoundmenu_la_SOURCES += \
 	soundmenu-lastfm.c \
 	soundmenu-lastfm.h
+endif
+
+if HAVE_LIBGLYR
+libsoundmenu_la_SOURCES += \
+	soundmenu-related.c \
+	soundmenu-related.h
 endif
 
 libsoundmenu_la_CFLAGS = \

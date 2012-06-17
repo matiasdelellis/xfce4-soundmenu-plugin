@@ -17,14 +17,12 @@
  *  Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA.
  */
 
-
 /* Lastfm Helper */
 
 void lastfm_track_love_action(GtkWidget *widget, SoundmenuPlugin    *soundmenu);
 void lastfm_track_unlove_action (GtkWidget *widget, SoundmenuPlugin    *soundmenu);
 
-gboolean lastfm_love_handler (SoundmenuPlugin  *soundmenu);
-gboolean lastfm_scrob_handler (SoundmenuPlugin  *soundmenu);
+gboolean lastfm_scrob_handler(gpointer data);
 gboolean lastfm_now_playing_handler (gpointer data);
 
 void update_lastfm (SoundmenuPlugin    *soundmenu);

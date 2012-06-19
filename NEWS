@@ -1,3 +1,9 @@
+V0.4.10
+Support to Xfce 4.10 thanks to Andrzej.
+Add option to show a tiny album art, or use all panel size in deskbar mode.
+Show contect menu on RMB click on album_art icon thanks to Andrzej.
+Set invisible event box to album art.
+
 V0.4.1
 Now is compiled as a module as recommended in the documentation.
 [PATCH] Use Xfce 4.8 locations for plugin and desktop file.

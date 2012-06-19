@@ -8,8 +8,8 @@ dnl ***************************
 dnl *** Version information ***
 dnl ***************************
 m4_define([soundmenu_version_major], [0])
-m4_define([soundmenu_version_minor], [4])
-m4_define([soundmenu_version_micro], [10])
+m4_define([soundmenu_version_minor], [5])
+m4_define([soundmenu_version_micro], [git])
 m4_define([soundmenu_version], [soundmenu_version_major().soundmenu_version_minor().soundmenu_version_micro()])
 
 dnl ***************************
@@ -43,7 +43,6 @@ AM_PROG_CC_C_O()
 AC_PROG_LD()
 AC_PROG_INSTALL()
 AC_PROG_INTLTOOL()
-AC_PROG_LIBTOOL()
 
 dnl **************************
 dnl *** Initialize libtool ***

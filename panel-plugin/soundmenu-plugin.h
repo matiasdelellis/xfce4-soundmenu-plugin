@@ -88,6 +88,7 @@ struct con_lastfm {
 	LASTFM_SESSION *session_id;
 	gint lastfm_handler_id;
 	time_t playback_started;
+	GtkWidget *lastfm_menu;
 };
 #endif
 

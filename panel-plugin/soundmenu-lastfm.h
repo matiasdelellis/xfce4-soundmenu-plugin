@@ -26,6 +26,6 @@ gboolean lastfm_scrob_handler(gpointer data);
 gboolean lastfm_now_playing_handler (gpointer data);
 
 void update_lastfm (SoundmenuPlugin    *soundmenu);
-
+void soundmenu_update_lastfm_menu (struct con_lastfm *clastfm);
 gint init_lastfm_idle_timeout(SoundmenuPlugin *soundmenu);
 gint just_init_lastfm (SoundmenuPlugin *soundmenu);

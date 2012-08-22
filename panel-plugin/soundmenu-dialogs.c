@@ -177,6 +177,7 @@ toggle_lastfm(GtkToggleButton *button, SoundmenuPlugin    *soundmenu)
 		LASTFM_dinit(soundmenu->clastfm->session_id);
 		soundmenu->clastfm->session_id = NULL;
 	}
+	soundmenu_update_lastfm_menu(soundmenu->clastfm);
 }
 #endif
 

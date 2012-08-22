@@ -199,6 +199,11 @@ void update_lastfm (SoundmenuPlugin *soundmenu)
 			lastfm_now_playing_handler, soundmenu, NULL);
 }
 
+void soundmenu_update_lastfm_menu (struct con_lastfm *clastfm)
+{
+	gtk_widget_set_sensitive(clastfm->lastfm_menu, (clastfm->session_id != NULL));
+}
+
 /* When just run soundmenu init lastfm with a timeuout of 30 sec. */
 
 gboolean do_init_lastfm_idle (gpointer data)
@@ -227,6 +232,8 @@ gboolean do_init_lastfm_idle (gpointer data)
 	else {
 		g_critical("Failure to init libclastfm");
 	}
+
+	soundmenu_update_lastfm_menu(clastfm);
 
 	return FALSE;
 }

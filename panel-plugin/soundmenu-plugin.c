@@ -357,6 +357,9 @@ soundmenu_add_lastfm_menu_item (SoundmenuPlugin *soundmenu)
 
 	item = gtk_menu_item_new_with_mnemonic (_("Last.fm"));
 	xfce_panel_plugin_menu_insert_item (soundmenu->plugin, GTK_MENU_ITEM(item));
+
+	soundmenu->clastfm->lastfm_menu = item;
+	gtk_widget_set_sensitive(item, FALSE);
 	gtk_widget_show (item);
 
 	submenu = gtk_menu_new ();

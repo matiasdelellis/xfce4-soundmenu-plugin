@@ -203,6 +203,9 @@ void mpris2_dbus_filter (DBusMessage *message, SoundmenuPlugin *soundmenu)
 			/* Ignore inferface string and send the pointer to metadata. */
 			dbus_message_iter_next(&dict_entry);
 			mpris2_demarshal_metadata (&dict_entry, soundmenu);
+            /* TODO: Check if arturl change before update album art.
+             * The same to lastfm.. First check artist, title and album. */
+            update_panel_album_art(soundmenu);
 			#ifdef HAVE_LIBCLASTFM
 			if (soundmenu->clastfm->lastfm_support)
 				update_lastfm(soundmenu);

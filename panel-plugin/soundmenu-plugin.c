@@ -566,10 +566,8 @@ void init_soundmenu_plugin(SoundmenuPlugin *soundmenu)
 		keybinder_bind_keys(soundmenu);
 	#endif
 	#ifdef HAVE_LIBCLASTFM
-	if (nm_is_online () == TRUE)
-		init_lastfm_idle_timeout(soundmenu);
-	else
-		just_init_lastfm(soundmenu);
+	if(soundmenu->clastfm->lastfm_support)
+        soundmenu_init_lastfm(soundmenu);
 	#endif
 	#ifdef HAVE_LIBGLYR
 	init_glyr_related(soundmenu);

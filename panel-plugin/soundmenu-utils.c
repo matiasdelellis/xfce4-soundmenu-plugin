@@ -28,6 +28,7 @@
 #include "soundmenu-utils.h"
 #include "soundmenu-related.h"
 
+#if !GLIB_CHECK_VERSION(2,32,0)
 /* Functions to check the network manager status. */
 
 static NMState
@@ -82,6 +83,7 @@ nm_is_online ()
 
 	return FALSE;
 }
+#endif
 
 /* Set and remove the watch cursor to suggest background work.*/
 

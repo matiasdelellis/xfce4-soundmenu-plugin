@@ -86,6 +86,7 @@ struct con_lastfm {
 	gchar *lastfm_user;
 	gchar *lastfm_pass;
 	LASTFM_SESSION *session_id;
+	enum LASTFM_STATUS_CODES status;
 	gint lastfm_handler_id;
 	time_t playback_started;
 	GtkWidget *lastfm_menu;

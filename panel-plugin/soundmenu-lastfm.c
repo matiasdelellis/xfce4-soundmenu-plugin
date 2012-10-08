@@ -31,7 +31,8 @@
 #define WAIT_UPDATE 5
 
 #ifdef HAVE_LIBCLASTFM
-gboolean do_lastfm_love (gpointer data)
+gpointer
+do_lastfm_love (gpointer data)
 {
 	gint rv;
 
@@ -44,8 +45,6 @@ gboolean do_lastfm_love (gpointer data)
 	if (rv != 0) {
 		g_critical("Love song on Last.fm failed");
 	}
-
-	return FALSE;
 }
 
 void lastfm_track_love_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
@@ -58,10 +57,15 @@ void lastfm_track_love_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 		return;
 	}
 
-	gdk_threads_add_idle(do_lastfm_love, soundmenu);
+	#if GLIB_CHECK_VERSION(2,31,0)
+	g_thread_new("Unlove", do_lastfm_love, soundmenu);
+	#else
+	g_thread_create(do_lastfm_love, soundmenu, FALSE, NULL);
+	#endif
 }
 
-gboolean do_lastfm_unlove (gpointer data)
+gpointer
+do_lastfm_unlove (gpointer data)
 {
 	gint rv;
 
@@ -74,8 +78,6 @@ gboolean do_lastfm_unlove (gpointer data)
 	if (rv != 0) {
 		g_critical("Unlove song on Last.fm failed");
 	}
-
-	return FALSE;
 }
 
 void lastfm_track_unlove_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
@@ -88,7 +90,32 @@ void lastfm_track_unlove_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 		return;
 	}
 
-	gdk_threads_add_idle(do_lastfm_unlove, soundmenu);
+    #if GLIB_CHECK_VERSION(2,31,0)
+    g_thread_new("Unlove", do_lastfm_unlove, soundmenu);
+    #else
+    g_thread_create(do_lastfm_unlove, soundmenu, FALSE, NULL);
+    #endif
+}
+
+gpointer
+do_lastfm_scrob (gpointer data)
+{
+    gint rv;
+    SoundmenuPlugin *soundmenu = data;
+
+    rv = LASTFM_track_scrobble(soundmenu->clastfm->session_id,
+                               soundmenu->metadata->title,
+                               soundmenu->metadata->album,
+                               soundmenu->metadata->artist,
+                               soundmenu->clastfm->playback_started,
+                               soundmenu->metadata->length,
+                               soundmenu->metadata->trackNumber,
+                               0, NULL);
+
+    if (rv != 0)
+        g_critical("Last.fm submission failed");
+
+    return FALSE;
 }
 
 gboolean lastfm_scrob_handler(gpointer data)
@@ -100,27 +127,22 @@ gboolean lastfm_scrob_handler(gpointer data)
 	if(soundmenu->state == ST_STOPPED)
 		return FALSE;
 
-	if (soundmenu->clastfm->session_id == NULL) {
+	if (soundmenu->clastfm->status != LASTFM_STATUS_OK) {
 		g_critical("No connection Last.fm has been established.");
 		return FALSE;
 	}
 
-	rv = LASTFM_track_scrobble (soundmenu->clastfm->session_id,
-		soundmenu->metadata->title,
-		soundmenu->metadata->album,
-		soundmenu->metadata->artist,
-		soundmenu->clastfm->playback_started,
-		soundmenu->metadata->length,
-		soundmenu->metadata->trackNumber,
-		0, NULL);
-
-	if (rv != 0)
-		g_critical("Last.fm submission failed");
+	#if GLIB_CHECK_VERSION(2,31,0)
+	g_thread_new("Scroble", do_lastfm_scrob, soundmenu);
+	#else
+	g_thread_create(do_lastfm_scrob, soundmenu, FALSE, NULL);
+	#endif
 
 	return FALSE;
 }
 
-gboolean do_lastfm_now_playing (gpointer data)
+gpointer
+do_lastfm_now_playing (gpointer data)
 {
 	gint rv;
 
@@ -137,7 +159,7 @@ gboolean do_lastfm_now_playing (gpointer data)
 	if (rv != 0) {
 		g_critical("Update current song on Last.fm failed");
 	}
-	return FALSE;
+	return;
 }
 
 gboolean lastfm_now_playing_handler (gpointer data)
@@ -159,7 +181,11 @@ gboolean lastfm_now_playing_handler (gpointer data)
 		return FALSE;
 
 	/* Firt update now playing on lastfm */
-	gdk_threads_add_idle(do_lastfm_now_playing, soundmenu);
+	#if GLIB_CHECK_VERSION(2,31,0)
+	g_thread_new("Lfm Now playing", do_lastfm_now_playing, soundmenu);
+	#else
+	g_thread_create(do_lastfm_now_playing, soundmenu, FALSE, NULL);
+	#endif
 
 	/* Kick the lastfm scrobbler on
 	 * Note: Only scrob if tracks is more than 30s.
@@ -177,87 +203,81 @@ gboolean lastfm_now_playing_handler (gpointer data)
 		length = (soundmenu->metadata->length / 2) - WAIT_UPDATE;
 	}
 
-	soundmenu->clastfm->lastfm_handler_id = gdk_threads_add_timeout_seconds_full(
-			G_PRIORITY_DEFAULT_IDLE, length,
-			lastfm_scrob_handler, soundmenu, NULL);
-
-	return FALSE;
+    soundmenu->clastfm->lastfm_handler_id =
+        g_timeout_add_seconds_full(G_PRIORITY_DEFAULT_IDLE,
+                                   length,
+                                   lastfm_scrob_handler,
+                                   soundmenu,
+                                   NULL);
 }
 
 void update_lastfm (SoundmenuPlugin *soundmenu)
 {
-	if(soundmenu->clastfm->lastfm_handler_id)
-		g_source_remove(soundmenu->clastfm->lastfm_handler_id);
+    if(soundmenu->clastfm->lastfm_handler_id)
+        g_source_remove(soundmenu->clastfm->lastfm_handler_id);
 
-	if(soundmenu->state != ST_PLAYING)
-		return;
+    if(soundmenu->state != ST_PLAYING)
+        return;
 
-	time(&soundmenu->clastfm->playback_started);
+    time(&soundmenu->clastfm->playback_started);
 
-	soundmenu->clastfm->lastfm_handler_id = gdk_threads_add_timeout_seconds_full(
-			G_PRIORITY_DEFAULT_IDLE, WAIT_UPDATE,
-			lastfm_now_playing_handler, soundmenu, NULL);
+    soundmenu->clastfm->lastfm_handler_id =
+	    g_timeout_add_seconds_full(G_PRIORITY_DEFAULT_IDLE,
+	                               WAIT_UPDATE,
+	                               lastfm_now_playing_handler,
+	                               soundmenu,
+	                               NULL);
 }
 
 void soundmenu_update_lastfm_menu (struct con_lastfm *clastfm)
 {
-	gtk_widget_set_sensitive(clastfm->lastfm_menu, (clastfm->session_id != NULL));
+	gtk_widget_set_sensitive(clastfm->lastfm_menu, (clastfm->status == LASTFM_STATUS_OK));
 }
 
-/* When just run soundmenu init lastfm with a timeuout of 30 sec. */
-
-gboolean do_init_lastfm_idle (gpointer data)
+gboolean
+do_soundmenu_init_lastfm(gpointer data)
 {
-	gint rv;
+    struct con_lastfm *clastfm = data;
 
-	struct con_lastfm *clastfm = data;
+    clastfm->session_id = LASTFM_init(LASTFM_API_KEY, LASTFM_SECRET);
 
-	clastfm->session_id = LASTFM_init(LASTFM_API_KEY, LASTFM_SECRET);
-
-	if (clastfm->session_id != NULL) {
+    if (clastfm->session_id != NULL) {
 		if((strlen(clastfm->lastfm_user) != 0) &&
 		   (strlen(clastfm->lastfm_pass) != 0)) {
-			rv = LASTFM_login (clastfm->session_id,
-					   clastfm->lastfm_user,
-					   clastfm->lastfm_pass);
+            clastfm->status = LASTFM_login (clastfm->session_id,
+                                            clastfm->lastfm_user,
+                                            clastfm->lastfm_pass);
 
-			if(rv != LASTFM_STATUS_OK) {
-				LASTFM_dinit(clastfm->session_id);
-				clastfm->session_id = NULL;
-
-				g_critical("Unable to login on Lastfm");
-			}
-		}
-	}
-	else {
-		g_critical("Failure to init libclastfm");
-	}
+			if(clastfm->status != LASTFM_STATUS_OK) {
+                LASTFM_dinit(clastfm->session_id);
+                clastfm->session_id = NULL;
+            }
+        }
+    }
 
 	soundmenu_update_lastfm_menu(clastfm);
 
-	return FALSE;
+    return FALSE;
 }
 
-/* When just init the soundmenu plugin init lastfm with a timeuout of 30 sec. */
-
-gint init_lastfm_idle_timeout(SoundmenuPlugin *soundmenu)
+gint
+soundmenu_init_lastfm(SoundmenuPlugin *soundmenu)
 {
-	if (soundmenu->clastfm->lastfm_support)
-		gdk_threads_add_timeout_seconds_full(
-					G_PRIORITY_DEFAULT_IDLE, 30,
-					do_init_lastfm_idle, soundmenu->clastfm, NULL);
+    /* Test internet and launch threads.*/
+#if GLIB_CHECK_VERSION(2,32,0)
+    if (g_network_monitor_get_network_available (g_network_monitor_get_default ()))
+#else
+    if(nm_is_online () == TRUE)
+#endif
+        g_idle_add(do_soundmenu_init_lastfm,
+                   soundmenu->clastfm);
+    else
+        g_timeout_add_seconds_full(G_PRIORITY_DEFAULT_IDLE,
+                                   30,
+                                   do_soundmenu_init_lastfm,
+                                   soundmenu->clastfm,
+                                   NULL);
 
-	return 0;
+    return 0;
 }
-
-/* Init lastfm with a simple thread when change preferences or init plugin with internet online. */
-
-gint just_init_lastfm (SoundmenuPlugin *soundmenu)
-{
-	if (soundmenu->clastfm->lastfm_support)
-		gdk_threads_add_idle (do_init_lastfm_idle, soundmenu->clastfm);
-
-	return 0;
-}
-
 #endif

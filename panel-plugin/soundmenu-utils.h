@@ -16,6 +16,7 @@
  *  Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA.
  */
 
+#if !GLIB_CHECK_VERSION(2,32,0)
 #define NM_DBUS_SERVICE		"org.freedesktop.NetworkManager"
 #define NM_DBUS_PATH		"/org/freedesktop/NetworkManager"
 #define NM_DBUS_INTERFACE	"org.freedesktop.NetworkManager"
@@ -33,6 +34,7 @@ typedef enum {
 
 static NMState dbus_check_nm_status (DBusConnection *connection);
 gboolean nm_is_online ();
+#endif
 
 void set_watch_cursor_on_thread(SoundmenuPlugin *soundmenu);
 void remove_watch_cursor_on_thread(gchar *message, SoundmenuPlugin *soundmenu);

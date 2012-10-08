@@ -93,8 +93,9 @@ soundmenu_configure_response (GtkWidget    *dialog,
 	}
 	mpris2_get_player_status (soundmenu);
 	#ifdef HAVE_LIBCLASTFM
-	if (soundmenu->clastfm->session_id == NULL)
-		just_init_lastfm(soundmenu);
+    if (soundmenu->clastfm->lastfm_support &&
+        soundmenu->clastfm->session_id == NULL)
+		soundmenu_init_lastfm(soundmenu);
 	#endif
 }
 

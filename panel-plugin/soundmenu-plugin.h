@@ -57,8 +57,8 @@
 #define NOTIFY_CHECK_VERSION(x,y,z) 0
 #endif
 
-#define LASTFM_API_KEY             "ecdc2d21dbfe1139b1f0da35daca9309"
-#define LASTFM_SECRET              "f3498ce387f30eeae8ea1b1023afb32b"
+#define LASTFM_API_KEY             "70c479ab2632e597fd9215cf35963c1b"
+#define LASTFM_SECRET              "4cb5255d955edc8f651de339fd2f335b"
 
 G_BEGIN_DECLS
 

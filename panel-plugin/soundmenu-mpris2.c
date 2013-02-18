@@ -105,14 +105,14 @@ get_meta_item_gint(DBusMessageIter *dict_entry, void *item)
 void
 mpris2_demarshal_metadata (DBusMessageIter *args, SoundmenuPlugin *soundmenu)	// arg inited on Metadata string
 {
-	DBG ("Demarshal_metadata");
-
 	DBusMessageIter dict, dict_entry, variant;
 	Metadata *metadata;
 	gchar *str_buf = NULL;
 
 	gint64 length = 0;
 	gint32 trackNumber = 0;
+
+	DBG ("Demarshal_metadata");
 	
 	metadata = malloc_metadata();
 

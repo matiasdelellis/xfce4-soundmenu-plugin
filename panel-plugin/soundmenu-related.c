@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011-2012 matias <mati86dl@gmail.com>
+ *  Copyright (c) 2011-2013 matias <mati86dl@gmail.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -54,7 +54,7 @@ soundmenu_show_related_text_info_dialog(glyr_struct *glyr_info,
                                         gchar *title_header,
                                         gchar *subtitle_header)
 {
-    GtkWidget *dialog, *header, *view, *scrolled;
+    GtkWidget *dialog, *view, *scrolled;
     GtkTextBuffer *buffer;
 
     SoundmenuPlugin *soundmenu = glyr_info->soundmenu;
@@ -223,8 +223,8 @@ void soundmenu_search_lyric_dialog (GtkWidget *widget, SoundmenuPlugin *soundmen
     if(soundmenu->state == ST_STOPPED)
         return;
 
-    if ((soundmenu->metadata->artist == NULL) || (soundmenu->metadata->title == NULL) ||
-        (strlen(soundmenu->metadata->artist) == 0) || (strlen(soundmenu->metadata->title) == 0))
+    if (g_str_empty0(soundmenu->metadata->artist) ||
+        g_str_empty0(soundmenu->metadata->title))
         return;
 
     artist = soundmenu->metadata->artist;
@@ -240,8 +240,7 @@ void soundmenu_search_artistinfo_dialog (GtkWidget *widget, SoundmenuPlugin *sou
     if(soundmenu->state == ST_STOPPED)
         return;
 
-    if ((soundmenu->metadata->artist == NULL) ||
-        (strlen(soundmenu->metadata->artist) == 0))
+    if (g_str_empty0(soundmenu->metadata->artist))
         return;
 
     artist = soundmenu->metadata->artist;

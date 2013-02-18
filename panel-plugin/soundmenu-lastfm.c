@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011-2012 matias <mati86dl@gmail.com>
+ *  Copyright (c) 2011-2013 matias <mati86dl@gmail.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -45,6 +45,7 @@ do_lastfm_love (gpointer data)
 	if (rv != 0) {
 		g_critical("Love song on Last.fm failed");
 	}
+	return NULL;
 }
 
 void lastfm_track_love_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
@@ -56,6 +57,10 @@ void lastfm_track_love_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 		g_critical("No connection Last.fm has been established.");
 		return;
 	}
+
+	if (g_str_empty0(soundmenu->metadata->artist) ||
+	    g_str_empty0(soundmenu->metadata->title))
+		return;
 
 	#if GLIB_CHECK_VERSION(2,31,0)
 	g_thread_new("Unlove", do_lastfm_love, soundmenu);
@@ -78,6 +83,8 @@ do_lastfm_unlove (gpointer data)
 	if (rv != 0) {
 		g_critical("Unlove song on Last.fm failed");
 	}
+
+	return NULL;
 }
 
 void lastfm_track_unlove_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
@@ -89,6 +96,9 @@ void lastfm_track_unlove_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 		g_critical("No connection Last.fm has been established.");
 		return;
 	}
+	if (g_str_empty0(soundmenu->metadata->artist) ||
+	    g_str_empty0(soundmenu->metadata->title))
+		return;
 
     #if GLIB_CHECK_VERSION(2,31,0)
     g_thread_new("Unlove", do_lastfm_unlove, soundmenu);
@@ -105,7 +115,7 @@ do_lastfm_scrob (gpointer data)
 
     rv = LASTFM_track_scrobble(soundmenu->clastfm->session_id,
                                soundmenu->metadata->title,
-                               soundmenu->metadata->album,
+                               soundmenu->metadata->album ? soundmenu->metadata->album : "",
                                soundmenu->metadata->artist,
                                soundmenu->clastfm->playback_started,
                                soundmenu->metadata->length,
@@ -115,13 +125,11 @@ do_lastfm_scrob (gpointer data)
     if (rv != 0)
         g_critical("Last.fm submission failed");
 
-    return FALSE;
+    return NULL;
 }
 
 gboolean lastfm_scrob_handler(gpointer data)
 {
-	gint rv;
-
 	SoundmenuPlugin *soundmenu = data;
 
 	if(soundmenu->state == ST_STOPPED)
@@ -150,7 +158,7 @@ do_lastfm_now_playing (gpointer data)
 
 	rv = LASTFM_track_update_now_playing (soundmenu->clastfm->session_id,
 		soundmenu->metadata->title,
-		soundmenu->metadata->album,
+		soundmenu->metadata->album ? soundmenu->metadata->album : "",
 		soundmenu->metadata->artist,
 		soundmenu->metadata->length,
 		soundmenu->metadata->trackNumber,
@@ -159,7 +167,8 @@ do_lastfm_now_playing (gpointer data)
 	if (rv != 0) {
 		g_critical("Update current song on Last.fm failed");
 	}
-	return;
+
+	return NULL;
 }
 
 gboolean lastfm_now_playing_handler (gpointer data)
@@ -176,8 +185,8 @@ gboolean lastfm_now_playing_handler (gpointer data)
 		return FALSE;
 	}
 
-	if ((soundmenu->metadata->artist == NULL) || (soundmenu->metadata->title == NULL) ||
-	    (strlen(soundmenu->metadata->artist) == 0) || (strlen(soundmenu->metadata->title) == 0))
+	if (g_str_empty0(soundmenu->metadata->artist) ||
+	    g_str_empty0(soundmenu->metadata->title))
 		return FALSE;
 
 	/* Firt update now playing on lastfm */

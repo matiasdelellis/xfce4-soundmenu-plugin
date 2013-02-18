@@ -29,6 +29,7 @@
 
 #include <gtk/gtk.h>
 #include <glib.h>
+#include <glib/gprintf.h>
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-lowlevel.h>

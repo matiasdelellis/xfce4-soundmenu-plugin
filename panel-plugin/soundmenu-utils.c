@@ -122,6 +122,37 @@ remove_watch_cursor_on_thread(gchar *message, SoundmenuPlugin *soundmenu)
 	gdk_threads_leave ();
 }
 
+/* Open the image when double click.. */
+
+gboolean
+soundmenu_album_art_frame_press_callback (GtkWidget         *event_box,
+                                          GdkEventButton    *event,
+                                          SoundmenuAlbumArt *albumart)
+{
+	gchar *command = NULL;
+	const gchar *art_url;
+	gboolean result;
+
+	art_url = soundmenu_album_art_get_path(albumart);
+
+	if ((art_url != NULL) &&
+	   (event->type==GDK_2BUTTON_PRESS ||
+	    event->type==GDK_3BUTTON_PRESS)) {
+
+	   	command = g_strdup_printf("exo-open \"%s\"", art_url);
+		result = g_spawn_command_line_async (command, NULL);
+
+		if (G_UNLIKELY (result == FALSE))
+			g_warning ("Unable to show the current album art: %s", art_url);
+
+		g_free(command);
+
+		return TRUE;
+	}
+	else
+		return FALSE;
+}
+
 gchar* convert_length_str(gint length)
 {
 	static gchar *str, tmp[24];

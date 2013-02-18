@@ -21,6 +21,7 @@
 #endif
 
 #include "soundmenu-plugin.h"
+#include "soundmenu-album-art.h"
 #include "soundmenu-dbus.h"
 #include "soundmenu-dialogs.h"
 #include "soundmenu-lastfm.h"
@@ -205,7 +206,8 @@ void mpris2_dbus_filter (DBusMessage *message, SoundmenuPlugin *soundmenu)
 			mpris2_demarshal_metadata (&dict_entry, soundmenu);
             /* TODO: Check if arturl change before update album art.
              * The same to lastfm.. First check artist, title and album. */
-            update_panel_album_art(soundmenu);
+			soundmenu_album_art_set_path(soundmenu->album_art, soundmenu->metadata->arturl);
+
 			#ifdef HAVE_LIBCLASTFM
 			if (soundmenu->clastfm->lastfm_support)
 				update_lastfm(soundmenu);

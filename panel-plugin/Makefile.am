@@ -17,6 +17,8 @@ plugindir = \
 libsoundmenu_la_SOURCES = \
 	soundmenu-plugin.c \
 	soundmenu-plugin.h \
+	soundmenu-album-art.c \
+	soundmenu-album-art.h \
 	soundmenu-dbus.c \
 	soundmenu-dbus.h \
 	soundmenu-mpris2.c \

@@ -54,12 +54,15 @@
 #include <libnotify/notify.h>
 #endif
 
+#include "soundmenu-album-art.h"
+
 #ifndef NOTIFY_CHECK_VERSION
 #define NOTIFY_CHECK_VERSION(x,y,z) 0
 #endif
 
 #define LASTFM_API_KEY             "70c479ab2632e597fd9215cf35963c1b"
 #define LASTFM_SECRET              "4cb5255d955edc8f651de339fd2f335b"
+
 
 G_BEGIN_DECLS
 
@@ -108,7 +111,7 @@ typedef struct
 	/* panel widgets */
 	GtkWidget		*hvbox;
 	GtkWidget		*hvbox_buttons;
-	GtkWidget		*album_art;
+	SoundmenuAlbumArt *album_art;
 	GtkWidget		*ev_album_art;
 	GtkWidget		*prev_button;
 	GtkWidget		*play_button;

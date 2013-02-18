@@ -20,10 +20,6 @@
 Metadata *malloc_metadata();
 void free_metadata(Metadata *m);
 
-static void get_meta_item_array(DBusMessageIter *dict_entry, char **item);
-static void get_meta_item_str(DBusMessageIter *dict_entry, char **item);
-static void get_meta_item_gint(DBusMessageIter *dict_entry, void *item);
-
 void mpris2_demarshal_metadata (DBusMessageIter *args, SoundmenuPlugin *soundmenu);
 
 void mpris2_dbus_filter (DBusMessage *message, SoundmenuPlugin *soundmenu);

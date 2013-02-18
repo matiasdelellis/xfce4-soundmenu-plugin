@@ -143,6 +143,8 @@ typedef struct
 }
 SoundmenuPlugin;
 
+void update_panel_album_art(SoundmenuPlugin *soundmenu);
+
 void
 soundmenu_update_layout_changes (SoundmenuPlugin    *soundmenu);
 

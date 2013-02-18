@@ -109,7 +109,7 @@ mpris2_demarshal_metadata (DBusMessageIter *args, SoundmenuPlugin *soundmenu)	//
 
 	DBusMessageIter dict, dict_entry, variant;
 	Metadata *metadata;
-	gchar *str_buf = NULL, *string = NULL;
+	gchar *str_buf = NULL;
 
 	gint64 length = 0;
 	gint32 trackNumber = 0;
@@ -281,7 +281,8 @@ mpris2_get_playbackstatus (SoundmenuPlugin *soundmenu)
 					DBUS_TYPE_STRING, &query,
 					DBUS_TYPE_INVALID);
 
-	if(reply_message = dbus_connection_send_with_reply_and_block (soundmenu->connection, message, -1, NULL)) {
+	reply_message = dbus_connection_send_with_reply_and_block (soundmenu->connection, message, -1, NULL);
+	if(reply_message) {
 		dbus_message_iter_init(reply_message, &dict_entry);
 		dbus_message_iter_recurse(&dict_entry, &variant);
 
@@ -312,7 +313,8 @@ mpris2_get_metadata (SoundmenuPlugin *soundmenu)
 					DBUS_TYPE_STRING, &query,
 					DBUS_TYPE_INVALID);
 
-	if(reply_message = dbus_connection_send_with_reply_and_block (soundmenu->connection, message, -1, NULL)) {
+	reply_message = dbus_connection_send_with_reply_and_block (soundmenu->connection, message, -1, NULL);
+	if(reply_message) {
 		dbus_message_iter_init(reply_message, &args);
 		mpris2_demarshal_metadata (&args, soundmenu);
 	}
@@ -340,7 +342,8 @@ mpris2_get_volume (SoundmenuPlugin *soundmenu)
 					DBUS_TYPE_STRING, &query,
 					DBUS_TYPE_INVALID);
 
-	if(reply_message = dbus_connection_send_with_reply_and_block (soundmenu->connection, message, -1, NULL)) {
+	reply_message = dbus_connection_send_with_reply_and_block (soundmenu->connection, message, -1, NULL);
+	if(reply_message) {
 		dbus_message_iter_init(reply_message, &dict_entry);
 		dbus_message_iter_recurse(&dict_entry, &variant);
 		dbus_message_iter_get_basic(&variant, &volume);

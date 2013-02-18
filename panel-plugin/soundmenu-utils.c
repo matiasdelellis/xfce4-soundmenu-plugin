@@ -102,10 +102,13 @@ set_watch_cursor_on_thread(SoundmenuPlugin *soundmenu)
 void
 remove_watch_cursor_on_thread(gchar *message, SoundmenuPlugin *soundmenu)
 {
+	#ifdef HAVE_LIBNOTIFY
+	NotifyNotification *notify = NULL;
+	#endif
+
 	gdk_threads_enter ();
 	gdk_window_set_cursor(GDK_WINDOW(gtk_widget_get_toplevel (GTK_WIDGET (soundmenu->plugin))->window), NULL);
 	#ifdef HAVE_LIBNOTIFY
-	NotifyNotification *notify = NULL;
 	if(message != NULL) {
 		#if NOTIFY_CHECK_VERSION (0, 7, 0)
 		notify = notify_notification_new(_("Sound menu Plugin"), message, "xfce4-soundmenu-plugin");

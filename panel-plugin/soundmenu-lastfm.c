@@ -218,6 +218,7 @@ gboolean lastfm_now_playing_handler (gpointer data)
                                    lastfm_scrob_handler,
                                    soundmenu,
                                    NULL);
+	return FALSE;
 }
 
 void update_lastfm (SoundmenuPlugin *soundmenu)

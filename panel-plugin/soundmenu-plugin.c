@@ -604,7 +604,8 @@ soundmenu_size_changed (XfcePanelPlugin *plugin,
 
 		size = panel_size / rows;
 
-		if (soundmenu->huge_on_deskbar_mode)
+		if (soundmenu->show_album_art &&
+		    soundmenu->huge_on_deskbar_mode)
 			album_size = panel_size * 0.80;
 		else
 			album_size = size;

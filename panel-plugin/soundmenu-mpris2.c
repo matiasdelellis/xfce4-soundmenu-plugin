@@ -222,16 +222,35 @@ void mpris2_dbus_filter (DBusMessage *message, SoundmenuPlugin *soundmenu)
 void
 mpris2_send_message (SoundmenuPlugin *soundmenu, const char *msg)
 {
-	DBusMessage *message;
-	gchar *destination = NULL;
+	GDBusMessage *message;
+	gchar        *destination;
+	GError       *error = NULL;
 
 	destination = g_strdup_printf ("org.mpris.MediaPlayer2.%s", soundmenu->player);
-	message = dbus_message_new_method_call (destination, "/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2.Player",  msg);
+	message = g_dbus_message_new_method_call (destination,
+	                                          "/org/mpris/MediaPlayer2",
+	                                          "org.mpris.MediaPlayer2.Player",
+	                                          msg);
 	g_free(destination);
 
-	/* Send the message */
-	dbus_connection_send (soundmenu->connection, message, NULL);
-	dbus_message_unref (message);
+	g_dbus_connection_send_message (soundmenu->gconnection,
+	                                message,
+	                                G_DBUS_SEND_MESSAGE_FLAGS_NONE,
+	                                NULL,
+	                                &error);
+	if (error != NULL) {
+		g_warning ("unable to send message: %s", error->message);
+		g_clear_error (&error);
+		error = NULL;
+	}
+
+	g_dbus_connection_flush_sync (soundmenu->gconnection, NULL, &error);
+	if (error != NULL) {
+		g_warning ("unable to flush message queue: %s", error->message);
+		g_clear_error (&error);
+	}
+
+	g_object_unref (message);
 }
 
 /*dbus-send --session  --print-reply --reply-timeout=2000

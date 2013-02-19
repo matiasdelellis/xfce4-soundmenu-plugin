@@ -136,6 +136,9 @@ typedef struct
 	DBusConnection 	*connection;
 	gchar			*dbus_name;
 
+	/* Dbus conecction */
+	GDBusConnection *gconnection;
+
 	/* soundmenu settings */
 	gchar			*player;
 	gboolean		show_album_art;

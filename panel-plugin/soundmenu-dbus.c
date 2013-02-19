@@ -45,9 +45,20 @@ soundmenu_dbus_connection_filter (DBusConnection *connection, DBusMessage *messa
 void
 init_dbus_session (SoundmenuPlugin *soundmenu)
 {
+	GDBusConnection *gconnection;
+	GError          *gerror = NULL;
 	DBusConnection *connection;
 	DBusError error;
 	gchar *rule = NULL;
+
+	/* Init gdbus connection. */
+
+	gconnection = g_bus_get_sync (G_BUS_TYPE_SESSION, NULL, &gerror);
+	if (gconnection == NULL) {
+		g_message ("Failed to get session bus: %s", gerror->message);
+		g_error_free (gerror);
+	}
+	soundmenu->gconnection = gconnection;
 
 	/* Init dbus connection. */
 

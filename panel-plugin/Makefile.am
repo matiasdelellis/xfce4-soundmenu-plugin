@@ -21,10 +21,12 @@ libsoundmenu_la_SOURCES = \
 	soundmenu-album-art.h \
 	soundmenu-dbus.c \
 	soundmenu-dbus.h \
-	soundmenu-mpris2.c \
-	soundmenu-mpris2.h \
+	soundmenu-dialog-hig.c \
+	soundmenu-dialog-hig.h \
 	soundmenu-dialogs.c \
 	soundmenu-dialogs.h \
+	soundmenu-mpris2.c \
+	soundmenu-mpris2.h \
 	soundmenu-utils.c \
 	soundmenu-utils.h
 

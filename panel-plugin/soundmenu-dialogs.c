@@ -188,6 +188,7 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 {
 	GtkWidget *dialog;
 	GtkWidget *pref_table, *player_label, *player_entry, *show_album_art_check, *show_tiny_album_art_check, *show_stop_check;
+	guint row = 0;
 
 	#ifdef HAVE_LIBKEYBINDER
 	GtkWidget *use_global_keys_check;
@@ -279,63 +280,29 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 	soundmenu->lw.lastfm_pass_w = lastfm_entry_pass;
 	#endif
 
-	gtk_table_attach(GTK_TABLE (pref_table), player_label,
-			0, 1, 0, 1,
-			GTK_FILL, GTK_SHRINK,
-			0, 0);
-	gtk_table_attach(GTK_TABLE (pref_table), player_entry,
-			1, 2, 0, 1,
-			GTK_FILL|GTK_EXPAND, GTK_SHRINK,
-			0, 0);
+	pref_table = soundmenu_hig_workarea_table_new();
 
-	gtk_table_attach(GTK_TABLE (pref_table), show_album_art_check,
-			0, 2, 1, 2,
-			GTK_FILL, GTK_SHRINK,
-			0, 0);
+	soundmenu_hig_workarea_table_add_section_title(pref_table, &row, _("Player"));
+	soundmenu_hig_workarea_table_add_row (pref_table, &row, player_label, player_entry);
 
+	soundmenu_hig_workarea_table_add_section_title(pref_table, &row, _("Appearance"));
+	soundmenu_hig_workarea_table_add_wide_control(pref_table, &row, show_album_art_check);
 	#if LIBXFCE4PANEL_CHECK_VERSION (4,9,0)
-	gtk_table_attach(GTK_TABLE (pref_table), show_tiny_album_art_check,
-			0, 2, 2, 3,
-			GTK_FILL, GTK_SHRINK,
-			0, 0);
+	soundmenu_hig_workarea_table_add_wide_control(pref_table, &row, show_tiny_album_art_check);
 	#endif
+	soundmenu_hig_workarea_table_add_wide_control(pref_table, &row, show_stop_check);
 
-	gtk_table_attach(GTK_TABLE (pref_table), show_stop_check,
-			0, 2, 3, 4,
-			GTK_FILL, GTK_SHRINK,
-			0, 0);
-
+	soundmenu_hig_workarea_table_add_section_title(pref_table, &row, _("Behavior"));
 	#ifdef HAVE_LIBKEYBINDER
-	gtk_table_attach(GTK_TABLE (pref_table), use_global_keys_check,
-			0, 2, 4, 5,
-			GTK_FILL, GTK_SHRINK,
-			0, 0);
+	soundmenu_hig_workarea_table_add_wide_control(pref_table, &row, use_global_keys_check);
 	#endif
-
 	#ifdef HAVE_LIBCLASTFM
-	gtk_table_attach(GTK_TABLE (pref_table), support_lastfm,
-			0, 2, 5, 6,
-			GTK_FILL, GTK_SHRINK,
-			0, 0);
-
-	gtk_table_attach(GTK_TABLE (pref_table), lastfm_label_user,
-			0, 1, 6, 7,
-			GTK_FILL, GTK_SHRINK,
-			0, 0);
-	gtk_table_attach(GTK_TABLE (pref_table), lastfm_entry_user,
-			1, 2, 6, 7,
-			GTK_FILL|GTK_EXPAND, GTK_SHRINK,
-			0, 0);
-
-	gtk_table_attach(GTK_TABLE (pref_table), lastfm_label_pass,
-			0, 1, 7, 8,
-			GTK_FILL, GTK_SHRINK,
-			0, 0);
-	gtk_table_attach(GTK_TABLE (pref_table), lastfm_entry_pass,
-			1, 2, 7, 8,
-			GTK_FILL|GTK_EXPAND, GTK_SHRINK,
-			0, 0);
+	soundmenu_hig_workarea_table_add_section_title(pref_table, &row, _("Last.fm"));
+	soundmenu_hig_workarea_table_add_wide_control(pref_table, &row, support_lastfm);
+	soundmenu_hig_workarea_table_add_row (pref_table, &row, lastfm_label_user, lastfm_entry_user);
+	soundmenu_hig_workarea_table_add_row (pref_table, &row, lastfm_label_pass, lastfm_entry_pass);
 	#endif
+	soundmenu_hig_workarea_table_finish(pref_table, &row);
 
 	gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), pref_table, TRUE, TRUE, 6);
 

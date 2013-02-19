@@ -20,6 +20,8 @@
 #ifndef __SOUNDMENU_DIALOGS_H__
 #define __SOUNDMENU_DIALOGS_H__
 
+#include "soundmenu-dialog-hig.h"
+
 G_BEGIN_DECLS
 
 void

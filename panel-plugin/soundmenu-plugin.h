@@ -139,7 +139,7 @@ typedef struct
 	/* soundmenu settings */
 	gchar			*player;
 	gboolean		show_album_art;
-	gboolean		show_tiny_album_art;
+	gboolean		huge_on_deskbar_mode;
 	gboolean		show_stop;
 	gboolean		use_global_keys;
 }

@@ -200,7 +200,7 @@ soundmenu_save (XfcePanelPlugin *plugin,
 			xfce_rc_write_entry    (rc, "player", soundmenu->player);
 
 		xfce_rc_write_bool_entry (rc, "show_album_art", soundmenu->show_album_art);
-		xfce_rc_write_bool_entry (rc, "show_tiny_album_art", soundmenu->show_tiny_album_art);
+		xfce_rc_write_bool_entry (rc, "huge_on_deskbar_mode", soundmenu->huge_on_deskbar_mode);
 		xfce_rc_write_bool_entry (rc, "show_stop", soundmenu->show_stop);
 		#ifdef HAVE_LIBKEYBINDER
 		xfce_rc_write_bool_entry (rc, "use_global_keys", soundmenu->use_global_keys);
@@ -244,7 +244,7 @@ soundmenu_read (SoundmenuPlugin *soundmenu)
 			/* read the settings */
 			soundmenu->player = g_strdup (xfce_rc_read_entry (rc, "player", NULL));
 			soundmenu->show_album_art = xfce_rc_read_bool_entry (rc, "show_album_art", FALSE);
-			soundmenu->show_tiny_album_art = xfce_rc_read_bool_entry (rc, "show_tiny_album_art", FALSE);
+			soundmenu->huge_on_deskbar_mode = xfce_rc_read_bool_entry (rc, "huge_on_deskbar_mode", FALSE);
 			soundmenu->show_stop = xfce_rc_read_bool_entry (rc, "show_stop", FALSE);
 			#ifdef HAVE_LIBKEYBINDER
 			soundmenu->use_global_keys = xfce_rc_read_bool_entry (rc, "use_global_keys", DEFAULT_GLOBAL_KEYS);
@@ -271,7 +271,7 @@ soundmenu_read (SoundmenuPlugin *soundmenu)
 
 	soundmenu->player = NULL;
 	soundmenu->show_album_art = FALSE;
-	soundmenu->show_tiny_album_art = FALSE;
+	soundmenu->huge_on_deskbar_mode = FALSE;
 	soundmenu->show_stop = FALSE;
 	#ifdef HAVE_LIBKEYBINDER
 	soundmenu->use_global_keys = DEFAULT_GLOBAL_KEYS;
@@ -599,15 +599,15 @@ soundmenu_size_changed (XfcePanelPlugin *plugin,
 		if (soundmenu->show_stop)
 			rows++;
 		if (soundmenu->show_album_art &&
-		    soundmenu->show_tiny_album_art)
+		    !soundmenu->huge_on_deskbar_mode)
 			rows++;
 
 		size = panel_size / rows;
 
-		if (soundmenu->show_tiny_album_art)
-			album_size = size;
-		else
+		if (soundmenu->huge_on_deskbar_mode)
 			album_size = panel_size * 0.80;
+		else
+			album_size = size;
 	}
 #endif
 
@@ -638,10 +638,10 @@ soundmenu_mode_changed (XfcePanelPlugin *plugin,
 
 	if (mode == XFCE_PANEL_PLUGIN_MODE_DESKBAR)
 	{
-		if (soundmenu->show_tiny_album_art)
-			xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->hvbox), GTK_ORIENTATION_HORIZONTAL);
-		else
+		if (soundmenu->huge_on_deskbar_mode)
 			xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->hvbox), GTK_ORIENTATION_VERTICAL);
+		else
+			xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->hvbox), GTK_ORIENTATION_HORIZONTAL);
 
 		xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->hvbox_buttons), GTK_ORIENTATION_HORIZONTAL);
 	}

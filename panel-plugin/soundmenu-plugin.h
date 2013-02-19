@@ -142,8 +142,6 @@ typedef struct
 	gboolean		show_tiny_album_art;
 	gboolean		show_stop;
 	gboolean		use_global_keys;
-	gint 			size_request;
-
 }
 SoundmenuPlugin;
 

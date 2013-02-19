@@ -478,8 +478,6 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	soundmenu->stop_button = stop_button;
 	soundmenu->next_button = next_button;
 
-	soundmenu->size_request = 24;
-
 	return soundmenu;
 }
 
@@ -578,12 +576,11 @@ soundmenu_free (XfcePanelPlugin *plugin,
 
 static gboolean
 soundmenu_size_changed (XfcePanelPlugin *plugin,
-                     gint             panel_size,
-                     SoundmenuPlugin    *soundmenu)
+                        gint             panel_size,
+                        SoundmenuPlugin *soundmenu)
 {
 	GtkOrientation panel_orientation;
-	gint           size = panel_size;
-	gint           rows = 3;
+	gint           size, album_size, rows = 3;
 
 	/* get the orientation of the plugin */
 	panel_orientation = xfce_panel_plugin_get_orientation (plugin);
@@ -594,7 +591,7 @@ soundmenu_size_changed (XfcePanelPlugin *plugin,
 	else
 		gtk_widget_set_size_request (GTK_WIDGET (plugin), panel_size, -1);
 
-	soundmenu->size_request = panel_size;
+	size = album_size = panel_size;
 
 #if LIBXFCE4PANEL_CHECK_VERSION (4,9,0)
 	if (xfce_panel_plugin_get_mode (plugin) == XFCE_PANEL_PLUGIN_MODE_DESKBAR)
@@ -605,10 +602,12 @@ soundmenu_size_changed (XfcePanelPlugin *plugin,
 		    soundmenu->show_tiny_album_art)
 			rows++;
 
-		size = size / rows;
+		size = panel_size / rows;
 
 		if (soundmenu->show_tiny_album_art)
-			soundmenu->size_request = size;
+			album_size = size;
+		else
+			album_size = panel_size * 0.80;
 	}
 #endif
 
@@ -617,7 +616,7 @@ soundmenu_size_changed (XfcePanelPlugin *plugin,
 	gtk_widget_set_size_request (GTK_WIDGET (soundmenu->stop_button), size, size);
 	gtk_widget_set_size_request (GTK_WIDGET (soundmenu->play_button), size, size);
 
-	soundmenu_album_art_set_size(soundmenu->album_art, size);
+	soundmenu_album_art_set_size(soundmenu->album_art, album_size);
 
 	/* we handled the orientation */
 	return TRUE;

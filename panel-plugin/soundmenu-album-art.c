@@ -268,7 +268,7 @@ soundmenu_album_art_class_init (SoundmenuAlbumArtClass *klass)
       g_param_spec_uint("size",
                         "Size",
                         "The album art size",
-                        36, 128,
+                        24, 512,
                         48,
                         G_PARAM_READWRITE |
                         G_PARAM_CONSTRUCT |

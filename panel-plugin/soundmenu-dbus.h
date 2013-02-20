@@ -18,13 +18,13 @@
  */
 
 void
+soundmenu_mpris2_send_player_message (SoundmenuPlugin *soundmenu, const char *msg);
+void
 soundmenu_mpris2_properties_set_volume(SoundmenuPlugin *soundmenu, gdouble volume);
-
 gchar *
 soundmenu_get_mpris2_player_running(SoundmenuPlugin *soundmenu);
-
-void
-soundmenu_mpris2_forse_update(SoundmenuPlugin *soundmenu);
+GVariant *
+soundmenu_mpris2_properties_get_all(SoundmenuPlugin *soundmenu);
 
 void
 soundmenu_mpris2_reinit_dbus(SoundmenuPlugin *soundmenu);

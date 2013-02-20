@@ -113,54 +113,6 @@ soundmenu_update_state(gchar *state, SoundmenuPlugin *soundmenu)
 	#endif
 }
 
-/* Callbacks of button controls */
-
-static void
-prev_button_handler(GtkButton *button, SoundmenuPlugin *soundmenu)
-{
-	mpris2_send_message (soundmenu, "Previous");
-}
-
-static void
-play_button_handler(GtkButton *button, SoundmenuPlugin *soundmenu)
-{
-	mpris2_send_message (soundmenu, "PlayPause");
-}
-
-static void
-stop_button_handler(GtkButton *button, SoundmenuPlugin    *soundmenu)
-{
-	mpris2_send_message (soundmenu, "Stop");
-}
-
-static void
-next_button_handler(GtkButton *button, SoundmenuPlugin    *soundmenu)
-{
-	mpris2_send_message (soundmenu, "Next");
-}
-
-static gboolean
-soundmenu_panel_button_scrolled (GtkWidget        *widget,
-                                 GdkEventScroll   *event,
-                                 SoundmenuPlugin *soundmenu)
-{
-	switch (event->direction) {
-		case GDK_SCROLL_UP:
-		case GDK_SCROLL_RIGHT:
-			soundmenu->volume += 0.02;
-			break;
-		case GDK_SCROLL_DOWN:
-		case GDK_SCROLL_LEFT:
-			soundmenu->volume -= 0.02;
-			break;
-	}
-	soundmenu->volume = CLAMP (soundmenu->volume, 0.0, 1.0);
-
-	soundmenu_mpris2_properties_set_volume(soundmenu, soundmenu->volume);
-
-	return FALSE;
-}
-
 /* Sound menu plugin construct */
 
 void

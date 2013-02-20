@@ -20,4 +20,23 @@
 Metadata *malloc_metadata();
 void free_metadata(Metadata *m);
 
-void mpris2_send_message (SoundmenuPlugin *soundmenu, const char *msg);
+Metadata *
+soundmenu_mpris2_get_metadata (GVariant *dictionary);
+void
+soundmenu_mpris2_parse_properties(SoundmenuPlugin *soundmenu, GVariant *properties);
+void
+soundmenu_mpris2_forse_update(SoundmenuPlugin *soundmenu);
+
+void
+prev_button_handler(GtkButton *button, SoundmenuPlugin *soundmenu);
+void
+play_button_handler(GtkButton *button, SoundmenuPlugin *soundmenu);
+void
+stop_button_handler(GtkButton *button, SoundmenuPlugin *soundmenu);
+void
+next_button_handler(GtkButton *button, SoundmenuPlugin *soundmenu);
+
+gboolean
+soundmenu_panel_button_scrolled (GtkWidget        *widget,
+                                 GdkEventScroll   *event,
+                                 SoundmenuPlugin *soundmenu);

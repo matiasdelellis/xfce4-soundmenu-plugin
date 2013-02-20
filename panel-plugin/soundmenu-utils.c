@@ -28,6 +28,15 @@
 #include "soundmenu-utils.h"
 #include "soundmenu-related.h"
 
+gchar *
+g_avariant_dup_string(GVariant * variant)
+{
+	const char **strv = NULL;
+	strv = g_variant_get_strv (variant, NULL);
+
+	return g_strdup (strv[0]);
+}
+
 #if !GLIB_CHECK_VERSION(2,32,0)
 /* Functions to check the network manager status. */
 

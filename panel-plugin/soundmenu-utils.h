@@ -19,6 +19,9 @@
 #define g_str_empty0(s) (!(s) || !(s)[0])
 #define g_str_nempty0(s) ((s) && (s)[0])
 
+gchar *
+g_avariant_dup_string(GVariant * variant);
+
 #if !GLIB_CHECK_VERSION(2,32,0)
 #define NM_DBUS_SERVICE		"org.freedesktop.NetworkManager"
 #define NM_DBUS_PATH		"/org/freedesktop/NetworkManager"

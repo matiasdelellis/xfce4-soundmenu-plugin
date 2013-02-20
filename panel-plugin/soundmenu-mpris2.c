@@ -29,6 +29,8 @@
 #include "soundmenu-utils.h"
 #include "soundmenu-related.h"
 
+/* Basic metadata object */
+
 Metadata *malloc_metadata (void)
 {
 	Metadata *m;
@@ -61,36 +63,171 @@ void free_metadata(Metadata *m)
 	free(m);
 }
 
-void
-mpris2_send_message (SoundmenuPlugin *soundmenu, const char *msg)
+Metadata *
+soundmenu_mpris2_get_metadata (GVariant *dictionary)
 {
-	GDBusMessage *message;
-	gchar        *destination;
-	GError       *error = NULL;
+	GVariantIter iter;
+	GVariant *value;
+	gchar *key;
 
-	destination = g_strdup_printf ("org.mpris.MediaPlayer2.%s", soundmenu->player);
-	message = g_dbus_message_new_method_call (destination,
-	                                          "/org/mpris/MediaPlayer2",
-	                                          "org.mpris.MediaPlayer2.Player",
-	                                          msg);
-	g_free(destination);
+	gint64 length = 0;
+	gint32 trackNumber = 0;
 
-	g_dbus_connection_send_message (soundmenu->gconnection,
-	                                message,
-	                                G_DBUS_SEND_MESSAGE_FLAGS_NONE,
-	                                NULL,
-	                                &error);
-	if (error != NULL) {
-		g_warning ("unable to send message: %s", error->message);
-		g_clear_error (&error);
-		error = NULL;
+	Metadata *metadata;
+
+	metadata = malloc_metadata();
+
+	g_variant_iter_init (&iter, dictionary);
+	while (g_variant_iter_loop (&iter, "{sv}", &key, &value)) {
+		if (0 == g_ascii_strcasecmp (key, "mpris:trackid"))
+			metadata->trackid = g_variant_dup_string(value, NULL);
+		else if (0 == g_ascii_strcasecmp (key, "xesam:url"))
+			metadata->url= g_variant_dup_string(value, NULL);
+		else if (0 == g_ascii_strcasecmp (key, "xesam:title"))
+			metadata->url= g_variant_dup_string(value, NULL);
+		else if (0 == g_ascii_strcasecmp (key, "xesam:artist"))
+			metadata->artist = g_avariant_dup_string(value);
+		else if (0 == g_ascii_strcasecmp (key, "xesam:album"))
+			metadata->album = g_variant_dup_string(value, NULL);
+		else if (0 == g_ascii_strcasecmp (key, "xesam:genre"));
+			/* (List of Strings.) Not use genre */
+		else if (0 == g_ascii_strcasecmp (key, "xesam:albumArtist"));
+			// List of Strings.
+		else if (0 == g_ascii_strcasecmp (key, "xesam:comment"));
+			/* (List of Strings) Not use comment */
+		else if (0 == g_ascii_strcasecmp (key, "xesam:audioBitrate"));
+			/* (uint32) Not use audioBitrate */
+		else if (0 == g_ascii_strcasecmp (key, "mpris:length"))
+			length = g_variant_get_int64 (value);
+		else if (0 == g_ascii_strcasecmp (key, "xesam:trackNumber"))
+			trackNumber = g_variant_get_int32 (value);
+		else if (0 == g_ascii_strcasecmp (key, "xesam:useCount"));
+			/* (Integer) Not use useCount */
+		else if (0 == g_ascii_strcasecmp (key, "xesam:userRating"));
+			/* (Float) Not use userRating */
+		else if (0 == g_ascii_strcasecmp (key, "mpris:artUrl"))
+			metadata->arturl= g_variant_dup_string(value, NULL);
+		else if (0 == g_ascii_strcasecmp (key, "xesam:contentCreated"));
+			/* has type 's' */
+		else if (0 == g_ascii_strcasecmp (key, "audio-bitrate"));
+			/* has type 'i' */
+		else if (0 == g_ascii_strcasecmp (key, "audio-channels"));
+			/* has type 'i' */
+		else if (0 == g_ascii_strcasecmp (key, "audio-samplerate"));
+			/* has type 'i' */
+		else if (0 == g_ascii_strcasecmp (key, "xesam:contentCreated"));
+			/* has type 's' */
+		else if (0 == g_ascii_strcasecmp (key, "audio-bitrate"));
+			/* has type 'i' */
+		else if (0 == g_ascii_strcasecmp (key, "audio-channels"));
+			/* has type 'i' */
+		else if (0 == g_ascii_strcasecmp (key, "audio-samplerate"));
+			/* has type 'i'*/
+		else
+			g_print ("Variant '%s' has type '%s'\n", key,
+				     g_variant_get_type_string (value));
 	}
 
-	g_dbus_connection_flush_sync (soundmenu->gconnection, NULL, &error);
-	if (error != NULL) {
-		g_warning ("unable to flush message queue: %s", error->message);
-		g_clear_error (&error);
-	}
+	metadata->length = length / 1000000l;
+	metadata->trackNumber = trackNumber;
 
-	g_object_unref (message);
+	return metadata;
+}
+
+void
+soundmenu_mpris2_parse_properties(SoundmenuPlugin *soundmenu, GVariant *properties)
+{
+	GVariantIter iter;
+	GVariant *value;
+	const gchar *key;
+	gchar *state = NULL;
+	gdouble volume = 0;
+	Metadata *metadata;
+
+	g_variant_iter_init (&iter, properties);
+	while (g_variant_iter_loop (&iter, "{sv}", &key, &value)) {
+		if (0 == g_ascii_strcasecmp (key, "PlaybackStatus"))
+		{
+			state = g_variant_dup_string(value, NULL);
+		}
+		else if (0 == g_ascii_strcasecmp (key, "Volume"))
+		{
+			volume = g_variant_get_double(value);
+			soundmenu->volume = volume;
+		}
+		else if (0 == g_ascii_strcasecmp (key, "Metadata"))
+		{
+			metadata = soundmenu_mpris2_get_metadata (value);
+			soundmenu_album_art_set_path(soundmenu->album_art, metadata->arturl);
+
+			free_metadata(soundmenu->metadata);
+			soundmenu->metadata = metadata;
+
+			#ifdef HAVE_LIBCLASTFM
+			if (soundmenu->clastfm->lastfm_support)
+				update_lastfm(soundmenu);
+			#endif
+		}
+	}
+	if (state != NULL)
+		soundmenu_update_state (state, soundmenu);
+}
+
+void
+soundmenu_mpris2_forse_update(SoundmenuPlugin *soundmenu)
+{
+	GVariant *result = NULL;
+	result = soundmenu_mpris2_properties_get_all(soundmenu);
+
+	soundmenu_mpris2_parse_properties(soundmenu, result);
+}
+
+/*
+ *  Callbacks of button controls
+ */
+
+void
+prev_button_handler(GtkButton *button, SoundmenuPlugin *soundmenu)
+{
+	soundmenu_mpris2_send_player_message (soundmenu, "Previous");
+}
+
+void
+play_button_handler(GtkButton *button, SoundmenuPlugin *soundmenu)
+{
+	soundmenu_mpris2_send_player_message (soundmenu, "PlayPause");
+}
+
+void
+stop_button_handler(GtkButton *button, SoundmenuPlugin    *soundmenu)
+{
+	soundmenu_mpris2_send_player_message (soundmenu, "Stop");
+}
+
+void
+next_button_handler(GtkButton *button, SoundmenuPlugin    *soundmenu)
+{
+	soundmenu_mpris2_send_player_message (soundmenu, "Next");
+}
+
+gboolean
+soundmenu_panel_button_scrolled (GtkWidget        *widget,
+                                 GdkEventScroll   *event,
+                                 SoundmenuPlugin *soundmenu)
+{
+	switch (event->direction) {
+		case GDK_SCROLL_UP:
+		case GDK_SCROLL_RIGHT:
+			soundmenu->volume += 0.02;
+			break;
+		case GDK_SCROLL_DOWN:
+		case GDK_SCROLL_LEFT:
+			soundmenu->volume -= 0.02;
+			break;
+	}
+	soundmenu->volume = CLAMP (soundmenu->volume, 0.0, 1.0);
+
+	soundmenu_mpris2_properties_set_volume(soundmenu, soundmenu->volume);
+
+	return FALSE;
 }

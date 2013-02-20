@@ -20,28 +20,29 @@
 
 #include "soundmenu-plugin.h"
 #include "soundmenu-mpris2.h"
+#include "soundmenu-dbus.h"
 
 static void
 keybind_play_handler (const char *keystring, SoundmenuPlugin *soundmenu)
 {
-	mpris2_send_message (soundmenu, "PlayPause");
+	soundmenu_mpris2_send_player_message (soundmenu, "PlayPause");
 }
 static void
 keybind_stop_handler (const char *keystring, SoundmenuPlugin *soundmenu)
 {
-	mpris2_send_message (soundmenu, "Stop");
+	soundmenu_mpris2_send_player_message (soundmenu, "Stop");
 }
 
 static void
 keybind_prev_handler (const char *keystring, SoundmenuPlugin *soundmenu)
 {
-	mpris2_send_message (soundmenu, "Previous");
+	soundmenu_mpris2_send_player_message (soundmenu, "Previous");
 }
 
 static void
 keybind_next_handler (const char *keystring, SoundmenuPlugin *soundmenu)
 {
-	mpris2_send_message (soundmenu, "Next");
+	soundmenu_mpris2_send_player_message (soundmenu, "Next");
 }
 
 void

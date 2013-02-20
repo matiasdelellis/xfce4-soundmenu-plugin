@@ -22,12 +22,80 @@
 
 #include "soundmenu-plugin.h"
 #include "soundmenu-dbus.h"
-#include "soundmenu-dialogs.h"
-#include "soundmenu-lastfm.h"
 #include "soundmenu-mpris2.h"
 #include "soundmenu-utils.h"
-#include "soundmenu-related.h"
 
+/*
+ * Send mesages to use methods of org.mpris.MediaPlayer2.Player interfase.
+ */
+void
+soundmenu_mpris2_send_player_message (SoundmenuPlugin *soundmenu, const char *msg)
+{
+	GDBusMessage *message;
+	gchar        *destination;
+	GError       *error = NULL;
+
+	destination = g_strdup_printf ("org.mpris.MediaPlayer2.%s", soundmenu->player);
+	message = g_dbus_message_new_method_call (destination,
+	                                          "/org/mpris/MediaPlayer2",
+	                                          "org.mpris.MediaPlayer2.Player",
+	                                          msg);
+	g_free(destination);
+
+	g_dbus_connection_send_message (soundmenu->gconnection,
+	                                message,
+	                                G_DBUS_SEND_MESSAGE_FLAGS_NONE,
+	                                NULL,
+	                                &error);
+	if (error != NULL) {
+		g_warning ("unable to send message: %s", error->message);
+		g_clear_error (&error);
+		error = NULL;
+	}
+
+	g_dbus_connection_flush_sync (soundmenu->gconnection, NULL, &error);
+	if (error != NULL) {
+		g_warning ("unable to flush message queue: %s", error->message);
+		g_clear_error (&error);
+	}
+
+	g_object_unref (message);
+}
+
+/*
+ * Change the player volume using org.freedesktop.DBus.Properties interfase.
+ */
+void
+soundmenu_mpris2_properties_set_volume(SoundmenuPlugin *soundmenu, gdouble volume)
+{
+	GVariant *reply;
+	GError   *error = NULL;
+
+	reply = g_dbus_connection_call_sync (soundmenu->gconnection,
+	                                     soundmenu->dbus_name,
+	                                     "/org/mpris/MediaPlayer2",
+	                                     "org.freedesktop.DBus.Properties",
+	                                     "Set",
+	                                     g_variant_new ("(ssv)",
+	                                                    "org.mpris.MediaPlayer2.Player",
+	                                                    "Volume",
+	                                                     g_variant_new_double(volume)),
+	                                     NULL,
+	                                     G_DBUS_CALL_FLAGS_NONE,
+	                                     -1,
+	                                     NULL,
+	                                     NULL);
+	if (reply == NULL) {
+		g_warning ("Unable to set session: %s", error->message);
+		g_error_free (error);
+		return;
+	}
+	g_variant_unref(reply);
+}
+
+/*
+ * Returns the first player name that compliant to mpris2 on dbus.
+ */
 gchar *
 soundmenu_get_mpris2_player_running(SoundmenuPlugin *soundmenu)
 {
@@ -68,7 +136,10 @@ soundmenu_get_mpris2_player_running(SoundmenuPlugin *soundmenu)
 	return player;
 }
 
-static GVariant *
+/*
+ * Get all properties using org.freedesktop.DBus.Properties interface.
+ */
+GVariant *
 soundmenu_mpris2_properties_get_all(SoundmenuPlugin *soundmenu)
 {
 	GVariantIter iter;
@@ -94,161 +165,9 @@ soundmenu_mpris2_properties_get_all(SoundmenuPlugin *soundmenu)
 	return child;
 }
 
-void
-soundmenu_mpris2_properties_set_volume(SoundmenuPlugin *soundmenu, gdouble volume)
-{
-	GVariant *reply;
-	GError   *error = NULL;
-
-	reply = g_dbus_connection_call_sync (soundmenu->gconnection,
-	                                     soundmenu->dbus_name,
-	                                     "/org/mpris/MediaPlayer2",
-	                                     "org.freedesktop.DBus.Properties",
-	                                     "Set",
-	                                     g_variant_new ("(ssv)",
-	                                                    "org.mpris.MediaPlayer2.Player",
-	                                                    "Volume",
-	                                                     g_variant_new_double(volume)),
-	                                     NULL,
-	                                     G_DBUS_CALL_FLAGS_NONE,
-	                                     -1,
-	                                     NULL,
-	                                     NULL);
-	if (reply == NULL) {
-		g_warning ("Unable to set session: %s", error->message);
-		g_error_free (error);
-		return;
-	}
-	g_variant_unref(reply);
-}
-
-static gchar *
-g_avariant_dup_string(GVariant * variant)
-{
-	const char **strv = NULL;
-	strv = g_variant_get_strv (variant, NULL);
-
-	return g_strdup (strv[0]);
-}
-
-static Metadata *
-soundmenu_mpris2_get_metadata (GVariant *dictionary)
-{
-	GVariantIter iter;
-	GVariant *value;
-	gchar *key;
-
-	gint64 length = 0;
-	gint32 trackNumber = 0;
-
-	Metadata *metadata;
-
-	metadata = malloc_metadata();
-
-	g_variant_iter_init (&iter, dictionary);
-	while (g_variant_iter_loop (&iter, "{sv}", &key, &value)) {
-		if (0 == g_ascii_strcasecmp (key, "mpris:trackid"))
-			metadata->trackid = g_variant_dup_string(value, NULL);
-		else if (0 == g_ascii_strcasecmp (key, "xesam:url"))
-			metadata->url= g_variant_dup_string(value, NULL);
-		else if (0 == g_ascii_strcasecmp (key, "xesam:title"))
-			metadata->url= g_variant_dup_string(value, NULL);
-		else if (0 == g_ascii_strcasecmp (key, "xesam:artist"))
-			metadata->artist = g_avariant_dup_string(value);
-		else if (0 == g_ascii_strcasecmp (key, "xesam:album"))
-			metadata->album = g_variant_dup_string(value, NULL);
-		else if (0 == g_ascii_strcasecmp (key, "xesam:genre"));
-			/* (List of Strings.) Not use genre */
-		else if (0 == g_ascii_strcasecmp (key, "xesam:albumArtist"));
-			// List of Strings.
-		else if (0 == g_ascii_strcasecmp (key, "xesam:comment"));
-			/* (List of Strings) Not use comment */
-		else if (0 == g_ascii_strcasecmp (key, "xesam:audioBitrate"));
-			/* (uint32) Not use audioBitrate */
-		else if (0 == g_ascii_strcasecmp (key, "mpris:length"))
-			length = g_variant_get_int64 (value);
-		else if (0 == g_ascii_strcasecmp (key, "xesam:trackNumber"))
-			trackNumber = g_variant_get_int32 (value);
-		else if (0 == g_ascii_strcasecmp (key, "xesam:useCount"));
-			/* (Integer) Not use useCount */
-		else if (0 == g_ascii_strcasecmp (key, "xesam:userRating"));
-			/* (Float) Not use userRating */
-		else if (0 == g_ascii_strcasecmp (key, "mpris:artUrl"))
-			metadata->arturl= g_variant_dup_string(value, NULL);
-		else if (0 == g_ascii_strcasecmp (key, "xesam:contentCreated"));
-			/* has type 's' */
-		else if (0 == g_ascii_strcasecmp (key, "audio-bitrate"));
-			/* has type 'i' */
-		else if (0 == g_ascii_strcasecmp (key, "audio-channels"));
-			/* has type 'i' */
-		else if (0 == g_ascii_strcasecmp (key, "audio-samplerate"));
-			/* has type 'i' */
-		else if (0 == g_ascii_strcasecmp (key, "xesam:contentCreated"));
-			/* has type 's' */
-		else if (0 == g_ascii_strcasecmp (key, "audio-bitrate"));
-			/* has type 'i' */
-		else if (0 == g_ascii_strcasecmp (key, "audio-channels"));
-			/* has type 'i' */
-		else if (0 == g_ascii_strcasecmp (key, "audio-samplerate"));
-			/* has type 'i'*/
-		else
-			g_print ("Variant '%s' has type '%s'\n", key,
-				     g_variant_get_type_string (value));
-	}
-
-	metadata->length = length / 1000000l;
-	metadata->trackNumber = trackNumber;
-
-	return metadata;
-}
-static void
-soundmenu_mpris2_parse_properties(SoundmenuPlugin *soundmenu, GVariant *properties)
-{
-	GVariantIter iter;
-	GVariant *value;
-	const gchar *key;
-	gchar *state = NULL;
-	gdouble volume = 0;
-	Metadata *metadata;
-
-	g_variant_iter_init (&iter, properties);
-	while (g_variant_iter_loop (&iter, "{sv}", &key, &value)) {
-		if (0 == g_ascii_strcasecmp (key, "PlaybackStatus"))
-		{
-			state = g_variant_dup_string(value, NULL);
-		}
-		else if (0 == g_ascii_strcasecmp (key, "Volume"))
-		{
-			volume = g_variant_get_double(value);
-			soundmenu->volume = volume;
-		}
-		else if (0 == g_ascii_strcasecmp (key, "Metadata"))
-		{
-			metadata = soundmenu_mpris2_get_metadata (value);
-			soundmenu_album_art_set_path(soundmenu->album_art, metadata->arturl);
-
-			free_metadata(soundmenu->metadata);
-			soundmenu->metadata = metadata;
-
-			#ifdef HAVE_LIBCLASTFM
-			if (soundmenu->clastfm->lastfm_support)
-				update_lastfm(soundmenu);
-			#endif
-		}
-	}
-	if (state != NULL)
-		soundmenu_update_state (state, soundmenu);
-}
-
-void
-soundmenu_mpris2_forse_update(SoundmenuPlugin *soundmenu)
-{
-	GVariant *result = NULL;
-	result = soundmenu_mpris2_properties_get_all(soundmenu);
-
-	soundmenu_mpris2_parse_properties(soundmenu, result);
-}
-
+/*
+ * This function intercepts the messages from the player.
+ */
 static void
 soundmenu_mpris2_on_dbus_signal (GDBusProxy *proxy,
                                  gchar      *sender_name,
@@ -269,6 +188,9 @@ soundmenu_mpris2_on_dbus_signal (GDBusProxy *proxy,
 	soundmenu_mpris2_parse_properties(soundmenu, child);
 }
 
+/*
+ * Functions that detect when the player is connected to mpris2
+ */
 static void
 soundmenu_mpris2_dbus_conected(GDBusConnection *connection,
                                const gchar *name,
@@ -290,6 +212,9 @@ soundmenu_mpris2_dbus_losed(GDBusConnection *connection,
 	gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->plugin), FALSE);
 }
 
+/*
+ *  Basic control of gdbus functions
+ */
 static void
 soundmenu_mpris2_disconnect_dbus(SoundmenuPlugin *soundmenu)
 {

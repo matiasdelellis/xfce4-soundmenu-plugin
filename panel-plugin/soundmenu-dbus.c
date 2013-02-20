@@ -43,6 +43,22 @@ soundmenu_dbus_connection_filter (DBusConnection *connection, DBusMessage *messa
 }
 
 static void
+soundmenu_mpris2_on_dbus_signal (GDBusProxy *proxy,
+                                 gchar      *sender_name,
+                                 gchar      *signal_name,
+                                 GVariant   *parameters,
+                                 gpointer    user_data)
+{
+	gchar *parameters_str;
+
+	parameters_str = g_variant_print (parameters, TRUE);
+	g_print (" *** Received Signal: %s: %s\n",
+	           signal_name,
+	           parameters_str);
+	g_free (parameters_str);
+}
+
+static void
 soundmenu_mpris2_dbus_conected(GDBusConnection *connection,
                                const gchar *name,
                                const gchar *name_owner,
@@ -68,6 +84,7 @@ init_dbus_session (SoundmenuPlugin *soundmenu)
 {
 	GDBusConnection *gconnection;
 	GError          *gerror = NULL;
+	GDBusProxy      *proxy;
 	DBusConnection *connection;
 	DBusError error;
 	gchar *rule = NULL;
@@ -78,7 +95,9 @@ init_dbus_session (SoundmenuPlugin *soundmenu)
 	if (gconnection == NULL) {
 		g_message ("Failed to get session bus: %s", gerror->message);
 		g_error_free (gerror);
+		gerror = NULL;
 	}
+
 	soundmenu->dbus_name = g_strdup_printf("org.mpris.MediaPlayer2.%s", soundmenu->player);
 
 	g_bus_watch_name_on_connection(gconnection,
@@ -88,6 +107,26 @@ init_dbus_session (SoundmenuPlugin *soundmenu)
 	                               soundmenu_mpris2_dbus_losed,
 	                               soundmenu,
 	                               NULL);
+
+	proxy = g_dbus_proxy_new_sync (gconnection,
+	                               G_DBUS_PROXY_FLAGS_NONE,
+	                               NULL,
+	                               soundmenu->dbus_name,
+	                               "/org/mpris/MediaPlayer2",
+	                               "org.freedesktop.DBus.Properties",
+	                               NULL, /* GCancellable */
+	                               &gerror);
+	if (proxy == NULL) {
+		g_printerr ("Error creating proxy: %s\n", gerror->message);
+		g_error_free (gerror);
+		gerror = NULL;
+    }
+    else {
+		g_signal_connect (proxy,
+			              "g-signal",
+			              G_CALLBACK (soundmenu_mpris2_on_dbus_signal),
+			              soundmenu);
+	}
 
 	soundmenu->gconnection = gconnection;
 

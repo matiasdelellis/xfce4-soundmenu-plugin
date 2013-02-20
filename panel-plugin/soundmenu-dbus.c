@@ -218,35 +218,33 @@ soundmenu_mpris2_dbus_losed(GDBusConnection *connection,
 	gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->plugin), FALSE);
 }
 
-void
-init_dbus_session (SoundmenuPlugin *soundmenu)
+static void
+soundmenu_mpris2_disconnect_dbus(SoundmenuPlugin *soundmenu)
 {
-	GDBusConnection *gconnection;
-	GError          *gerror = NULL;
-	GDBusProxy      *proxy;
-	DBusConnection *connection;
-	DBusError error;
+	g_bus_unwatch_name(soundmenu->watch_id);
+	g_object_unref(soundmenu->proxy);
+}
 
-	/* Init gdbus connection. */
+static void
+soundmenu_mpris2_connect_dbus(SoundmenuPlugin *soundmenu)
+{
+	GDBusProxy *proxy;
+	guint       watch_id;
+	GError     *gerror = NULL;
 
-	gconnection = g_bus_get_sync (G_BUS_TYPE_SESSION, NULL, &gerror);
-	if (gconnection == NULL) {
-		g_message ("Failed to get session bus: %s", gerror->message);
-		g_error_free (gerror);
-		gerror = NULL;
-	}
-
+	g_free(soundmenu->dbus_name);
 	soundmenu->dbus_name = g_strdup_printf("org.mpris.MediaPlayer2.%s", soundmenu->player);
 
-	g_bus_watch_name_on_connection(gconnection,
-	                               soundmenu->dbus_name,
-	                               G_BUS_NAME_OWNER_FLAGS_REPLACE,
-	                               soundmenu_mpris2_dbus_conected,
-	                               soundmenu_mpris2_dbus_losed,
-	                               soundmenu,
-	                               NULL);
+	watch_id = g_bus_watch_name_on_connection(soundmenu->gconnection,
+	                                          soundmenu->dbus_name,
+	                                          G_BUS_NAME_OWNER_FLAGS_REPLACE,
+	                                          soundmenu_mpris2_dbus_conected,
+	                                          soundmenu_mpris2_dbus_losed,
+	                                          soundmenu,
+	                                          NULL);
+	soundmenu->watch_id = watch_id;
 
-	proxy = g_dbus_proxy_new_sync (gconnection,
+	proxy = g_dbus_proxy_new_sync (soundmenu->gconnection,
 	                               G_DBUS_PROXY_FLAGS_NONE,
 	                               NULL,
 	                               soundmenu->dbus_name,
@@ -264,9 +262,36 @@ init_dbus_session (SoundmenuPlugin *soundmenu)
 			              "g-signal",
 			              G_CALLBACK (soundmenu_mpris2_on_dbus_signal),
 			              soundmenu);
+		soundmenu->proxy = proxy;
 	}
+}
 
+void
+soundmenu_mpris2_reinit_dbus(SoundmenuPlugin *soundmenu)
+{
+	soundmenu_mpris2_disconnect_dbus(soundmenu);
+	soundmenu_mpris2_connect_dbus(soundmenu);
+}
+
+void
+init_dbus_session (SoundmenuPlugin *soundmenu)
+{
+	GDBusConnection *gconnection;
+	GError          *gerror = NULL;
+	DBusConnection *connection;
+	DBusError error;
+
+	/* Init gdbus connection. */
+
+	gconnection = g_bus_get_sync (G_BUS_TYPE_SESSION, NULL, &gerror);
+	if (gconnection == NULL) {
+		g_message ("Failed to get session bus: %s", gerror->message);
+		g_error_free (gerror);
+		gerror = NULL;
+	}
 	soundmenu->gconnection = gconnection;
+
+	soundmenu_mpris2_connect_dbus(soundmenu);
 
 	/* Init dbus connection. */
 

@@ -131,9 +131,11 @@ typedef struct
 	/* Dbus conecction */
 	DBusConnection 	*connection;
 	gchar			*dbus_name;
+	guint            watch_id;
 
 	/* Dbus conecction */
 	GDBusConnection *gconnection;
+	GDBusProxy      *proxy;
 
 	/* soundmenu settings */
 	gchar			*player;

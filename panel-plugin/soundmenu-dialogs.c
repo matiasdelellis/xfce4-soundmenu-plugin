@@ -60,17 +60,7 @@ soundmenu_configure_response (GtkWidget    *dialog,
 				g_free (soundmenu->player);
 			soundmenu->player = player;
 
-			rule = g_strdup_printf ("type='signal', sender='%s'", soundmenu->dbus_name);
-			dbus_bus_remove_match (soundmenu->connection, rule, NULL);
-			g_free(rule);
-
-			if (G_LIKELY (soundmenu->dbus_name != NULL))
-				g_free(soundmenu->dbus_name);
-			soundmenu->dbus_name = g_strdup_printf("org.mpris.MediaPlayer2.%s", soundmenu->player);
-
-			rule = g_strdup_printf ("type='signal', sender='%s'", soundmenu->dbus_name);
-			dbus_bus_add_match (soundmenu->connection, rule, NULL);
-			g_free(rule);
+			soundmenu_mpris2_reinit_dbus(soundmenu);
 		}
 		#ifdef HAVE_LIBCLASTFM
 		soundmenu->clastfm->lastfm_support = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(soundmenu->lw.lastfm_w));

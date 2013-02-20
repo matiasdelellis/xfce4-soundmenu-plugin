@@ -42,6 +42,27 @@ soundmenu_dbus_connection_filter (DBusConnection *connection, DBusMessage *messa
 	return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 }
 
+static void
+soundmenu_mpris2_dbus_conected(GDBusConnection *connection,
+                               const gchar *name,
+                               const gchar *name_owner,
+                               gpointer user_data)
+{
+	SoundmenuPlugin *soundmenu = user_data;
+
+	gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->plugin), TRUE);
+}
+
+static void
+soundmenu_mpris2_dbus_losed(GDBusConnection *connection,
+                            const gchar *name,
+                            gpointer user_data)
+{
+	SoundmenuPlugin *soundmenu = user_data;
+
+	gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->plugin), FALSE);
+}
+
 void
 init_dbus_session (SoundmenuPlugin *soundmenu)
 {
@@ -58,6 +79,16 @@ init_dbus_session (SoundmenuPlugin *soundmenu)
 		g_message ("Failed to get session bus: %s", gerror->message);
 		g_error_free (gerror);
 	}
+	soundmenu->dbus_name = g_strdup_printf("org.mpris.MediaPlayer2.%s", soundmenu->player);
+
+	g_bus_watch_name_on_connection(gconnection,
+	                               soundmenu->dbus_name,
+	                               G_BUS_NAME_OWNER_FLAGS_REPLACE,
+	                               soundmenu_mpris2_dbus_conected,
+	                               soundmenu_mpris2_dbus_losed,
+	                               soundmenu,
+	                               NULL);
+
 	soundmenu->gconnection = gconnection;
 
 	/* Init dbus connection. */
@@ -71,8 +102,6 @@ init_dbus_session (SoundmenuPlugin *soundmenu)
 	}
 
 	/* Configure rule according to player selected. */
-
-	soundmenu->dbus_name = g_strdup_printf("org.mpris.MediaPlayer2.%s", soundmenu->player);
 
 	rule = g_strdup_printf ("type='signal', sender='%s'", soundmenu->dbus_name);
 	dbus_bus_add_match (connection, rule, NULL);

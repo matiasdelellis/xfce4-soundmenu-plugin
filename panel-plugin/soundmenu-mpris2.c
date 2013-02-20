@@ -202,37 +202,6 @@ mpris2_send_message (SoundmenuPlugin *soundmenu, const char *msg)
 	g_object_unref (message);
 }
 
-/*dbus-send --session  --print-reply --reply-timeout=2000
- * --type=method_call --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.ListNames
- */
-gchar *
-mpris2_get_player (SoundmenuPlugin *soundmenu)
-{
-	DBusError d_error;
-	DBusMessageIter dict, list;
-	DBusMessage *reply_msg = NULL, *message = NULL;
-	gchar *str_buf = NULL, *player = NULL;
-
-	dbus_error_init(&d_error);
-
-	message = dbus_message_new_method_call ("org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus",  "ListNames");
-
-	reply_msg = dbus_connection_send_with_reply_and_block(soundmenu->connection, message, -1, &d_error);
-
-	dbus_message_iter_init(reply_msg, &list);
-	dbus_message_iter_recurse(&list, &dict);
-
-	do {
-		dbus_message_iter_get_basic(&dict, (void*) &str_buf);
-		if (g_str_has_prefix(str_buf, "org.mpris.MediaPlayer2.")) {
-			player = g_strdup(str_buf + 23);
-			break;
-		}
-	} while (dbus_message_iter_next(&dict));
-
-	return player;
-}
-
 void
 mpris2_get_playbackstatus (SoundmenuPlugin *soundmenu)
 {

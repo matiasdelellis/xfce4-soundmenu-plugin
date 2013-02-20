@@ -457,7 +457,7 @@ static void init_soundmenu_plugin(SoundmenuPlugin *soundmenu)
 	/* If no has a player selected, search it with dbus. */
 
 	if (soundmenu->player == NULL)
-		soundmenu->player = mpris2_get_player(soundmenu);
+		soundmenu->player = soundmenu_get_mpris2_player_running(soundmenu);
 	if (soundmenu->player == NULL)
 		soundmenu->player = g_strdup (DEFAULT_PLAYER);
 

@@ -112,10 +112,10 @@ refresh_player (GtkEntry        *player_entry,
 {
 	gchar *player = NULL;
 
-        if (position == GTK_ENTRY_ICON_SECONDARY) {
-		player = mpris2_get_player(soundmenu);
-        	gtk_entry_set_text(GTK_ENTRY(soundmenu->w_player), player);
-        }
+	if (position == GTK_ENTRY_ICON_SECONDARY) {
+		player = soundmenu_get_mpris2_player_running(soundmenu);
+		gtk_entry_set_text(GTK_ENTRY(soundmenu->w_player), player);
+	}
 }
 
 static void

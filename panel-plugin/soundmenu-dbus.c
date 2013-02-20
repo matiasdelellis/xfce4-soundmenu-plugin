@@ -42,6 +42,46 @@ print_variant(GVariant *value)
 	g_free(s_variant);
 }*/
 
+gchar *
+soundmenu_get_mpris2_player_running(SoundmenuPlugin *soundmenu)
+{
+	GError *error = NULL;
+	GVariant *v;
+	GVariantIter *iter;
+	const gchar *str = NULL;
+	gchar *player = NULL;
+
+	v = g_dbus_connection_call_sync (soundmenu->gconnection,
+	                                 "org.freedesktop.DBus",
+	                                 "/org/freedesktop/DBus",
+	                                 "org.freedesktop.DBus",
+	                                 "ListNames",
+	                                 NULL,
+	                                 G_VARIANT_TYPE ("(as)"),
+	                                 G_DBUS_CALL_FLAGS_NONE,
+	                                 -1,
+	                                 NULL,
+	                                 &error);
+	if (error) {
+		g_critical ("Could not get a list of names registered on the session bus, %s",
+		            error ? error->message : "no error given");
+		g_clear_error (&error);
+		return NULL;
+	}
+
+	g_variant_get (v, "(as)", &iter);
+	while (g_variant_iter_loop (iter, "&s", &str)) {
+		if (g_str_has_prefix(str, "org.mpris.MediaPlayer2.")) {
+			player = g_strdup(str + 23);
+			break;
+		}
+	}
+	g_variant_iter_free (iter);
+	g_variant_unref (v);
+
+	return player;
+}
+
 static gchar *
 g_avariant_dup_string(GVariant * variant)
 {

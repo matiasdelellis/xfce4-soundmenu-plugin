@@ -80,7 +80,7 @@ soundmenu_hig_workarea_table_add_row(GtkWidget *table, guint *row, GtkWidget *la
 }
 
 GtkWidget *
-soundmenu_hig_workarea_table_new()
+soundmenu_hig_workarea_table_new (void)
 {
 	GtkWidget *table;
 

@@ -21,24 +21,31 @@
 #include "soundmenu-plugin.h"
 #include "soundmenu-mpris2.h"
 
-void keybind_play_handler (const char *keystring, SoundmenuPlugin *soundmenu)
+static void
+keybind_play_handler (const char *keystring, SoundmenuPlugin *soundmenu)
 {
 	mpris2_send_message (soundmenu, "PlayPause");
 }
-void keybind_stop_handler (const char *keystring, SoundmenuPlugin *soundmenu)
+static void
+keybind_stop_handler (const char *keystring, SoundmenuPlugin *soundmenu)
 {
 	mpris2_send_message (soundmenu, "Stop");
 }
-void keybind_prev_handler (const char *keystring, SoundmenuPlugin *soundmenu)
+
+static void
+keybind_prev_handler (const char *keystring, SoundmenuPlugin *soundmenu)
 {
 	mpris2_send_message (soundmenu, "Previous");
 }
-void keybind_next_handler (const char *keystring, SoundmenuPlugin *soundmenu)
+
+static void
+keybind_next_handler (const char *keystring, SoundmenuPlugin *soundmenu)
 {
 	mpris2_send_message (soundmenu, "Next");
 }
 
-void keybinder_bind_keys(SoundmenuPlugin *soundmenu)
+void
+keybinder_bind_keys(SoundmenuPlugin *soundmenu)
 {
 	keybinder_bind("XF86AudioPlay", (KeybinderHandler) keybind_play_handler, soundmenu);
 	keybinder_bind("XF86AudioStop", (KeybinderHandler) keybind_stop_handler, soundmenu);
@@ -46,10 +53,17 @@ void keybinder_bind_keys(SoundmenuPlugin *soundmenu)
 	keybinder_bind("XF86AudioNext", (KeybinderHandler) keybind_next_handler, soundmenu);
 }
 
-void keybinder_unbind_keys(SoundmenuPlugin *soundmenu)
+void
+keybinder_unbind_keys(SoundmenuPlugin *soundmenu)
 {
 	keybinder_unbind("XF86AudioPlay", (KeybinderHandler) keybind_play_handler);
 	keybinder_unbind("XF86AudioStop", (KeybinderHandler) keybind_stop_handler);
 	keybinder_unbind("XF86AudioPrev", (KeybinderHandler) keybind_prev_handler);
 	keybinder_unbind("XF86AudioNext", (KeybinderHandler) keybind_next_handler);
+}
+
+void
+soundmenu_init_keybinder(void)
+{
+	keybinder_init ();
 }

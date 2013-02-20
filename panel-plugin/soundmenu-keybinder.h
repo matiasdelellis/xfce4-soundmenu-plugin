@@ -18,3 +18,5 @@
 
 void keybinder_bind_keys(SoundmenuPlugin *soundmenu);
 void keybinder_unbind_keys(SoundmenuPlugin *soundmenu);
+
+void soundmenu_init_keybinder(void);

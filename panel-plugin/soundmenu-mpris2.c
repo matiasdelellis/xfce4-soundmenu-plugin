@@ -29,7 +29,7 @@
 #include "soundmenu-utils.h"
 #include "soundmenu-related.h"
 
-Metadata *malloc_metadata()
+Metadata *malloc_metadata (void)
 {
 	Metadata *m;
 	m = malloc(sizeof(Metadata));

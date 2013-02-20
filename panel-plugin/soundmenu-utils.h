@@ -17,6 +17,7 @@
  */
 
 #define g_str_empty0(s) (!(s) || !(s)[0])
+#define g_str_nempty0(s) ((s) && (s)[0])
 
 #if !GLIB_CHECK_VERSION(2,32,0)
 #define NM_DBUS_SERVICE		"org.freedesktop.NetworkManager"

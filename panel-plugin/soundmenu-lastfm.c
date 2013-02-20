@@ -31,7 +31,7 @@
 #define WAIT_UPDATE 5
 
 #ifdef HAVE_LIBCLASTFM
-gpointer
+static gpointer
 do_lastfm_love (gpointer data)
 {
 	gint rv;
@@ -69,7 +69,7 @@ void lastfm_track_love_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 	#endif
 }
 
-gpointer
+static gpointer
 do_lastfm_unlove (gpointer data)
 {
 	gint rv;
@@ -107,7 +107,7 @@ void lastfm_track_unlove_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
     #endif
 }
 
-gpointer
+static gpointer
 do_lastfm_scrob (gpointer data)
 {
     gint rv;
@@ -149,7 +149,7 @@ gboolean lastfm_scrob_handler(gpointer data)
 	return FALSE;
 }
 
-gpointer
+static gpointer
 do_lastfm_now_playing (gpointer data)
 {
 	gint rv;

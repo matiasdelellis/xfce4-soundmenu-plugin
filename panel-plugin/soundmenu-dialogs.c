@@ -22,11 +22,16 @@
 
 #include "soundmenu-plugin.h"
 #include "soundmenu-dbus.h"
+#include "soundmenu-dialog-hig.h"
 #include "soundmenu-dialogs.h"
 #include "soundmenu-lastfm.h"
 #include "soundmenu-mpris2.h"
 #include "soundmenu-utils.h"
 #include "soundmenu-related.h"
+
+#ifdef HAVE_LIBKEYBINDER
+#include "soundmenu-keybinder.h"
+#endif
 
 #define PLUGIN_WEBSITE "https://github.com/matiasdelellis/xfce4-soundmenu-plugin/"
 

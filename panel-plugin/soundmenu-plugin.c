@@ -48,24 +48,13 @@ soundmenu_construct (XfcePanelPlugin *plugin);
 
 XFCE_PANEL_PLUGIN_REGISTER (soundmenu_construct);
 
-void
-play_button_toggle_state (SoundmenuPlugin *soundmenu)
-{
-	gtk_container_remove(GTK_CONTAINER(soundmenu->play_button),
-                       gtk_bin_get_child(GTK_BIN(soundmenu->play_button)));
-	if ((soundmenu->state == ST_PAUSED) || (soundmenu->state == ST_STOPPED))
-		gtk_container_add(GTK_CONTAINER(soundmenu->play_button), soundmenu->image_play);
-	else
-		gtk_container_add(GTK_CONTAINER(soundmenu->play_button), soundmenu->image_pause);
-	gtk_widget_show_all(soundmenu->play_button);
-}
-
-gboolean status_get_tooltip_cb (GtkWidget        *widget,
-					gint              x,
-					gint              y,
-					gboolean          keyboard_mode,
-					GtkTooltip       *tooltip,
-					SoundmenuPlugin *soundmenu)
+static gboolean
+soundmenu_set_query_tooltip_cb (GtkWidget       *widget,
+                                gint             x,
+                                gint             y,
+                                gboolean         keyboard_mode,
+                                GtkTooltip      *tooltip,
+                                SoundmenuPlugin *soundmenu)
 {
 	gchar *markup_text = NULL, *length = NULL;
 
@@ -75,13 +64,10 @@ gboolean status_get_tooltip_cb (GtkWidget        *widget,
 		markup_text = g_strdup_printf("%s", _("Stopped"));
 	else {
 		markup_text = g_markup_printf_escaped(_("<b>%s</b> (%s)\nby %s in %s"),
-						(soundmenu->metadata->title && strlen(soundmenu->metadata->title)) ?
-						soundmenu->metadata->title : soundmenu->metadata->url,
-						length,
-						(soundmenu->metadata->artist && strlen(soundmenu->metadata->artist)) ?
-						soundmenu->metadata->artist : _("Unknown Artist"),
-						(soundmenu->metadata->album && strlen(soundmenu->metadata->album)) ?
-						soundmenu->metadata->album : _("Unknown Album"));
+		                                      g_str_nempty0(soundmenu->metadata->title) ? soundmenu->metadata->title :soundmenu->metadata->url,
+		                                      length,
+		                                      g_str_nempty0(soundmenu->metadata->artist) ? soundmenu->metadata->artist : _("Unknown Artist"),
+		                                      g_str_nempty0(soundmenu->metadata->album) ? soundmenu->metadata->album : _("Unknown Album"));
 	}
 
 	gtk_tooltip_set_markup (tooltip, markup_text);
@@ -93,6 +79,18 @@ gboolean status_get_tooltip_cb (GtkWidget        *widget,
 	g_free(length);
 
 	return TRUE;
+}
+
+static void
+soundmenu_toggle_play_button_state (SoundmenuPlugin *soundmenu)
+{
+	gtk_container_remove(GTK_CONTAINER(soundmenu->play_button),
+                       gtk_bin_get_child(GTK_BIN(soundmenu->play_button)));
+	if ((soundmenu->state == ST_PAUSED) || (soundmenu->state == ST_STOPPED))
+		gtk_container_add(GTK_CONTAINER(soundmenu->play_button), soundmenu->image_play);
+	else
+		gtk_container_add(GTK_CONTAINER(soundmenu->play_button), soundmenu->image_pause);
+	gtk_widget_show_all(soundmenu->play_button);
 }
 
 void
@@ -108,7 +106,7 @@ soundmenu_update_state(gchar *state, SoundmenuPlugin *soundmenu)
 		soundmenu->state = ST_STOPPED;
 		soundmenu_album_art_set_path(soundmenu->album_art, NULL);
 	}
-	play_button_toggle_state(soundmenu);
+	soundmenu_toggle_play_button_state(soundmenu);
 	#ifdef HAVE_LIBCLASTFM
 	if (soundmenu->clastfm->lastfm_support)
 		update_lastfm(soundmenu);
@@ -117,25 +115,25 @@ soundmenu_update_state(gchar *state, SoundmenuPlugin *soundmenu)
 
 /* Callbacks of button controls */
 
-void
+static void
 prev_button_handler(GtkButton *button, SoundmenuPlugin *soundmenu)
 {
 	mpris2_send_message (soundmenu, "Previous");
 }
 
-void
+static void
 play_button_handler(GtkButton *button, SoundmenuPlugin *soundmenu)
 {
 	mpris2_send_message (soundmenu, "PlayPause");
 }
 
-void
+static void
 stop_button_handler(GtkButton *button, SoundmenuPlugin    *soundmenu)
 {
 	mpris2_send_message (soundmenu, "Stop");
 }
 
-void
+static void
 next_button_handler(GtkButton *button, SoundmenuPlugin    *soundmenu)
 {
 	mpris2_send_message (soundmenu, "Next");
@@ -256,7 +254,7 @@ soundmenu_read (SoundmenuPlugin *soundmenu)
 }
 
 #ifdef HAVE_LIBCLASTFM
-void
+static void
 soundmenu_add_lastfm_menu_item (SoundmenuPlugin *soundmenu)
 {
 	GtkWidget *submenu, *item;
@@ -283,7 +281,7 @@ soundmenu_add_lastfm_menu_item (SoundmenuPlugin *soundmenu)
 #endif
 
 #ifdef HAVE_LIBGLYR
-void
+static void
 soundmenu_add_lyrics_menu_item (SoundmenuPlugin *soundmenu)
 {
 	GtkWidget *item;
@@ -425,15 +423,15 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	g_object_set (G_OBJECT(next_button), "has-tooltip", TRUE, NULL);
 
 	g_signal_connect(G_OBJECT(album_art), "query-tooltip",
-			G_CALLBACK(status_get_tooltip_cb), soundmenu);
+			G_CALLBACK(soundmenu_set_query_tooltip_cb), soundmenu);
 	g_signal_connect(G_OBJECT(prev_button), "query-tooltip",
-			G_CALLBACK(status_get_tooltip_cb), soundmenu);
+			G_CALLBACK(soundmenu_set_query_tooltip_cb), soundmenu);
 	g_signal_connect(G_OBJECT(play_button), "query-tooltip",
-			G_CALLBACK(status_get_tooltip_cb), soundmenu);
+			G_CALLBACK(soundmenu_set_query_tooltip_cb), soundmenu);
 	g_signal_connect(G_OBJECT(stop_button), "query-tooltip",
-			G_CALLBACK(status_get_tooltip_cb), soundmenu);
+			G_CALLBACK(soundmenu_set_query_tooltip_cb), soundmenu);
 	g_signal_connect(G_OBJECT(next_button), "query-tooltip",
-			G_CALLBACK(status_get_tooltip_cb), soundmenu);
+			G_CALLBACK(soundmenu_set_query_tooltip_cb), soundmenu);
 
 	/* FIXME:
 	 * See comments in the function panel_button_scrolled.
@@ -450,7 +448,7 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	return soundmenu;
 }
 
-void init_soundmenu_plugin(SoundmenuPlugin *soundmenu)
+static void init_soundmenu_plugin(SoundmenuPlugin *soundmenu)
 {
 	/* Init dbus and configure filters. */
 
@@ -466,7 +464,7 @@ void init_soundmenu_plugin(SoundmenuPlugin *soundmenu)
 	/* Init the goodies services .*/
 
 	#ifdef HAVE_LIBKEYBINDER
-	keybinder_init ();
+	soundmenu_init_keybinder();
 	if (soundmenu->use_global_keys)
 		keybinder_bind_keys(soundmenu);
 	#endif

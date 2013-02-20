@@ -42,6 +42,85 @@ soundmenu_dbus_connection_filter (DBusConnection *connection, DBusMessage *messa
 	return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 }
 
+/*
+ *Useful to debug..
+ static void
+print_variant(GVariant *value)
+{
+	gchar *s_variant;
+	s_variant = g_variant_print (value, TRUE);
+
+    g_print ("Variant '%s' has type '%s'\n", s_variant,
+	           g_variant_get_type_string (value));
+
+	g_free(s_variant);
+}*/
+
+static gchar *
+g_avariant_dup_string(GVariant * variant)
+{
+	const char **strv = NULL;
+	strv = g_variant_get_strv (variant, NULL);
+
+	return g_strdup (strv[0]);
+}
+
+static Metadata *
+soundmenu_mpris2_get_metadata (GVariant *dictionary)
+{
+	GVariantIter iter;
+	GVariant *value;
+	gchar *key;
+	gsize *size;
+
+	gint64 length = 0;
+	gint32 trackNumber = 0;
+
+	Metadata *metadata;
+
+	metadata = malloc_metadata();
+
+	g_variant_iter_init (&iter, dictionary);
+	while (g_variant_iter_loop (&iter, "{sv}", &key, &value)) {
+		if (0 == g_ascii_strcasecmp (key, "mpris:trackid"))
+			metadata->trackid = g_variant_dup_string(value, NULL);
+		else if (0 == g_ascii_strcasecmp (key, "xesam:url"))
+			metadata->url= g_variant_dup_string(value, size);
+		else if (0 == g_ascii_strcasecmp (key, "xesam:title"))
+			metadata->url= g_variant_dup_string(value, size);
+		else if (0 == g_ascii_strcasecmp (key, "xesam:artist"))
+			metadata->artist = g_avariant_dup_string(value);
+		else if (0 == g_ascii_strcasecmp (key, "xesam:album"))
+			metadata->album = g_variant_dup_string(value, size);
+		else if (0 == g_ascii_strcasecmp (key, "xesam:genre"));
+			/* (List of Strings.) Not use genre */
+		else if (0 == g_ascii_strcasecmp (key, "xesam:albumArtist"));
+			// List of Strings.
+		else if (0 == g_ascii_strcasecmp (key, "xesam:comment"));
+			/* (List of Strings) Not use comment */
+		else if (0 == g_ascii_strcasecmp (key, "xesam:audioBitrate"));
+			/* (uint32) Not use audioBitrate */
+		else if (0 == g_ascii_strcasecmp (key, "mpris:length"))
+			length = g_variant_get_int64 (value);
+		else if (0 == g_ascii_strcasecmp (key, "xesam:trackNumber"))
+			trackNumber = g_variant_get_int32 (value);
+		else if (0 == g_ascii_strcasecmp (key, "xesam:useCount"));
+			/* (Integer) Not use useCount */
+		else if (0 == g_ascii_strcasecmp (key, "xesam:userRating"));
+			/* (Float) Not use userRating */
+		else if (0 == g_ascii_strcasecmp (key, "mpris:artUrl"))
+			metadata->url= g_variant_dup_string(value, size);
+		else
+			g_print ("Variant '%s' has type '%s'\n", key,
+				     g_variant_get_type_string (value));
+	}
+
+	metadata->length = length / 1000000l;
+	metadata->trackNumber = trackNumber;
+
+	return metadata;
+}
+
 static void
 soundmenu_mpris2_on_dbus_signal (GDBusProxy *proxy,
                                  gchar      *sender_name,
@@ -49,13 +128,45 @@ soundmenu_mpris2_on_dbus_signal (GDBusProxy *proxy,
                                  GVariant   *parameters,
                                  gpointer    user_data)
 {
-	gchar *parameters_str;
+	GVariantIter iter;
+	GVariant *value;
+	GVariant *child;
+	const gchar *key;
+	Metadata *metadata;
 
-	parameters_str = g_variant_print (parameters, TRUE);
-	g_print (" *** Received Signal: %s: %s\n",
-	           signal_name,
-	           parameters_str);
-	g_free (parameters_str);
+	SoundmenuPlugin *soundmenu = user_data;
+
+	g_variant_iter_init (&iter, parameters);
+
+	child = g_variant_iter_next_value (&iter); /* Interface name. */
+
+	child = g_variant_iter_next_value (&iter); /* Property name. */
+	g_variant_iter_init (&iter, child);
+	while (g_variant_iter_loop (&iter, "{sv}", &key, &value)) {
+		if (0 == g_ascii_strcasecmp (key, "PlaybackStatus"))
+		{
+			g_print ("Variant '%s' has type '%s'\n", key,
+				     g_variant_get_type_string (value));
+		}
+		else if (0 == g_ascii_strcasecmp (key, "Volume"))
+		{
+			g_print ("Variant '%s' has type '%s'\n", key,
+				     g_variant_get_type_string (value));
+		}
+		else if (0 == g_ascii_strcasecmp (key, "Metadata"))
+		{
+			metadata = soundmenu_mpris2_get_metadata (value);
+			free_metadata(soundmenu->metadata);
+			soundmenu->metadata = metadata;
+
+			soundmenu_album_art_set_path(soundmenu->album_art, soundmenu->metadata->arturl);
+
+			#ifdef HAVE_LIBCLASTFM
+			if (soundmenu->clastfm->lastfm_support)
+				update_lastfm(soundmenu);
+			#endif
+		}
+	}
 }
 
 static void

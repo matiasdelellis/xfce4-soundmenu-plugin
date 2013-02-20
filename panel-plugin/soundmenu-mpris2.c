@@ -201,17 +201,7 @@ void mpris2_dbus_filter (DBusMessage *message, SoundmenuPlugin *soundmenu)
 		}
 		else if (0 == g_ascii_strcasecmp (str_buf, "Metadata"))
 		{
-			/* Ignore inferface string and send the pointer to metadata. */
-			dbus_message_iter_next(&dict_entry);
-			mpris2_demarshal_metadata (&dict_entry, soundmenu);
-            /* TODO: Check if arturl change before update album art.
-             * The same to lastfm.. First check artist, title and album. */
-			soundmenu_album_art_set_path(soundmenu->album_art, soundmenu->metadata->arturl);
-
-			#ifdef HAVE_LIBCLASTFM
-			if (soundmenu->clastfm->lastfm_support)
-				update_lastfm(soundmenu);
-			#endif
+			/* Ignore: Ported to gdbus */
 		}
 	} while (dbus_message_iter_next(&dict));
 

@@ -175,6 +175,22 @@ soundmenu_mpris2_get_metadata (GVariant *dictionary)
 			/* (Float) Not use userRating */
 		else if (0 == g_ascii_strcasecmp (key, "mpris:artUrl"))
 			metadata->arturl= g_variant_dup_string(value, NULL);
+		else if (0 == g_ascii_strcasecmp (key, "xesam:contentCreated"));
+			/* has type 's' */
+		else if (0 == g_ascii_strcasecmp (key, "audio-bitrate"));
+			/* has type 'i' */
+		else if (0 == g_ascii_strcasecmp (key, "audio-channels"));
+			/* has type 'i' */
+		else if (0 == g_ascii_strcasecmp (key, "audio-samplerate"));
+			/* has type 'i' */
+		else if (0 == g_ascii_strcasecmp (key, "xesam:contentCreated"));
+			/* has type 's' */
+		else if (0 == g_ascii_strcasecmp (key, "audio-bitrate"));
+			/* has type 'i' */
+		else if (0 == g_ascii_strcasecmp (key, "audio-channels"));
+			/* has type 'i' */
+		else if (0 == g_ascii_strcasecmp (key, "audio-samplerate"));
+			/* has type 'i'*/
 		else
 			g_print ("Variant '%s' has type '%s'\n", key,
 				     g_variant_get_type_string (value));

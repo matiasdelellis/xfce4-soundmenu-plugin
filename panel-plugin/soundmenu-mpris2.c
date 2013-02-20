@@ -168,47 +168,6 @@ mpris2_demarshal_metadata (DBusMessageIter *args, SoundmenuPlugin *soundmenu)	//
 	soundmenu->metadata = metadata;
 }
 
-/* Basic dbus functions for interacting with MPRIS2*/
-
-void mpris2_dbus_filter (DBusMessage *message, SoundmenuPlugin *soundmenu)
-{
-	DBusMessageIter args, dict, dict_entry;
-	gchar *str_buf = NULL, *state = NULL;
-	gdouble volume = 0;
-
-	dbus_message_iter_init(message, &args);
-
-	/* Ignore the interface_name*/
-	dbus_message_iter_next(&args);
-
-	dbus_message_iter_recurse(&args, &dict);
-	do
-	{
-		dbus_message_iter_recurse(&dict, &dict_entry);
-		dbus_message_iter_get_basic(&dict_entry, (void*) &str_buf);
-
-		if(str_buf == NULL)
-			continue;
-
-		if (0 == g_ascii_strcasecmp (str_buf, "PlaybackStatus"))
-		{
-			get_meta_item_str (&dict_entry, &state);
-		}
-		else if (0 == g_ascii_strcasecmp (str_buf, "Volume"))
-		{
-			get_meta_item_gint(&dict_entry, &volume);
-			soundmenu->volume = volume;
-		}
-		else if (0 == g_ascii_strcasecmp (str_buf, "Metadata"))
-		{
-			/* Ignore: Ported to gdbus */
-		}
-	} while (dbus_message_iter_next(&dict));
-
-	if (state != NULL)
-		soundmenu_update_state (state, soundmenu);
-}
-
 void
 mpris2_send_message (SoundmenuPlugin *soundmenu, const char *msg)
 {

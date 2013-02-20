@@ -28,20 +28,6 @@
 #include "soundmenu-utils.h"
 #include "soundmenu-related.h"
 
-DBusHandlerResult
-soundmenu_dbus_connection_filter (DBusConnection *connection, DBusMessage *message, void *user_data)
-{
-	SoundmenuPlugin *soundmenu = user_data;
-
-	if(dbus_message_is_signal(message, "org.freedesktop.DBus.Properties", "PropertiesChanged"))
-	{
-		mpris2_dbus_filter (message, soundmenu);
-		return DBUS_HANDLER_RESULT_HANDLED;
-	}
-
-	return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
-}
-
 /*
  *Useful to debug..
  static void
@@ -71,7 +57,6 @@ soundmenu_mpris2_get_metadata (GVariant *dictionary)
 	GVariantIter iter;
 	GVariant *value;
 	gchar *key;
-	gsize *size;
 
 	gint64 length = 0;
 	gint32 trackNumber = 0;
@@ -85,13 +70,13 @@ soundmenu_mpris2_get_metadata (GVariant *dictionary)
 		if (0 == g_ascii_strcasecmp (key, "mpris:trackid"))
 			metadata->trackid = g_variant_dup_string(value, NULL);
 		else if (0 == g_ascii_strcasecmp (key, "xesam:url"))
-			metadata->url= g_variant_dup_string(value, size);
+			metadata->url= g_variant_dup_string(value, NULL);
 		else if (0 == g_ascii_strcasecmp (key, "xesam:title"))
-			metadata->url= g_variant_dup_string(value, size);
+			metadata->url= g_variant_dup_string(value, NULL);
 		else if (0 == g_ascii_strcasecmp (key, "xesam:artist"))
 			metadata->artist = g_avariant_dup_string(value);
 		else if (0 == g_ascii_strcasecmp (key, "xesam:album"))
-			metadata->album = g_variant_dup_string(value, size);
+			metadata->album = g_variant_dup_string(value, NULL);
 		else if (0 == g_ascii_strcasecmp (key, "xesam:genre"));
 			/* (List of Strings.) Not use genre */
 		else if (0 == g_ascii_strcasecmp (key, "xesam:albumArtist"));
@@ -109,7 +94,7 @@ soundmenu_mpris2_get_metadata (GVariant *dictionary)
 		else if (0 == g_ascii_strcasecmp (key, "xesam:userRating"));
 			/* (Float) Not use userRating */
 		else if (0 == g_ascii_strcasecmp (key, "mpris:artUrl"))
-			metadata->url= g_variant_dup_string(value, size);
+			metadata->arturl= g_variant_dup_string(value, NULL);
 		else
 			g_print ("Variant '%s' has type '%s'\n", key,
 				     g_variant_get_type_string (value));
@@ -132,6 +117,8 @@ soundmenu_mpris2_on_dbus_signal (GDBusProxy *proxy,
 	GVariant *value;
 	GVariant *child;
 	const gchar *key;
+	gchar *state = NULL;
+	gdouble volume = 0;
 	Metadata *metadata;
 
 	SoundmenuPlugin *soundmenu = user_data;
@@ -145,21 +132,20 @@ soundmenu_mpris2_on_dbus_signal (GDBusProxy *proxy,
 	while (g_variant_iter_loop (&iter, "{sv}", &key, &value)) {
 		if (0 == g_ascii_strcasecmp (key, "PlaybackStatus"))
 		{
-			g_print ("Variant '%s' has type '%s'\n", key,
-				     g_variant_get_type_string (value));
+			state = g_variant_dup_string(value, NULL);
 		}
 		else if (0 == g_ascii_strcasecmp (key, "Volume"))
 		{
-			g_print ("Variant '%s' has type '%s'\n", key,
-				     g_variant_get_type_string (value));
+			volume = g_variant_get_double(value);
+			soundmenu->volume = volume;
 		}
 		else if (0 == g_ascii_strcasecmp (key, "Metadata"))
 		{
 			metadata = soundmenu_mpris2_get_metadata (value);
+			soundmenu_album_art_set_path(soundmenu->album_art, metadata->arturl);
+
 			free_metadata(soundmenu->metadata);
 			soundmenu->metadata = metadata;
-
-			soundmenu_album_art_set_path(soundmenu->album_art, soundmenu->metadata->arturl);
 
 			#ifdef HAVE_LIBCLASTFM
 			if (soundmenu->clastfm->lastfm_support)
@@ -167,6 +153,8 @@ soundmenu_mpris2_on_dbus_signal (GDBusProxy *proxy,
 			#endif
 		}
 	}
+	if (state != NULL)
+		soundmenu_update_state (state, soundmenu);
 }
 
 static void
@@ -198,7 +186,6 @@ init_dbus_session (SoundmenuPlugin *soundmenu)
 	GDBusProxy      *proxy;
 	DBusConnection *connection;
 	DBusError error;
-	gchar *rule = NULL;
 
 	/* Init gdbus connection. */
 
@@ -250,15 +237,5 @@ init_dbus_session (SoundmenuPlugin *soundmenu)
 		g_critical("Error connecting to DBUS_BUS_SESSION: %s", error.message);
 		dbus_error_free (&error);
 	}
-
-	/* Configure rule according to player selected. */
-
-	rule = g_strdup_printf ("type='signal', sender='%s'", soundmenu->dbus_name);
-	dbus_bus_add_match (connection, rule, NULL);
-	g_free(rule);
-
-	dbus_connection_add_filter (connection, soundmenu_dbus_connection_filter, soundmenu, NULL);
-	dbus_connection_setup_with_g_main (connection, NULL);
-
 	soundmenu->connection = connection;
 }

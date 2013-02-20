@@ -17,5 +17,4 @@
  *  Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA.
  */
 
-DBusHandlerResult soundmenu_dbus_connection_filter (DBusConnection *connection, DBusMessage *message, void *user_data);
 void init_dbus_session (SoundmenuPlugin *soundmenu);

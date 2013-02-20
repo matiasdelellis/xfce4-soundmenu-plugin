@@ -22,11 +22,16 @@
 
 #include "soundmenu-plugin.h"
 #include "soundmenu-dbus.h"
+#include "soundmenu-dialog-hig.h"
 #include "soundmenu-dialogs.h"
 #include "soundmenu-lastfm.h"
 #include "soundmenu-mpris2.h"
 #include "soundmenu-utils.h"
 #include "soundmenu-related.h"
+
+#ifdef HAVE_LIBKEYBINDER
+#include "soundmenu-keybinder.h"
+#endif
 
 #define PLUGIN_WEBSITE "https://github.com/matiasdelellis/xfce4-soundmenu-plugin/"
 
@@ -128,9 +133,9 @@ toggle_show_album_art(GtkToggleButton *button, SoundmenuPlugin    *soundmenu)
 
 #if LIBXFCE4PANEL_CHECK_VERSION (4,9,0)
 static void
-toggle_show_tiny_album_art(GtkToggleButton *button, SoundmenuPlugin    *soundmenu)
+toggle_huge_on_deskbar_mode(GtkToggleButton *button, SoundmenuPlugin    *soundmenu)
 {
-	soundmenu->show_tiny_album_art = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button));
+	soundmenu->huge_on_deskbar_mode = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button));
 
 	if(soundmenu->show_album_art)
 		soundmenu_update_layout_changes (soundmenu);
@@ -187,7 +192,7 @@ soundmenu_configure (XfcePanelPlugin *plugin,
                   SoundmenuPlugin    *soundmenu)
 {
 	GtkWidget *dialog;
-	GtkWidget *pref_table, *player_label, *player_entry, *show_album_art_check, *show_tiny_album_art_check, *show_stop_check;
+	GtkWidget *pref_table, *player_label, *player_entry, *show_album_art_check, *huge_on_deskbar_mode_check, *show_stop_check;
 	guint row = 0;
 
 	#ifdef HAVE_LIBKEYBINDER
@@ -234,11 +239,11 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 				G_CALLBACK(toggle_show_album_art), soundmenu);
 
 	#if LIBXFCE4PANEL_CHECK_VERSION (4,9,0)
-	show_tiny_album_art_check = gtk_check_button_new_with_label(_("Show tiny cover art in deskbar panel mode"));
-	if(soundmenu->show_tiny_album_art)
-		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(show_tiny_album_art_check), TRUE);
-	g_signal_connect (G_OBJECT(show_tiny_album_art_check), "toggled",
-				G_CALLBACK(toggle_show_tiny_album_art), soundmenu);
+	huge_on_deskbar_mode_check = gtk_check_button_new_with_label(_("Show huge cover art when deskbar panel mode"));
+	if(soundmenu->huge_on_deskbar_mode)
+		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(huge_on_deskbar_mode_check), TRUE);
+	g_signal_connect (G_OBJECT(huge_on_deskbar_mode_check), "toggled",
+				G_CALLBACK(toggle_huge_on_deskbar_mode), soundmenu);
 	#endif
 
 	show_stop_check = gtk_check_button_new_with_label(_("Show stop button"));
@@ -288,7 +293,7 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 	soundmenu_hig_workarea_table_add_section_title(pref_table, &row, _("Appearance"));
 	soundmenu_hig_workarea_table_add_wide_control(pref_table, &row, show_album_art_check);
 	#if LIBXFCE4PANEL_CHECK_VERSION (4,9,0)
-	soundmenu_hig_workarea_table_add_wide_control(pref_table, &row, show_tiny_album_art_check);
+	soundmenu_hig_workarea_table_add_wide_control(pref_table, &row, huge_on_deskbar_mode_check);
 	#endif
 	soundmenu_hig_workarea_table_add_wide_control(pref_table, &row, show_stop_check);
 

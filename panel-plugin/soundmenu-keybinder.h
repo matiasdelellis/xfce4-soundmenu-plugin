@@ -1,6 +1,5 @@
-/*  $Id$
- *
- *  Copyright (c) 2006-2007 John Doo <john@foo.org>
+/*
+ *  Copyright (c) 2011-2013 matias <mati86dl@gmail.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,18 +16,7 @@
  *  Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA.
  */
 
-#ifndef __SOUNDMENU_DIALOGS_H__
-#define __SOUNDMENU_DIALOGS_H__
+void keybinder_bind_keys(SoundmenuPlugin *soundmenu);
+void keybinder_unbind_keys(SoundmenuPlugin *soundmenu);
 
-G_BEGIN_DECLS
-
-void
-soundmenu_configure (XfcePanelPlugin *plugin,
-                     SoundmenuPlugin    *soundmenu);
-
-void
-soundmenu_about (XfcePanelPlugin *plugin);
-
-G_END_DECLS
-
-#endif
+void soundmenu_init_keybinder(void);

@@ -28,6 +28,10 @@
 #include "soundmenu-utils.h"
 #include "soundmenu-related.h"
 
+#ifdef HAVE_LIBKEYBINDER
+#include "soundmenu-keybinder.h"
+#endif
+
 /* default settings */
 
 #define DEFAULT_PLAYER "pragha"
@@ -44,24 +48,13 @@ soundmenu_construct (XfcePanelPlugin *plugin);
 
 XFCE_PANEL_PLUGIN_REGISTER (soundmenu_construct);
 
-void
-play_button_toggle_state (SoundmenuPlugin *soundmenu)
-{
-	gtk_container_remove(GTK_CONTAINER(soundmenu->play_button),
-                       gtk_bin_get_child(GTK_BIN(soundmenu->play_button)));
-	if ((soundmenu->state == ST_PAUSED) || (soundmenu->state == ST_STOPPED))
-		gtk_container_add(GTK_CONTAINER(soundmenu->play_button), soundmenu->image_play);
-	else
-		gtk_container_add(GTK_CONTAINER(soundmenu->play_button), soundmenu->image_pause);
-	gtk_widget_show_all(soundmenu->play_button);
-}
-
-gboolean status_get_tooltip_cb (GtkWidget        *widget,
-					gint              x,
-					gint              y,
-					gboolean          keyboard_mode,
-					GtkTooltip       *tooltip,
-					SoundmenuPlugin *soundmenu)
+static gboolean
+soundmenu_set_query_tooltip_cb (GtkWidget       *widget,
+                                gint             x,
+                                gint             y,
+                                gboolean         keyboard_mode,
+                                GtkTooltip      *tooltip,
+                                SoundmenuPlugin *soundmenu)
 {
 	gchar *markup_text = NULL, *length = NULL;
 
@@ -71,13 +64,10 @@ gboolean status_get_tooltip_cb (GtkWidget        *widget,
 		markup_text = g_strdup_printf("%s", _("Stopped"));
 	else {
 		markup_text = g_markup_printf_escaped(_("<b>%s</b> (%s)\nby %s in %s"),
-						(soundmenu->metadata->title && strlen(soundmenu->metadata->title)) ?
-						soundmenu->metadata->title : soundmenu->metadata->url,
-						length,
-						(soundmenu->metadata->artist && strlen(soundmenu->metadata->artist)) ?
-						soundmenu->metadata->artist : _("Unknown Artist"),
-						(soundmenu->metadata->album && strlen(soundmenu->metadata->album)) ?
-						soundmenu->metadata->album : _("Unknown Album"));
+		                                      g_str_nempty0(soundmenu->metadata->title) ? soundmenu->metadata->title :soundmenu->metadata->url,
+		                                      length,
+		                                      g_str_nempty0(soundmenu->metadata->artist) ? soundmenu->metadata->artist : _("Unknown Artist"),
+		                                      g_str_nempty0(soundmenu->metadata->album) ? soundmenu->metadata->album : _("Unknown Album"));
 	}
 
 	gtk_tooltip_set_markup (tooltip, markup_text);
@@ -89,6 +79,18 @@ gboolean status_get_tooltip_cb (GtkWidget        *widget,
 	g_free(length);
 
 	return TRUE;
+}
+
+static void
+soundmenu_toggle_play_button_state (SoundmenuPlugin *soundmenu)
+{
+	gtk_container_remove(GTK_CONTAINER(soundmenu->play_button),
+                       gtk_bin_get_child(GTK_BIN(soundmenu->play_button)));
+	if ((soundmenu->state == ST_PAUSED) || (soundmenu->state == ST_STOPPED))
+		gtk_container_add(GTK_CONTAINER(soundmenu->play_button), soundmenu->image_play);
+	else
+		gtk_container_add(GTK_CONTAINER(soundmenu->play_button), soundmenu->image_pause);
+	gtk_widget_show_all(soundmenu->play_button);
 }
 
 void
@@ -104,7 +106,7 @@ soundmenu_update_state(gchar *state, SoundmenuPlugin *soundmenu)
 		soundmenu->state = ST_STOPPED;
 		soundmenu_album_art_set_path(soundmenu->album_art, NULL);
 	}
-	play_button_toggle_state(soundmenu);
+	soundmenu_toggle_play_button_state(soundmenu);
 	#ifdef HAVE_LIBCLASTFM
 	if (soundmenu->clastfm->lastfm_support)
 		update_lastfm(soundmenu);
@@ -113,64 +115,29 @@ soundmenu_update_state(gchar *state, SoundmenuPlugin *soundmenu)
 
 /* Callbacks of button controls */
 
-void
+static void
 prev_button_handler(GtkButton *button, SoundmenuPlugin *soundmenu)
 {
 	mpris2_send_message (soundmenu, "Previous");
 }
 
-void
+static void
 play_button_handler(GtkButton *button, SoundmenuPlugin *soundmenu)
 {
 	mpris2_send_message (soundmenu, "PlayPause");
 }
 
-void
+static void
 stop_button_handler(GtkButton *button, SoundmenuPlugin    *soundmenu)
 {
 	mpris2_send_message (soundmenu, "Stop");
 }
 
-void
+static void
 next_button_handler(GtkButton *button, SoundmenuPlugin    *soundmenu)
 {
 	mpris2_send_message (soundmenu, "Next");
 }
-
-#ifdef HAVE_LIBKEYBINDER
-void keybind_play_handler (const char *keystring, SoundmenuPlugin *soundmenu)
-{
-	mpris2_send_message (soundmenu, "PlayPause");
-}
-void keybind_stop_handler (const char *keystring, SoundmenuPlugin *soundmenu)
-{
-	mpris2_send_message (soundmenu, "Stop");
-}
-void keybind_prev_handler (const char *keystring, SoundmenuPlugin *soundmenu)
-{
-	mpris2_send_message (soundmenu, "Previous");
-}
-void keybind_next_handler (const char *keystring, SoundmenuPlugin *soundmenu)
-{
-	mpris2_send_message (soundmenu, "Next");
-}
-
-void keybinder_bind_keys(SoundmenuPlugin *soundmenu)
-{
-	keybinder_bind("XF86AudioPlay", (KeybinderHandler) keybind_play_handler, soundmenu);
-	keybinder_bind("XF86AudioStop", (KeybinderHandler) keybind_stop_handler, soundmenu);
-	keybinder_bind("XF86AudioPrev", (KeybinderHandler) keybind_prev_handler, soundmenu);
-	keybinder_bind("XF86AudioNext", (KeybinderHandler) keybind_next_handler, soundmenu);
-}
-
-void keybinder_unbind_keys(SoundmenuPlugin *soundmenu)
-{
-	keybinder_unbind("XF86AudioPlay", (KeybinderHandler) keybind_play_handler);
-	keybinder_unbind("XF86AudioStop", (KeybinderHandler) keybind_stop_handler);
-	keybinder_unbind("XF86AudioPrev", (KeybinderHandler) keybind_prev_handler);
-	keybinder_unbind("XF86AudioNext", (KeybinderHandler) keybind_next_handler);
-}
-#endif
 
 /* Sound menu plugin construct */
 
@@ -200,7 +167,7 @@ soundmenu_save (XfcePanelPlugin *plugin,
 			xfce_rc_write_entry    (rc, "player", soundmenu->player);
 
 		xfce_rc_write_bool_entry (rc, "show_album_art", soundmenu->show_album_art);
-		xfce_rc_write_bool_entry (rc, "show_tiny_album_art", soundmenu->show_tiny_album_art);
+		xfce_rc_write_bool_entry (rc, "huge_on_deskbar_mode", soundmenu->huge_on_deskbar_mode);
 		xfce_rc_write_bool_entry (rc, "show_stop", soundmenu->show_stop);
 		#ifdef HAVE_LIBKEYBINDER
 		xfce_rc_write_bool_entry (rc, "use_global_keys", soundmenu->use_global_keys);
@@ -244,7 +211,7 @@ soundmenu_read (SoundmenuPlugin *soundmenu)
 			/* read the settings */
 			soundmenu->player = g_strdup (xfce_rc_read_entry (rc, "player", NULL));
 			soundmenu->show_album_art = xfce_rc_read_bool_entry (rc, "show_album_art", FALSE);
-			soundmenu->show_tiny_album_art = xfce_rc_read_bool_entry (rc, "show_tiny_album_art", FALSE);
+			soundmenu->huge_on_deskbar_mode = xfce_rc_read_bool_entry (rc, "huge_on_deskbar_mode", FALSE);
 			soundmenu->show_stop = xfce_rc_read_bool_entry (rc, "show_stop", FALSE);
 			#ifdef HAVE_LIBKEYBINDER
 			soundmenu->use_global_keys = xfce_rc_read_bool_entry (rc, "use_global_keys", DEFAULT_GLOBAL_KEYS);
@@ -271,7 +238,7 @@ soundmenu_read (SoundmenuPlugin *soundmenu)
 
 	soundmenu->player = NULL;
 	soundmenu->show_album_art = FALSE;
-	soundmenu->show_tiny_album_art = FALSE;
+	soundmenu->huge_on_deskbar_mode = FALSE;
 	soundmenu->show_stop = FALSE;
 	#ifdef HAVE_LIBKEYBINDER
 	soundmenu->use_global_keys = DEFAULT_GLOBAL_KEYS;
@@ -287,7 +254,7 @@ soundmenu_read (SoundmenuPlugin *soundmenu)
 }
 
 #ifdef HAVE_LIBCLASTFM
-void
+static void
 soundmenu_add_lastfm_menu_item (SoundmenuPlugin *soundmenu)
 {
 	GtkWidget *submenu, *item;
@@ -314,7 +281,7 @@ soundmenu_add_lastfm_menu_item (SoundmenuPlugin *soundmenu)
 #endif
 
 #ifdef HAVE_LIBGLYR
-void
+static void
 soundmenu_add_lyrics_menu_item (SoundmenuPlugin *soundmenu)
 {
 	GtkWidget *item;
@@ -456,15 +423,15 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	g_object_set (G_OBJECT(next_button), "has-tooltip", TRUE, NULL);
 
 	g_signal_connect(G_OBJECT(album_art), "query-tooltip",
-			G_CALLBACK(status_get_tooltip_cb), soundmenu);
+			G_CALLBACK(soundmenu_set_query_tooltip_cb), soundmenu);
 	g_signal_connect(G_OBJECT(prev_button), "query-tooltip",
-			G_CALLBACK(status_get_tooltip_cb), soundmenu);
+			G_CALLBACK(soundmenu_set_query_tooltip_cb), soundmenu);
 	g_signal_connect(G_OBJECT(play_button), "query-tooltip",
-			G_CALLBACK(status_get_tooltip_cb), soundmenu);
+			G_CALLBACK(soundmenu_set_query_tooltip_cb), soundmenu);
 	g_signal_connect(G_OBJECT(stop_button), "query-tooltip",
-			G_CALLBACK(status_get_tooltip_cb), soundmenu);
+			G_CALLBACK(soundmenu_set_query_tooltip_cb), soundmenu);
 	g_signal_connect(G_OBJECT(next_button), "query-tooltip",
-			G_CALLBACK(status_get_tooltip_cb), soundmenu);
+			G_CALLBACK(soundmenu_set_query_tooltip_cb), soundmenu);
 
 	/* FIXME:
 	 * See comments in the function panel_button_scrolled.
@@ -481,7 +448,7 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	return soundmenu;
 }
 
-void init_soundmenu_plugin(SoundmenuPlugin *soundmenu)
+static void init_soundmenu_plugin(SoundmenuPlugin *soundmenu)
 {
 	/* Init dbus and configure filters. */
 
@@ -497,7 +464,7 @@ void init_soundmenu_plugin(SoundmenuPlugin *soundmenu)
 	/* Init the goodies services .*/
 
 	#ifdef HAVE_LIBKEYBINDER
-	keybinder_init ();
+	soundmenu_init_keybinder();
 	if (soundmenu->use_global_keys)
 		keybinder_bind_keys(soundmenu);
 	#endif
@@ -599,15 +566,16 @@ soundmenu_size_changed (XfcePanelPlugin *plugin,
 		if (soundmenu->show_stop)
 			rows++;
 		if (soundmenu->show_album_art &&
-		    soundmenu->show_tiny_album_art)
+		    !soundmenu->huge_on_deskbar_mode)
 			rows++;
 
 		size = panel_size / rows;
 
-		if (soundmenu->show_tiny_album_art)
-			album_size = size;
-		else
+		if (soundmenu->show_album_art &&
+		    soundmenu->huge_on_deskbar_mode)
 			album_size = panel_size * 0.80;
+		else
+			album_size = size;
 	}
 #endif
 
@@ -638,10 +606,10 @@ soundmenu_mode_changed (XfcePanelPlugin *plugin,
 
 	if (mode == XFCE_PANEL_PLUGIN_MODE_DESKBAR)
 	{
-		if (soundmenu->show_tiny_album_art)
-			xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->hvbox), GTK_ORIENTATION_HORIZONTAL);
-		else
+		if (soundmenu->huge_on_deskbar_mode)
 			xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->hvbox), GTK_ORIENTATION_VERTICAL);
+		else
+			xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->hvbox), GTK_ORIENTATION_HORIZONTAL);
 
 		xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->hvbox_buttons), GTK_ORIENTATION_HORIZONTAL);
 	}

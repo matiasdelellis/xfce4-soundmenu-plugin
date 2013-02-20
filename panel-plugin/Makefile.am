@@ -30,6 +30,12 @@ libsoundmenu_la_SOURCES = \
 	soundmenu-utils.c \
 	soundmenu-utils.h
 
+if HAVE_LIBKEYBINDER
+libsoundmenu_la_SOURCES += \
+	soundmenu-keybinder.c \
+	soundmenu-keybinder.h
+endif
+
 if HAVE_LIBCLASTFM
 libsoundmenu_la_SOURCES += \
 	soundmenu-lastfm.c \

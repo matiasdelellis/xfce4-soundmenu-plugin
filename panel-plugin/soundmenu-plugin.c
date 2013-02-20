@@ -28,6 +28,10 @@
 #include "soundmenu-utils.h"
 #include "soundmenu-related.h"
 
+#ifdef HAVE_LIBKEYBINDER
+#include "soundmenu-keybinder.h"
+#endif
+
 /* default settings */
 
 #define DEFAULT_PLAYER "pragha"
@@ -136,41 +140,6 @@ next_button_handler(GtkButton *button, SoundmenuPlugin    *soundmenu)
 {
 	mpris2_send_message (soundmenu, "Next");
 }
-
-#ifdef HAVE_LIBKEYBINDER
-void keybind_play_handler (const char *keystring, SoundmenuPlugin *soundmenu)
-{
-	mpris2_send_message (soundmenu, "PlayPause");
-}
-void keybind_stop_handler (const char *keystring, SoundmenuPlugin *soundmenu)
-{
-	mpris2_send_message (soundmenu, "Stop");
-}
-void keybind_prev_handler (const char *keystring, SoundmenuPlugin *soundmenu)
-{
-	mpris2_send_message (soundmenu, "Previous");
-}
-void keybind_next_handler (const char *keystring, SoundmenuPlugin *soundmenu)
-{
-	mpris2_send_message (soundmenu, "Next");
-}
-
-void keybinder_bind_keys(SoundmenuPlugin *soundmenu)
-{
-	keybinder_bind("XF86AudioPlay", (KeybinderHandler) keybind_play_handler, soundmenu);
-	keybinder_bind("XF86AudioStop", (KeybinderHandler) keybind_stop_handler, soundmenu);
-	keybinder_bind("XF86AudioPrev", (KeybinderHandler) keybind_prev_handler, soundmenu);
-	keybinder_bind("XF86AudioNext", (KeybinderHandler) keybind_next_handler, soundmenu);
-}
-
-void keybinder_unbind_keys(SoundmenuPlugin *soundmenu)
-{
-	keybinder_unbind("XF86AudioPlay", (KeybinderHandler) keybind_play_handler);
-	keybinder_unbind("XF86AudioStop", (KeybinderHandler) keybind_stop_handler);
-	keybinder_unbind("XF86AudioPrev", (KeybinderHandler) keybind_prev_handler);
-	keybinder_unbind("XF86AudioNext", (KeybinderHandler) keybind_next_handler);
-}
-#endif
 
 /* Sound menu plugin construct */
 

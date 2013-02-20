@@ -42,10 +42,6 @@
 #include <clastfm.h>
 #endif
 
-#ifdef HAVE_LIBKEYBINDER
-#include <keybinder.h>
-#endif
-
 #ifdef HAVE_LIBGLYR
 #include <glyr/glyr.h>
 #endif
@@ -156,9 +152,6 @@ soundmenu_update_state(gchar *state, SoundmenuPlugin *soundmenu);
 void
 soundmenu_save (XfcePanelPlugin *plugin,
              SoundmenuPlugin    *soundmenu);
-
-void keybinder_bind_keys(SoundmenuPlugin *soundmenu);
-void keybinder_unbind_keys(SoundmenuPlugin *soundmenu);
 
 G_END_DECLS
 

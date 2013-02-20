@@ -17,6 +17,9 @@
  *  Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA.
  */
 
+void
+soundmenu_mpris2_properties_set_volume(SoundmenuPlugin *soundmenu, gdouble volume);
+
 gchar *
 soundmenu_get_mpris2_player_running(SoundmenuPlugin *soundmenu);
 

@@ -139,6 +139,28 @@ next_button_handler(GtkButton *button, SoundmenuPlugin    *soundmenu)
 	mpris2_send_message (soundmenu, "Next");
 }
 
+static gboolean
+soundmenu_panel_button_scrolled (GtkWidget        *widget,
+                                 GdkEventScroll   *event,
+                                 SoundmenuPlugin *soundmenu)
+{
+	switch (event->direction) {
+		case GDK_SCROLL_UP:
+		case GDK_SCROLL_RIGHT:
+			soundmenu->volume += 0.02;
+			break;
+		case GDK_SCROLL_DOWN:
+		case GDK_SCROLL_LEFT:
+			soundmenu->volume -= 0.02;
+			break;
+	}
+	soundmenu->volume = CLAMP (soundmenu->volume, 0.0, 1.0);
+
+	soundmenu_mpris2_properties_set_volume(soundmenu, soundmenu->volume);
+
+	return FALSE;
+}
+
 /* Sound menu plugin construct */
 
 void
@@ -433,10 +455,8 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	g_signal_connect(G_OBJECT(next_button), "query-tooltip",
 			G_CALLBACK(soundmenu_set_query_tooltip_cb), soundmenu);
 
-	/* FIXME:
-	 * See comments in the function panel_button_scrolled.
-	g_signal_connect (G_OBJECT (play_button), "scroll-event",
-			G_CALLBACK (panel_button_scrolled), soundmenu);*/
+	g_signal_connect (G_OBJECT (ev_album_art), "scroll-event",
+			G_CALLBACK (soundmenu_panel_button_scrolled), soundmenu);
 
 	soundmenu->album_art = album_art;
 	soundmenu->ev_album_art = ev_album_art;

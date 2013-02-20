@@ -94,6 +94,34 @@ soundmenu_mpris2_properties_get_all(SoundmenuPlugin *soundmenu)
 	return child;
 }
 
+void
+soundmenu_mpris2_properties_set_volume(SoundmenuPlugin *soundmenu, gdouble volume)
+{
+	GVariant *reply;
+	GError   *error = NULL;
+
+	reply = g_dbus_connection_call_sync (soundmenu->gconnection,
+	                                     soundmenu->dbus_name,
+	                                     "/org/mpris/MediaPlayer2",
+	                                     "org.freedesktop.DBus.Properties",
+	                                     "Set",
+	                                     g_variant_new ("(ssv)",
+	                                                    "org.mpris.MediaPlayer2.Player",
+	                                                    "Volume",
+	                                                     g_variant_new_double(volume)),
+	                                     NULL,
+	                                     G_DBUS_CALL_FLAGS_NONE,
+	                                     -1,
+	                                     NULL,
+	                                     NULL);
+	if (reply == NULL) {
+		g_warning ("Unable to set session: %s", error->message);
+		g_error_free (error);
+		return;
+	}
+	g_variant_unref(reply);
+}
+
 static gchar *
 g_avariant_dup_string(GVariant * variant)
 {

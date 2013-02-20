@@ -306,8 +306,6 @@ init_dbus_session (SoundmenuPlugin *soundmenu)
 {
 	GDBusConnection *gconnection;
 	GError          *gerror = NULL;
-	DBusConnection *connection;
-	DBusError error;
 
 	/* Init gdbus connection. */
 
@@ -320,15 +318,4 @@ init_dbus_session (SoundmenuPlugin *soundmenu)
 	soundmenu->gconnection = gconnection;
 
 	soundmenu_mpris2_connect_dbus(soundmenu);
-
-	/* Init dbus connection. */
-
-	dbus_error_init (&error);
-
-	connection = dbus_bus_get (DBUS_BUS_SESSION, &error);
-	if (connection == NULL) {
-		g_critical("Error connecting to DBUS_BUS_SESSION: %s", error.message);
-		dbus_error_free (&error);
-	}
-	soundmenu->connection = connection;
 }

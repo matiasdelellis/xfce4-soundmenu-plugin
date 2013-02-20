@@ -129,13 +129,10 @@ typedef struct
 	gdouble			volume;
 
 	/* Dbus conecction */
-	DBusConnection 	*connection;
-	gchar			*dbus_name;
-	guint            watch_id;
-
-	/* Dbus conecction */
 	GDBusConnection *gconnection;
 	GDBusProxy      *proxy;
+	gchar			*dbus_name;
+	guint            watch_id;
 
 	/* soundmenu settings */
 	gchar			*player;

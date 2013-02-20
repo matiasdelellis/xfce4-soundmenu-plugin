@@ -41,7 +41,7 @@ soundmenu_configure_response (GtkWidget    *dialog,
                            SoundmenuPlugin *soundmenu)
 {
 	gboolean result;
-	gchar *rule = NULL, *player = NULL;
+	gchar *player = NULL;
 
 	if (response == GTK_RESPONSE_HELP)
 	{
@@ -61,6 +61,7 @@ soundmenu_configure_response (GtkWidget    *dialog,
 			soundmenu->player = player;
 
 			soundmenu_mpris2_reinit_dbus(soundmenu);
+			soundmenu_mpris2_forse_update(soundmenu);
 		}
 		#ifdef HAVE_LIBCLASTFM
 		soundmenu->clastfm->lastfm_support = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(soundmenu->lw.lastfm_w));
@@ -86,7 +87,6 @@ soundmenu_configure_response (GtkWidget    *dialog,
 		/* destroy the properties dialog */
 		gtk_widget_destroy (dialog);
 	}
-	mpris2_get_player_status (soundmenu);
 	#ifdef HAVE_LIBCLASTFM
     if (soundmenu->clastfm->lastfm_support &&
         soundmenu->clastfm->session_id == NULL)

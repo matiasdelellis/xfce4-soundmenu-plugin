@@ -481,7 +481,7 @@ static void init_soundmenu_plugin(SoundmenuPlugin *soundmenu)
 
 	/* Get status of current player. */
 
-	mpris2_get_player_status (soundmenu);
+	soundmenu_mpris2_forse_update(soundmenu);
 
 	/* Add lastfm and glyr options in panel plugin. */
 
@@ -589,8 +589,6 @@ soundmenu_size_changed (XfcePanelPlugin *plugin,
 	/* we handled the orientation */
 	return TRUE;
 }
-
-
 
 #if LIBXFCE4PANEL_CHECK_VERSION (4,9,0)
 static void

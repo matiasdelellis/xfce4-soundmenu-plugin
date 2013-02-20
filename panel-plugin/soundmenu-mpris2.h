@@ -20,12 +20,4 @@
 Metadata *malloc_metadata();
 void free_metadata(Metadata *m);
 
-void mpris2_demarshal_metadata (DBusMessageIter *args, SoundmenuPlugin *soundmenu);
-
-void mpris2_dbus_filter (DBusMessage *message, SoundmenuPlugin *soundmenu);
 void mpris2_send_message (SoundmenuPlugin *soundmenu, const char *msg);
-
-void mpris2_get_playbackstatus (SoundmenuPlugin *soundmenu);
-void mpris2_get_metadata (SoundmenuPlugin *soundmenu);
-void mpris2_get_volume (SoundmenuPlugin *soundmenu);
-void mpris2_get_player_status (SoundmenuPlugin *soundmenu);

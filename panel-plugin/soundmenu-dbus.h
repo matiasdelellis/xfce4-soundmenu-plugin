@@ -1,6 +1,6 @@
 /*  $Id$
  *
- *  Copyright (c) 2011 John Doo <john@foo.org>
+ *  Copyright (c) 2013 matias <mati86dl@gmail.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,6 +19,9 @@
 
 gchar *
 soundmenu_get_mpris2_player_running(SoundmenuPlugin *soundmenu);
+
+void
+soundmenu_mpris2_forse_update(SoundmenuPlugin *soundmenu);
 
 void
 soundmenu_mpris2_reinit_dbus(SoundmenuPlugin *soundmenu);

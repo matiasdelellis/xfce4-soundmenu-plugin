@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2012 matias <mati86dl@gmail.com>
+ *  Copyright (c) 2013 matias <mati86dl@gmail.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -27,20 +27,6 @@
 #include "soundmenu-mpris2.h"
 #include "soundmenu-utils.h"
 #include "soundmenu-related.h"
-
-/*
- *Useful to debug..
- static void
-print_variant(GVariant *value)
-{
-	gchar *s_variant;
-	s_variant = g_variant_print (value, TRUE);
-
-    g_print ("Variant '%s' has type '%s'\n", s_variant,
-	           g_variant_get_type_string (value));
-
-	g_free(s_variant);
-}*/
 
 gchar *
 soundmenu_get_mpris2_player_running(SoundmenuPlugin *soundmenu)
@@ -80,6 +66,32 @@ soundmenu_get_mpris2_player_running(SoundmenuPlugin *soundmenu)
 	g_variant_unref (v);
 
 	return player;
+}
+
+static GVariant *
+soundmenu_mpris2_properties_get_all(SoundmenuPlugin *soundmenu)
+{
+	GVariantIter iter;
+	GVariant *result, *child = NULL;
+
+	result = g_dbus_connection_call_sync (soundmenu->gconnection,
+	                                      soundmenu->dbus_name,
+	                                      "/org/mpris/MediaPlayer2",
+	                                      "org.freedesktop.DBus.Properties",
+	                                      "GetAll",
+	                                      g_variant_new ("(s)", "org.mpris.MediaPlayer2.Player"),
+	                                      G_VARIANT_TYPE ("(a{sv})"),
+	                                      G_DBUS_CALL_FLAGS_NONE,
+	                                      -1,
+	                                      NULL,
+	                                      NULL);
+
+	if(result) {
+		g_variant_iter_init (&iter, result);
+		child = g_variant_iter_next_value (&iter);
+	}
+
+	return child;
 }
 
 static gchar *
@@ -145,30 +157,17 @@ soundmenu_mpris2_get_metadata (GVariant *dictionary)
 
 	return metadata;
 }
-
 static void
-soundmenu_mpris2_on_dbus_signal (GDBusProxy *proxy,
-                                 gchar      *sender_name,
-                                 gchar      *signal_name,
-                                 GVariant   *parameters,
-                                 gpointer    user_data)
+soundmenu_mpris2_parse_properties(SoundmenuPlugin *soundmenu, GVariant *properties)
 {
 	GVariantIter iter;
 	GVariant *value;
-	GVariant *child;
 	const gchar *key;
 	gchar *state = NULL;
 	gdouble volume = 0;
 	Metadata *metadata;
 
-	SoundmenuPlugin *soundmenu = user_data;
-
-	g_variant_iter_init (&iter, parameters);
-
-	child = g_variant_iter_next_value (&iter); /* Interface name. */
-
-	child = g_variant_iter_next_value (&iter); /* Property name. */
-	g_variant_iter_init (&iter, child);
+	g_variant_iter_init (&iter, properties);
 	while (g_variant_iter_loop (&iter, "{sv}", &key, &value)) {
 		if (0 == g_ascii_strcasecmp (key, "PlaybackStatus"))
 		{
@@ -195,6 +194,35 @@ soundmenu_mpris2_on_dbus_signal (GDBusProxy *proxy,
 	}
 	if (state != NULL)
 		soundmenu_update_state (state, soundmenu);
+}
+
+void
+soundmenu_mpris2_forse_update(SoundmenuPlugin *soundmenu)
+{
+	GVariant *result = NULL;
+	result = soundmenu_mpris2_properties_get_all(soundmenu);
+
+	soundmenu_mpris2_parse_properties(soundmenu, result);
+}
+
+static void
+soundmenu_mpris2_on_dbus_signal (GDBusProxy *proxy,
+                                 gchar      *sender_name,
+                                 gchar      *signal_name,
+                                 GVariant   *parameters,
+                                 gpointer    user_data)
+{
+	GVariantIter iter;
+	GVariant *child;
+
+	SoundmenuPlugin *soundmenu = user_data;
+
+	g_variant_iter_init (&iter, parameters);
+
+	child = g_variant_iter_next_value (&iter); /* Interface name. */
+
+	child = g_variant_iter_next_value (&iter); /* Property name. */
+	soundmenu_mpris2_parse_properties(soundmenu, child);
 }
 
 static void

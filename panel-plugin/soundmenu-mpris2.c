@@ -122,11 +122,11 @@ soundmenu_mpris2_parse_properties(SoundmenuPlugin *soundmenu, GVariant *properti
 		else if (0 == g_ascii_strcasecmp (key, "Metadata"))
 		{
 			metadata = soundmenu_mpris2_get_metadata (value);
-			soundmenu_album_art_set_path(soundmenu->album_art,
-				soundmenu_metatada_get_arturl(soundmenu->metadata));
-
 			soundmenu_metadata_free(soundmenu->metadata);
 			soundmenu->metadata = metadata;
+
+			soundmenu_album_art_set_path(soundmenu->album_art,
+				soundmenu_metatada_get_arturl(soundmenu->metadata));
 
 			#ifdef HAVE_LIBCLASTFM
 			if (soundmenu->clastfm->lastfm_support)

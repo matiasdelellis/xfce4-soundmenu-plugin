@@ -180,9 +180,11 @@ soundmenu_mpris2_on_dbus_signal (GDBusProxy *proxy,
 	g_variant_iter_init (&iter, parameters);
 
 	child = g_variant_iter_next_value (&iter); /* Interface name. */
+	g_variant_unref (child);
 
 	child = g_variant_iter_next_value (&iter); /* Property name. */
 	soundmenu_mpris2_parse_properties(soundmenu, child);
+	g_variant_unref (child);
 }
 
 /*

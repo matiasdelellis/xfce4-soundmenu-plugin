@@ -141,13 +141,14 @@ soundmenu_mpris2_parse_properties(SoundmenuPlugin *soundmenu, GVariant *properti
 void
 soundmenu_mpris2_forse_update(SoundmenuPlugin *soundmenu)
 {
-	GVariant *result = NULL;
+	GVariant *reply = NULL;
 
 	if(!soundmenu->connected)
 		return;
 
-	result = soundmenu_mpris2_properties_get_all(soundmenu);
-	soundmenu_mpris2_parse_properties(soundmenu, result);
+	reply = soundmenu_mpris2_properties_get_all(soundmenu);
+	soundmenu_mpris2_parse_properties(soundmenu, reply);
+	g_variant_unref (reply);
 }
 
 /*

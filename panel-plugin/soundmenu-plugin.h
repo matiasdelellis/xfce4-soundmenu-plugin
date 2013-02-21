@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011-2012 matias <mati86dl@gmail.com>
+ *  Copyright (c) 2011-2013 matias <mati86dl@gmail.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -48,6 +48,7 @@
 #endif
 
 #include "soundmenu-album-art.h"
+#include "soundmenu-metadata.h"
 
 #ifndef NOTIFY_CHECK_VERSION
 #define NOTIFY_CHECK_VERSION(x,y,z) 0
@@ -55,21 +56,7 @@
 
 #define LASTFM_API_KEY             "70c479ab2632e597fd9215cf35963c1b"
 #define LASTFM_SECRET              "4cb5255d955edc8f651de339fd2f335b"
-
-
 G_BEGIN_DECLS
-
-typedef struct {
-	char *trackid;
-	char *url;
-	char *title;
-	char *artist;
-	char *album;
-	unsigned int length;
-	unsigned int trackNumber;
-	char *arturl;
-} Metadata;
-
 
 #ifdef HAVE_LIBCLASTFM
 struct lastfm_pref {
@@ -121,9 +108,9 @@ typedef struct
 	#endif
 
 	/* Player states */
-	enum player_state	state;
-	Metadata		*metadata;
-	gdouble			volume;
+	enum player_state    state;
+	SoundmenuMetadata   *metadata;
+	gdouble              volume;
 
 	/* Dbus conecction */
 	GDBusConnection *gconnection;

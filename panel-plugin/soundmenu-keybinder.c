@@ -21,6 +21,7 @@
 #include "soundmenu-plugin.h"
 #include "soundmenu-mpris2.h"
 #include "soundmenu-dbus.h"
+#include "soundmenu-keybinder.h"
 
 static void
 keybind_play_handler (const char *keystring, SoundmenuPlugin *soundmenu)

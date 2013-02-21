@@ -282,7 +282,7 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	GtkOrientation panel_orientation, orientation;
 	GtkWidget *ev_album_art, *play_button, *stop_button, *prev_button, *next_button;
 	SoundmenuAlbumArt *album_art;
-	Metadata *metadata;
+	SoundmenuMetadata *metadata;
 
 	/* allocate memory for the plugin structure */
 	soundmenu = panel_slice_new0 (SoundmenuPlugin);
@@ -292,7 +292,7 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	soundmenu->clastfm = g_slice_new0(struct con_lastfm);
 	#endif
 
-	metadata = malloc_metadata();
+	metadata = soundmenu_metadata_new();
 	soundmenu->metadata = metadata;
 
 	/* read the user settings */
@@ -506,7 +506,7 @@ soundmenu_free (XfcePanelPlugin *plugin,
 	if (G_LIKELY (soundmenu->dbus_name != NULL))
 		g_free (soundmenu->dbus_name);
 	if (G_LIKELY (soundmenu->metadata != NULL))
-		free_metadata(soundmenu->metadata);
+		soundmenu_metadata_free(soundmenu->metadata);
 
 	/* free the plugin structure */
 	panel_slice_free (SoundmenuPlugin, soundmenu);

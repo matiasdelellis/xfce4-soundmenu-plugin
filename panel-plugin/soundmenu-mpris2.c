@@ -29,41 +29,7 @@
 #include "soundmenu-utils.h"
 #include "soundmenu-related.h"
 
-/* Basic metadata object */
-
-Metadata *malloc_metadata (void)
-{
-	Metadata *m;
-	m = malloc(sizeof(Metadata));
-
-	m->trackid = NULL;
-	m->url = NULL;
-	m->title = NULL;
-	m->artist = NULL;
-	m->album = NULL;
-	m->length = 0;
-	m->trackNumber = 0;
-	m->arturl = NULL;
-
-	return m;
-}
-
-void free_metadata(Metadata *m)
-{
-	if(m == NULL)
-		return;
-
-	if(m->trackid)	free(m->trackid);
-	if(m->url)		free(m->url);
-	if(m->title)	free(m->title);
-	if(m->artist)	free(m->artist);
-	if(m->album) 	free(m->album);
-	if(m->arturl)	free(m->arturl);
-
-	free(m);
-}
-
-Metadata *
+SoundmenuMetadata *
 soundmenu_mpris2_get_metadata (GVariant *dictionary)
 {
 	GVariantIter iter;
@@ -73,9 +39,9 @@ soundmenu_mpris2_get_metadata (GVariant *dictionary)
 	gint64 length = 0;
 	gint32 trackNumber = 0;
 
-	Metadata *metadata;
+	SoundmenuMetadata *metadata;
 
-	metadata = malloc_metadata();
+	metadata = soundmenu_metadata_new();
 
 	g_variant_iter_init (&iter, dictionary);
 	while (g_variant_iter_loop (&iter, "{sv}", &key, &value)) {
@@ -142,7 +108,7 @@ soundmenu_mpris2_parse_properties(SoundmenuPlugin *soundmenu, GVariant *properti
 	const gchar *key;
 	gchar *state = NULL;
 	gdouble volume = 0;
-	Metadata *metadata;
+	SoundmenuMetadata *metadata;
 
 	g_variant_iter_init (&iter, properties);
 	while (g_variant_iter_loop (&iter, "{sv}", &key, &value)) {
@@ -160,7 +126,7 @@ soundmenu_mpris2_parse_properties(SoundmenuPlugin *soundmenu, GVariant *properti
 			metadata = soundmenu_mpris2_get_metadata (value);
 			soundmenu_album_art_set_path(soundmenu->album_art, metadata->arturl);
 
-			free_metadata(soundmenu->metadata);
+			soundmenu_metadata_free(soundmenu->metadata);
 			soundmenu->metadata = metadata;
 
 			#ifdef HAVE_LIBCLASTFM

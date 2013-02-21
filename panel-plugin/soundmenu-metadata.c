@@ -16,25 +16,46 @@
  *  Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA.
  */
 
-//#include "soundmenu-metadata.h"
+#include "soundmenu-metadata.h"
+
+/* Basic metadata object */
 
 SoundmenuMetadata *
-soundmenu_mpris2_get_metadata (GVariant *dictionary);
-void
-soundmenu_mpris2_parse_properties(SoundmenuPlugin *soundmenu, GVariant *properties);
-void
-soundmenu_mpris2_forse_update(SoundmenuPlugin *soundmenu);
+soundmenu_metadata_new (void)
+{
+	SoundmenuMetadata *metadata;
+	metadata = g_slice_new0(SoundmenuMetadata);
+
+	metadata->trackid = NULL;
+	metadata->url = NULL;
+	metadata->title = NULL;
+	metadata->artist = NULL;
+	metadata->album = NULL;
+	metadata->length = 0;
+	metadata->trackNumber = 0;
+	metadata->arturl = NULL;
+
+	return metadata;
+}
 
 void
-prev_button_handler(GtkButton *button, SoundmenuPlugin *soundmenu);
-void
-play_button_handler(GtkButton *button, SoundmenuPlugin *soundmenu);
-void
-stop_button_handler(GtkButton *button, SoundmenuPlugin *soundmenu);
-void
-next_button_handler(GtkButton *button, SoundmenuPlugin *soundmenu);
+soundmenu_metadata_free(SoundmenuMetadata *metadata)
+{
+	if(metadata == NULL)
+		return;
 
-gboolean
-soundmenu_panel_button_scrolled (GtkWidget        *widget,
-                                 GdkEventScroll   *event,
-                                 SoundmenuPlugin *soundmenu);
+	if(metadata->trackid)
+		g_free(metadata->trackid);
+	if(metadata->url)
+		g_free(metadata->url);
+	if(metadata->title)
+		g_free(metadata->title);
+	if(metadata->artist)
+		g_free(metadata->artist);
+	if(metadata->album) 
+		g_free(metadata->album);
+	if(metadata->arturl)
+		g_free(metadata->arturl);
+
+	g_slice_free(SoundmenuMetadata, metadata);
+}

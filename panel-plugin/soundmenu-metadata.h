@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2013 matias <mati86dl@gmail.com>
+ *  Copyright (c) 2011-2013 matias <mati86dl@gmail.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,16 +16,18 @@
  *  Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA.
  */
 
-void
-soundmenu_mpris2_send_player_message (SoundmenuPlugin *soundmenu, const char *msg);
-void
-soundmenu_mpris2_properties_set_volume(SoundmenuPlugin *soundmenu, gdouble volume);
-gchar *
-soundmenu_get_mpris2_player_running(SoundmenuPlugin *soundmenu);
-GVariant *
-soundmenu_mpris2_properties_get_all(SoundmenuPlugin *soundmenu);
+#include <glib.h>
 
-void
-soundmenu_mpris2_reinit_dbus(SoundmenuPlugin *soundmenu);
+typedef struct {
+	gchar *trackid;
+	gchar *url;
+	gchar *title;
+	gchar *artist;
+	gchar *album;
+	guint length;
+	guint trackNumber;
+	gchar *arturl;
+} SoundmenuMetadata;
 
-void init_dbus_session (SoundmenuPlugin *soundmenu);
+SoundmenuMetadata *soundmenu_metadata_new(void);
+void soundmenu_metadata_free(SoundmenuMetadata *metadata);

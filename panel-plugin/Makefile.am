@@ -25,6 +25,8 @@ libsoundmenu_la_SOURCES = \
 	soundmenu-dialog-hig.h \
 	soundmenu-dialogs.c \
 	soundmenu-dialogs.h \
+	soundmenu-metadata.c \
+	soundmenu-metadata.h \
 	soundmenu-mpris2.c \
 	soundmenu-mpris2.h \
 	soundmenu-utils.c \

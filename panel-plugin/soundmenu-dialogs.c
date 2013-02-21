@@ -61,7 +61,6 @@ soundmenu_configure_response (GtkWidget    *dialog,
 			soundmenu->player = player;
 
 			soundmenu_mpris2_reinit_dbus(soundmenu);
-			soundmenu_mpris2_forse_update(soundmenu);
 		}
 		#ifdef HAVE_LIBCLASTFM
 		soundmenu->clastfm->lastfm_support = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(soundmenu->lw.lastfm_w));
@@ -179,7 +178,7 @@ toggle_lastfm(GtkToggleButton *button, SoundmenuPlugin    *soundmenu)
 
 void
 soundmenu_configure (XfcePanelPlugin *plugin,
-                  SoundmenuPlugin    *soundmenu)
+                     SoundmenuPlugin *soundmenu)
 {
 	GtkWidget *dialog;
 	GtkWidget *pref_table, *player_label, *player_entry, *show_album_art_check, *huge_on_deskbar_mode_check, *show_stop_check;

@@ -156,8 +156,12 @@ soundmenu_album_art_frame_press_callback (GtkWidget       *event_box,
 
 	if(command) {
 		result = g_spawn_command_line_async (command, NULL);
-		if (G_UNLIKELY (result == FALSE))
+		if (G_UNLIKELY (result == FALSE)) {
+			if(!soundmenu->connected)
+				soundmenu_configure(soundmenu->plugin, soundmenu);
+
 			g_warning ("Unable to launch command: %s", command);
+		}
 		g_free(command);
 	}
 

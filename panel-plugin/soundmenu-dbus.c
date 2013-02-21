@@ -204,6 +204,8 @@ soundmenu_mpris2_dbus_conected(GDBusConnection *connection,
 		gtk_widget_hide(GTK_WIDGET(soundmenu->ev_album_art));
 
 	soundmenu->connected = TRUE;
+
+	soundmenu_mpris2_forse_update(soundmenu);
 }
 
 static void
@@ -214,7 +216,9 @@ soundmenu_mpris2_dbus_losed(GDBusConnection *connection,
 	SoundmenuPlugin *soundmenu = user_data;
 
 	gtk_widget_hide(GTK_WIDGET(soundmenu->hvbox_buttons));
+
 	gtk_widget_show(GTK_WIDGET(soundmenu->ev_album_art));
+	soundmenu_album_art_set_path(soundmenu->album_art, NULL);
 
 	soundmenu->connected = FALSE;
 }

@@ -320,6 +320,7 @@ soundmenu_new (XfcePanelPlugin *plugin)
 
 	ev_album_art = gtk_event_box_new ();
 	gtk_event_box_set_visible_window(GTK_EVENT_BOX(ev_album_art), FALSE);
+	gtk_event_box_set_above_child(GTK_EVENT_BOX(ev_album_art), TRUE);
 
 	album_art = soundmenu_album_art_new ();
 	gtk_container_add (GTK_CONTAINER (ev_album_art), GTK_WIDGET(album_art));
@@ -377,6 +378,10 @@ soundmenu_new (XfcePanelPlugin *plugin)
 
 	/* Signal handlers */
 
+	g_signal_connect(G_OBJECT (ev_album_art), "button_press_event",
+	                 G_CALLBACK (soundmenu_album_art_frame_press_callback), soundmenu);
+	g_signal_connect(G_OBJECT (ev_album_art), "scroll-event",
+	                  G_CALLBACK (soundmenu_panel_button_scrolled), soundmenu);
 	g_signal_connect(G_OBJECT(prev_button), "clicked",
 	                 G_CALLBACK(prev_button_handler), soundmenu);
 	g_signal_connect(G_OBJECT(play_button), "clicked",
@@ -385,16 +390,13 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	                 G_CALLBACK(stop_button_handler), soundmenu);
 	g_signal_connect(G_OBJECT(next_button), "clicked",
 	                 G_CALLBACK(next_button_handler), soundmenu);
-	g_signal_connect(G_OBJECT (ev_album_art), "button_press_event",
-	                 G_CALLBACK (soundmenu_album_art_frame_press_callback), soundmenu);
-	g_signal_connect(G_OBJECT (ev_album_art), "scroll-event",
-	                  G_CALLBACK (soundmenu_panel_button_scrolled), soundmenu);
 
+	xfce_panel_plugin_add_action_widget (plugin, GTK_WIDGET(album_art));
+	xfce_panel_plugin_add_action_widget (plugin, GTK_WIDGET(ev_album_art));
 	xfce_panel_plugin_add_action_widget (plugin, prev_button);
 	xfce_panel_plugin_add_action_widget (plugin, play_button);
 	xfce_panel_plugin_add_action_widget (plugin, stop_button);
 	xfce_panel_plugin_add_action_widget (plugin, next_button);
-	xfce_panel_plugin_add_action_widget (plugin, ev_album_art);
 
 	g_object_set (G_OBJECT(album_art), "has-tooltip", TRUE, NULL);
 	g_object_set (G_OBJECT(prev_button), "has-tooltip", TRUE, NULL);
@@ -453,10 +455,6 @@ static void init_soundmenu_plugin(SoundmenuPlugin *soundmenu)
 	#ifdef HAVE_LIBNOTIFY
 	notify_init ("xfce4-soundmenu-plugin");
 	#endif
-
-	/* Get status of current player. */
-
-	soundmenu_mpris2_forse_update(soundmenu);
 
 	/* Add lastfm and glyr options in panel plugin. */
 

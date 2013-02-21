@@ -147,6 +147,7 @@ soundmenu_save (XfcePanelPlugin *plugin,
 		xfce_rc_write_bool_entry (rc, "show_album_art", soundmenu->show_album_art);
 		xfce_rc_write_bool_entry (rc, "huge_on_deskbar_mode", soundmenu->huge_on_deskbar_mode);
 		xfce_rc_write_bool_entry (rc, "show_stop", soundmenu->show_stop);
+		xfce_rc_write_bool_entry (rc, "hide_controls_if_loose", soundmenu->hide_controls_if_loose);
 		#ifdef HAVE_LIBKEYBINDER
 		xfce_rc_write_bool_entry (rc, "use_global_keys", soundmenu->use_global_keys);
 		#endif
@@ -191,6 +192,7 @@ soundmenu_read (SoundmenuPlugin *soundmenu)
 			soundmenu->show_album_art = xfce_rc_read_bool_entry (rc, "show_album_art", FALSE);
 			soundmenu->huge_on_deskbar_mode = xfce_rc_read_bool_entry (rc, "huge_on_deskbar_mode", FALSE);
 			soundmenu->show_stop = xfce_rc_read_bool_entry (rc, "show_stop", FALSE);
+			soundmenu->hide_controls_if_loose = xfce_rc_read_bool_entry (rc, "hide_controls_if_loose", FALSE);
 			#ifdef HAVE_LIBKEYBINDER
 			soundmenu->use_global_keys = xfce_rc_read_bool_entry (rc, "use_global_keys", DEFAULT_GLOBAL_KEYS);
 			#endif
@@ -218,6 +220,7 @@ soundmenu_read (SoundmenuPlugin *soundmenu)
 	soundmenu->show_album_art = FALSE;
 	soundmenu->huge_on_deskbar_mode = FALSE;
 	soundmenu->show_stop = FALSE;
+	soundmenu->hide_controls_if_loose = FALSE;
 	#ifdef HAVE_LIBKEYBINDER
 	soundmenu->use_global_keys = DEFAULT_GLOBAL_KEYS;
 	#endif

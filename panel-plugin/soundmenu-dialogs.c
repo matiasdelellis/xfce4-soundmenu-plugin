@@ -95,9 +95,9 @@ soundmenu_configure_response (GtkWidget    *dialog,
 
 static void
 refresh_player (GtkEntry        *player_entry,
-		gint             position,
-		GdkEventButton  *event,
-		SoundmenuPlugin *soundmenu)
+                gint             position,
+                GdkEventButton  *event,
+                SoundmenuPlugin *soundmenu)
 {
 	gchar *player = NULL;
 
@@ -108,7 +108,8 @@ refresh_player (GtkEntry        *player_entry,
 }
 
 static void
-toggle_show_album_art(GtkToggleButton *button, SoundmenuPlugin    *soundmenu)
+toggle_show_album_art(GtkToggleButton *button,
+                      SoundmenuPlugin *soundmenu)
 {
 	soundmenu->show_album_art = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button));
 
@@ -122,7 +123,8 @@ toggle_show_album_art(GtkToggleButton *button, SoundmenuPlugin    *soundmenu)
 
 #if LIBXFCE4PANEL_CHECK_VERSION (4,9,0)
 static void
-toggle_huge_on_deskbar_mode(GtkToggleButton *button, SoundmenuPlugin    *soundmenu)
+toggle_huge_on_deskbar_mode(GtkToggleButton *button,
+                            SoundmenuPlugin *soundmenu)
 {
 	soundmenu->huge_on_deskbar_mode = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button));
 
@@ -132,7 +134,8 @@ toggle_huge_on_deskbar_mode(GtkToggleButton *button, SoundmenuPlugin    *soundme
 #endif
 
 static void
-toggle_show_stop(GtkToggleButton *button, SoundmenuPlugin    *soundmenu)
+toggle_show_stop(GtkToggleButton *button,
+                 SoundmenuPlugin *soundmenu)
 {
 	soundmenu->show_stop = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button));
 
@@ -142,6 +145,13 @@ toggle_show_stop(GtkToggleButton *button, SoundmenuPlugin    *soundmenu)
 		gtk_widget_hide(soundmenu->stop_button);
 
 	soundmenu_update_layout_changes (soundmenu);
+}
+
+static void
+toggle_hide_controls_if_loose(GtkToggleButton *button,
+                              SoundmenuPlugin *soundmenu)
+{
+	soundmenu->hide_controls_if_loose = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button));
 }
 
 #ifdef HAVE_LIBKEYBINDER
@@ -158,7 +168,8 @@ toggle_use_global_keys_check(GtkToggleButton *button, SoundmenuPlugin    *soundm
 
 #ifdef HAVE_LIBCLASTFM
 static void
-toggle_lastfm(GtkToggleButton *button, SoundmenuPlugin    *soundmenu)
+toggle_lastfm(GtkToggleButton *button,
+              SoundmenuPlugin *soundmenu)
 {
 	gboolean is_active;
 
@@ -181,7 +192,7 @@ soundmenu_configure (XfcePanelPlugin *plugin,
                      SoundmenuPlugin *soundmenu)
 {
 	GtkWidget *dialog;
-	GtkWidget *pref_table, *player_label, *player_entry, *show_album_art_check, *huge_on_deskbar_mode_check, *show_stop_check;
+	GtkWidget *pref_table, *player_label, *player_entry, *show_album_art_check, *huge_on_deskbar_mode_check, *show_stop_check, *hide_controls_if_loose_check;
 	guint row = 0;
 
 	#ifdef HAVE_LIBKEYBINDER
@@ -241,6 +252,12 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 	g_signal_connect (G_OBJECT(show_stop_check), "toggled",
 				G_CALLBACK(toggle_show_stop), soundmenu);
 
+	hide_controls_if_loose_check = gtk_check_button_new_with_label(_("Hide the controls if the player is not present"));
+	if(soundmenu->hide_controls_if_loose)
+		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(hide_controls_if_loose_check), TRUE);
+	g_signal_connect (G_OBJECT(hide_controls_if_loose_check), "toggled",
+				G_CALLBACK(toggle_hide_controls_if_loose), soundmenu);
+
 	#ifdef HAVE_LIBKEYBINDER
 	use_global_keys_check = gtk_check_button_new_with_label(_("Use multimedia keys"));
 	if(soundmenu->use_global_keys)
@@ -255,7 +272,7 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 				G_CALLBACK(toggle_lastfm), soundmenu);
 	soundmenu->lw.lastfm_w = support_lastfm;
 
-	lastfm_label_user = gtk_label_new(_("Last.fm user"));
+	lastfm_label_user = gtk_label_new(_("User"));
 	gtk_misc_set_alignment(GTK_MISC (lastfm_label_user), 0, 0);
 
 	lastfm_entry_user = gtk_entry_new();
@@ -263,7 +280,7 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 		gtk_entry_set_text(GTK_ENTRY(lastfm_entry_user), soundmenu->clastfm->lastfm_user);
 	soundmenu->lw.lastfm_uname_w = lastfm_entry_user;
 
-	lastfm_label_pass = gtk_label_new(_("Last.fm password"));
+	lastfm_label_pass = gtk_label_new(_("Password"));
 	gtk_misc_set_alignment(GTK_MISC (lastfm_label_pass), 0, 0);
 
 	lastfm_entry_pass = gtk_entry_new();
@@ -285,6 +302,7 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 	soundmenu_hig_workarea_table_add_wide_control(pref_table, &row, huge_on_deskbar_mode_check);
 	#endif
 	soundmenu_hig_workarea_table_add_wide_control(pref_table, &row, show_stop_check);
+	soundmenu_hig_workarea_table_add_wide_control(pref_table, &row, hide_controls_if_loose_check);
 
 	soundmenu_hig_workarea_table_add_section_title(pref_table, &row, _("Behavior"));
 	#ifdef HAVE_LIBKEYBINDER

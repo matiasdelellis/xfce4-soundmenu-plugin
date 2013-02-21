@@ -124,6 +124,7 @@ typedef struct
 	gboolean		show_album_art;
 	gboolean		huge_on_deskbar_mode;
 	gboolean		show_stop;
+	gboolean		hide_controls_if_loose;
 	gboolean		use_global_keys;
 }
 SoundmenuPlugin;

@@ -59,16 +59,19 @@ soundmenu_set_query_tooltip_cb (GtkWidget       *widget,
 	gchar *markup_text = NULL, *length = NULL;
 
 	length = convert_length_str(soundmenu->metadata->length);
-
-	if (soundmenu->state == ST_STOPPED)
-		markup_text = g_strdup_printf("%s", _("Stopped"));
-	else {
-		markup_text = g_markup_printf_escaped(_("<b>%s</b> (%s)\nby %s in %s"),
-		                                      g_str_nempty0(soundmenu->metadata->title) ? soundmenu->metadata->title :soundmenu->metadata->url,
-		                                      length,
-		                                      g_str_nempty0(soundmenu->metadata->artist) ? soundmenu->metadata->artist : _("Unknown Artist"),
-		                                      g_str_nempty0(soundmenu->metadata->album) ? soundmenu->metadata->album : _("Unknown Album"));
+	if(soundmenu->connected) {
+		if (soundmenu->state == ST_STOPPED)
+			markup_text = g_strdup_printf("%s", _("Stopped"));
+		else {
+			markup_text = g_markup_printf_escaped(_("<b>%s</b> (%s)\nby %s in %s"),
+				                                  g_str_nempty0(soundmenu->metadata->title) ? soundmenu->metadata->title :soundmenu->metadata->url,
+				                                  length,
+				                                  g_str_nempty0(soundmenu->metadata->artist) ? soundmenu->metadata->artist : _("Unknown Artist"),
+				                                  g_str_nempty0(soundmenu->metadata->album) ? soundmenu->metadata->album : _("Unknown Album"));
+		}
 	}
+	else
+		markup_text = g_strdup_printf("%s", _("Double-click to launch the music player"));
 
 	gtk_tooltip_set_markup (tooltip, markup_text);
 
@@ -374,21 +377,24 @@ soundmenu_new (XfcePanelPlugin *plugin)
 
 	/* Signal handlers */
 
-	g_signal_connect (G_OBJECT (ev_album_art), "button_press_event",
-			  G_CALLBACK (soundmenu_album_art_frame_press_callback), album_art);
 	g_signal_connect(G_OBJECT(prev_button), "clicked",
-			 G_CALLBACK(prev_button_handler), soundmenu);
+	                 G_CALLBACK(prev_button_handler), soundmenu);
 	g_signal_connect(G_OBJECT(play_button), "clicked",
-			 G_CALLBACK(play_button_handler), soundmenu);
+	                 G_CALLBACK(play_button_handler), soundmenu);
 	g_signal_connect(G_OBJECT(stop_button), "clicked",
-			 G_CALLBACK(stop_button_handler), soundmenu);
+	                 G_CALLBACK(stop_button_handler), soundmenu);
 	g_signal_connect(G_OBJECT(next_button), "clicked",
-			 G_CALLBACK(next_button_handler), soundmenu);
+	                 G_CALLBACK(next_button_handler), soundmenu);
+	g_signal_connect(G_OBJECT (ev_album_art), "button_press_event",
+	                 G_CALLBACK (soundmenu_album_art_frame_press_callback), soundmenu);
+	g_signal_connect(G_OBJECT (ev_album_art), "scroll-event",
+	                  G_CALLBACK (soundmenu_panel_button_scrolled), soundmenu);
 
 	xfce_panel_plugin_add_action_widget (plugin, prev_button);
 	xfce_panel_plugin_add_action_widget (plugin, play_button);
 	xfce_panel_plugin_add_action_widget (plugin, stop_button);
 	xfce_panel_plugin_add_action_widget (plugin, next_button);
+	xfce_panel_plugin_add_action_widget (plugin, ev_album_art);
 
 	g_object_set (G_OBJECT(album_art), "has-tooltip", TRUE, NULL);
 	g_object_set (G_OBJECT(prev_button), "has-tooltip", TRUE, NULL);
@@ -406,9 +412,6 @@ soundmenu_new (XfcePanelPlugin *plugin)
 			G_CALLBACK(soundmenu_set_query_tooltip_cb), soundmenu);
 	g_signal_connect(G_OBJECT(next_button), "query-tooltip",
 			G_CALLBACK(soundmenu_set_query_tooltip_cb), soundmenu);
-
-	g_signal_connect (G_OBJECT (ev_album_art), "scroll-event",
-			G_CALLBACK (soundmenu_panel_button_scrolled), soundmenu);
 
 	soundmenu->album_art = album_art;
 	soundmenu->ev_album_art = ev_album_art;

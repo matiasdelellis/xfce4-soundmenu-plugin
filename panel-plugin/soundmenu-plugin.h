@@ -133,6 +133,7 @@ typedef struct
 	GDBusProxy      *proxy;
 	gchar			*dbus_name;
 	guint            watch_id;
+	gboolean         connected;
 
 	/* soundmenu settings */
 	gchar			*player;

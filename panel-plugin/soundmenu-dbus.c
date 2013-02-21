@@ -199,7 +199,8 @@ soundmenu_mpris2_dbus_conected(GDBusConnection *connection,
 {
 	SoundmenuPlugin *soundmenu = user_data;
 
-	gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->plugin), TRUE);
+	gtk_widget_show(GTK_WIDGET(soundmenu->hvbox_buttons));
+	soundmenu->connected = TRUE;
 }
 
 static void
@@ -209,7 +210,8 @@ soundmenu_mpris2_dbus_losed(GDBusConnection *connection,
 {
 	SoundmenuPlugin *soundmenu = user_data;
 
-	gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->plugin), FALSE);
+	gtk_widget_hide(GTK_WIDGET(soundmenu->hvbox_buttons));
+	soundmenu->connected = FALSE;
 }
 
 /*

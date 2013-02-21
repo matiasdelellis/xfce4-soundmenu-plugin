@@ -134,32 +134,34 @@ remove_watch_cursor_on_thread(gchar *message, SoundmenuPlugin *soundmenu)
 /* Open the image when double click.. */
 
 gboolean
-soundmenu_album_art_frame_press_callback (GtkWidget         *event_box,
-                                          GdkEventButton    *event,
-                                          SoundmenuAlbumArt *albumart)
+soundmenu_album_art_frame_press_callback (GtkWidget       *event_box,
+                                          GdkEventButton  *event,
+                                          SoundmenuPlugin *soundmenu)
 {
 	gchar *command = NULL;
-	const gchar *art_url;
+	const gchar *url;
 	gboolean result;
 
-	art_url = soundmenu_album_art_get_path(albumart);
-
-	if ((art_url != NULL) &&
-	   (event->type==GDK_2BUTTON_PRESS ||
-	    event->type==GDK_3BUTTON_PRESS)) {
-
-	   	command = g_strdup_printf("exo-open \"%s\"", art_url);
-		result = g_spawn_command_line_async (command, NULL);
-
-		if (G_UNLIKELY (result == FALSE))
-			g_warning ("Unable to show the current album art: %s", art_url);
-
-		g_free(command);
-
+	if(event->type != GDK_2BUTTON_PRESS &&
+	   event->type != GDK_3BUTTON_PRESS)
 		return TRUE;
+
+	if(soundmenu->connected) {
+		url = soundmenu_album_art_get_path(soundmenu->album_art);
+		if(url)
+			command = g_strdup_printf("exo-open \"%s\"", url);
 	}
 	else
-		return FALSE;
+		command = g_strdup(soundmenu->player);
+
+	if(command) {
+		result = g_spawn_command_line_async (command, NULL);
+		if (G_UNLIKELY (result == FALSE))
+			g_warning ("Unable to launch command: %s", command);
+		g_free(command);
+	}
+
+	return TRUE;
 }
 
 gchar* convert_length_str(gint length)

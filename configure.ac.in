@@ -15,7 +15,7 @@ m4_define([soundmenu_version], [soundmenu_version_major().soundmenu_version_mino
 dnl ***************************
 dnl *** Initialize autoconf ***
 dnl ***************************
-AC_COPYRIGHT([Copyright (c) 2011-2012
+AC_COPYRIGHT([Copyright (c) 2011-2013
         Matias De lellis. All rights reserved.])
 AC_INIT([xfce4-soundmenu-plugin], [soundmenu_version], [http://bugzilla.xfce.org/], [xfce4-soundmenu-plugin])
 AC_PREREQ([2.50])
@@ -73,7 +73,7 @@ dnl ***********************************
 dnl *** Check for required packages ***
 dnl ***********************************
 XDT_CHECK_PACKAGE([GTK], [gtk+-2.0], [2.20.0])
-XDT_CHECK_PACKAGE([DBUS_GLIB], [dbus-glib-1], [0.74])
+XDT_CHECK_PACKAGE([GIO], [gio-2.0], [2.28])
 XDT_CHECK_PACKAGE([LIBXFCE4UI], [libxfce4ui-1], [4.8.0])
 XDT_CHECK_PACKAGE([LIBXFCE4UTIL], [libxfce4util-1.0], [4.8.0])
 XDT_CHECK_PACKAGE([LIBXFCE4PANEL], [libxfce4panel-1.0], [4.8.0])

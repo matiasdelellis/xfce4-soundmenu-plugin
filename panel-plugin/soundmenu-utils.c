@@ -142,6 +142,11 @@ soundmenu_album_art_frame_press_callback (GtkWidget       *event_box,
 	const gchar *url;
 	gboolean result;
 
+	if(event->button == 3) {
+		g_signal_emit_by_name (G_OBJECT (soundmenu->play_button), "button-press-event", event, &result);
+		return TRUE;
+	}
+
 	if(event->type != GDK_2BUTTON_PRESS &&
 	   event->type != GDK_3BUTTON_PRESS)
 		return TRUE;

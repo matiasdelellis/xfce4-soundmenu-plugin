@@ -30,9 +30,6 @@
 #include <gtk/gtk.h>
 #include <glib.h>
 #include <glib/gprintf.h>
-#include <dbus/dbus.h>
-#include <dbus/dbus-glib.h>
-#include <dbus/dbus-glib-lowlevel.h>
 #include <libxfce4ui/libxfce4ui.h>
 #include <libxfce4panel/xfce-panel-plugin.h>
 #include <libxfce4util/libxfce4util.h>

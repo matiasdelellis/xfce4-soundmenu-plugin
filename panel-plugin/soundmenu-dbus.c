@@ -32,15 +32,12 @@ void
 soundmenu_mpris2_send_player_message (SoundmenuPlugin *soundmenu, const char *msg)
 {
 	GDBusMessage *message;
-	gchar        *destination;
 	GError       *error = NULL;
 
-	destination = g_strdup_printf ("org.mpris.MediaPlayer2.%s", soundmenu->player);
-	message = g_dbus_message_new_method_call (destination,
+	message = g_dbus_message_new_method_call (soundmenu->dbus_name,
 	                                          "/org/mpris/MediaPlayer2",
 	                                          "org.mpris.MediaPlayer2.Player",
 	                                          msg);
-	g_free(destination);
 
 	g_dbus_connection_send_message (soundmenu->gconnection,
 	                                message,

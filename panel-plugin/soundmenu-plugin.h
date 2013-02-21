@@ -134,7 +134,7 @@ void
 soundmenu_update_layout_changes (SoundmenuPlugin    *soundmenu);
 
 void
-soundmenu_update_state(gchar *state, SoundmenuPlugin *soundmenu);
+soundmenu_update_state(const gchar *state, SoundmenuPlugin *soundmenu);
 
 void
 soundmenu_save (XfcePanelPlugin *plugin,

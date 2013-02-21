@@ -223,12 +223,12 @@ void soundmenu_search_lyric_dialog (GtkWidget *widget, SoundmenuPlugin *soundmen
     if(soundmenu->state == ST_STOPPED)
         return;
 
-    if (g_str_empty0(soundmenu->metadata->artist) ||
-        g_str_empty0(soundmenu->metadata->title))
+    if (g_str_empty0(soundmenu_metatada_get_artist(soundmenu->metadata)) ||
+        g_str_empty0(soundmenu_metatada_get_title(soundmenu->metadata)))
         return;
 
-    artist = soundmenu->metadata->artist;
-    title = soundmenu->metadata->title;
+    artist = soundmenu_metatada_get_artist(soundmenu->metadata);
+    title = soundmenu_metatada_get_title(soundmenu->metadata);
 
     configure_and_launch_get_text_info_dialog(GLYR_GET_LYRICS, artist, title, soundmenu);
 }
@@ -240,10 +240,10 @@ void soundmenu_search_artistinfo_dialog (GtkWidget *widget, SoundmenuPlugin *sou
     if(soundmenu->state == ST_STOPPED)
         return;
 
-    if (g_str_empty0(soundmenu->metadata->artist))
+    if (g_str_empty0(soundmenu_metatada_get_artist(soundmenu->metadata)))
         return;
 
-    artist = soundmenu->metadata->artist;
+    artist = soundmenu_metatada_get_artist(soundmenu->metadata);
 
     configure_and_launch_get_text_info_dialog(GLYR_GET_ARTISTBIO, artist, NULL, soundmenu);
 }

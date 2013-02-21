@@ -28,13 +28,23 @@
 #include "soundmenu-utils.h"
 #include "soundmenu-related.h"
 
-gchar *
-g_avariant_dup_string(GVariant * variant)
+const gchar *
+g_avariant_get_string(GVariant * variant)
 {
-	const char **strv = NULL;
-	strv = g_variant_get_strv (variant, NULL);
+	const gchar **strv = NULL;
+	const gchar *string = NULL;
+	gsize len;
 
-	return g_strdup (strv[0]);
+	strv = g_variant_get_strv (variant, &len);
+	if (len > 0) {
+		string = strv[0];
+		g_free (strv);
+	}
+	else {
+		string = "";
+	}
+
+	return string;
 }
 
 #if !GLIB_CHECK_VERSION(2,32,0)

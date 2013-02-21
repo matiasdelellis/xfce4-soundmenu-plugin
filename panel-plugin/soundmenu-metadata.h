@@ -25,9 +25,50 @@ typedef struct {
 	gchar *artist;
 	gchar *album;
 	guint length;
-	guint trackNumber;
+	guint track_no;
 	gchar *arturl;
 } SoundmenuMetadata;
+
+void
+soundmenu_metatada_set_trackid(SoundmenuMetadata *metadata, const gchar *trackid);
+const gchar *
+soundmenu_metatada_get_trackid(SoundmenuMetadata *metadata);
+
+void
+soundmenu_metatada_set_url(SoundmenuMetadata *metadata, const gchar *url);
+const gchar *
+soundmenu_metatada_get_url(SoundmenuMetadata *metadata);
+
+void
+soundmenu_metatada_set_title(SoundmenuMetadata *metadata, const gchar *title);
+const gchar *
+soundmenu_metatada_get_title(SoundmenuMetadata *metadata);
+
+void
+soundmenu_metatada_set_artist(SoundmenuMetadata *metadata, const gchar *artist);
+const gchar *
+soundmenu_metatada_get_artist(SoundmenuMetadata *metadata);
+
+void
+soundmenu_metatada_set_album(SoundmenuMetadata *metadata, const gchar *album);
+const gchar *
+soundmenu_metatada_get_album(SoundmenuMetadata *metadata);
+
+void
+soundmenu_metatada_set_length(SoundmenuMetadata *metadata, guint length);
+guint
+soundmenu_metatada_get_length(SoundmenuMetadata *metadata);
+
+void
+soundmenu_metatada_set_track_no(SoundmenuMetadata *metadata, guint track_no);
+guint
+soundmenu_metatada_get_track_no(SoundmenuMetadata *metadata);
+
+void
+soundmenu_metatada_set_arturl(SoundmenuMetadata *metadata, const gchar *arturl);
+const gchar *
+soundmenu_metatada_get_arturl(SoundmenuMetadata *metadata);
+
 
 SoundmenuMetadata *soundmenu_metadata_new(void);
 void soundmenu_metadata_free(SoundmenuMetadata *metadata);

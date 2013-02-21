@@ -18,8 +18,174 @@
 
 #include "soundmenu-metadata.h"
 
-/* Basic metadata object */
+/*
+ * Set and get metadata.
+ */
+void
+soundmenu_metatada_set_trackid(SoundmenuMetadata *metadata, const gchar *trackid)
+{
+	if(!metadata)
+		return;
 
+	if(metadata->trackid)
+		g_free(metadata->trackid);
+
+	metadata->trackid = g_strdup(trackid);
+}
+
+const gchar *
+soundmenu_metatada_get_trackid(SoundmenuMetadata *metadata)
+{
+	if(!metadata)
+		return NULL;
+
+	return metadata->trackid;
+}
+
+void
+soundmenu_metatada_set_url(SoundmenuMetadata *metadata, const gchar *url)
+{
+	if(!metadata)
+		return;
+
+	if(metadata->url)
+		g_free(metadata->url);
+
+	metadata->url = g_strdup(url);
+}
+
+const gchar *
+soundmenu_metatada_get_url(SoundmenuMetadata *metadata)
+{
+	if(!metadata)
+		return NULL;
+
+	return metadata->url;
+}
+
+void
+soundmenu_metatada_set_title(SoundmenuMetadata *metadata, const gchar *title)
+{
+	if(!metadata)
+		return;
+
+	if(metadata->title)
+		g_free(metadata->title);
+
+	metadata->title = g_strdup(title);
+}
+
+const gchar *
+soundmenu_metatada_get_title(SoundmenuMetadata *metadata)
+{
+	if(!metadata)
+		return NULL;
+
+	return metadata->title;
+}
+
+void
+soundmenu_metatada_set_artist(SoundmenuMetadata *metadata, const gchar *artist)
+{
+	if(!metadata)
+		return;
+
+	if(metadata->artist)
+		g_free(metadata->artist);
+
+	metadata->artist = g_strdup(artist);
+}
+
+const gchar *
+soundmenu_metatada_get_artist(SoundmenuMetadata *metadata)
+{
+	if(!metadata)
+		return NULL;
+
+	return metadata->artist;
+}
+
+void
+soundmenu_metatada_set_album(SoundmenuMetadata *metadata, const gchar *album)
+{
+	if(!metadata)
+		return;
+
+	if(metadata->album)
+		g_free(metadata->album);
+
+	metadata->album = g_strdup(album);
+}
+
+const gchar *
+soundmenu_metatada_get_album(SoundmenuMetadata *metadata)
+{
+	if(!metadata)
+		return NULL;
+
+	return metadata->album;
+}
+
+void
+soundmenu_metatada_set_length(SoundmenuMetadata *metadata, guint length)
+{
+	if(!metadata)
+		return;
+
+	metadata->length = length;
+}
+
+guint
+soundmenu_metatada_get_length(SoundmenuMetadata *metadata)
+{
+	if(!metadata)
+		return 0;
+
+	return metadata->length;
+}
+
+void
+soundmenu_metatada_set_track_no(SoundmenuMetadata *metadata, guint track_no)
+{
+	if(!metadata)
+		return;
+
+	metadata->track_no = track_no;
+}
+
+guint
+soundmenu_metatada_get_track_no(SoundmenuMetadata *metadata)
+{
+	if(!metadata)
+		return 0;
+
+	return metadata->track_no;
+}
+
+void
+soundmenu_metatada_set_arturl(SoundmenuMetadata *metadata, const gchar *arturl)
+{
+	if(!metadata)
+		return;
+
+	if(metadata->arturl)
+		g_free(metadata->arturl);
+
+	metadata->arturl = g_strdup(arturl);
+}
+
+const gchar *
+soundmenu_metatada_get_arturl(SoundmenuMetadata *metadata)
+{
+	if(!metadata)
+		return NULL;
+
+	return metadata->arturl;
+}
+
+/*
+ * Construction and destruction of metadata.
+ */
 SoundmenuMetadata *
 soundmenu_metadata_new (void)
 {
@@ -32,7 +198,7 @@ soundmenu_metadata_new (void)
 	metadata->artist = NULL;
 	metadata->album = NULL;
 	metadata->length = 0;
-	metadata->trackNumber = 0;
+	metadata->track_no = 0;
 	metadata->arturl = NULL;
 
 	return metadata;

@@ -37,7 +37,6 @@ soundmenu_mpris2_get_metadata (GVariant *dictionary)
 	gchar *key;
 
 	gint64 length = 0;
-	gint32 trackNumber = 0;
 
 	SoundmenuMetadata *metadata;
 
@@ -46,15 +45,15 @@ soundmenu_mpris2_get_metadata (GVariant *dictionary)
 	g_variant_iter_init (&iter, dictionary);
 	while (g_variant_iter_loop (&iter, "{sv}", &key, &value)) {
 		if (0 == g_ascii_strcasecmp (key, "mpris:trackid"))
-			metadata->trackid = g_variant_dup_string(value, NULL);
+			soundmenu_metatada_set_trackid(metadata, g_variant_get_string(value, NULL));
 		else if (0 == g_ascii_strcasecmp (key, "xesam:url"))
-			metadata->url= g_variant_dup_string(value, NULL);
+			soundmenu_metatada_set_url(metadata, g_variant_get_string(value, NULL));
 		else if (0 == g_ascii_strcasecmp (key, "xesam:title"))
-			metadata->url= g_variant_dup_string(value, NULL);
+			soundmenu_metatada_set_title(metadata, g_variant_get_string(value, NULL));
 		else if (0 == g_ascii_strcasecmp (key, "xesam:artist"))
-			metadata->artist = g_avariant_dup_string(value);
+			soundmenu_metatada_set_artist(metadata, g_avariant_get_string(value));
 		else if (0 == g_ascii_strcasecmp (key, "xesam:album"))
-			metadata->album = g_variant_dup_string(value, NULL);
+			soundmenu_metatada_set_album(metadata, g_variant_get_string(value, NULL));
 		else if (0 == g_ascii_strcasecmp (key, "xesam:genre"));
 			/* (List of Strings.) Not use genre */
 		else if (0 == g_ascii_strcasecmp (key, "xesam:albumArtist"));
@@ -66,13 +65,13 @@ soundmenu_mpris2_get_metadata (GVariant *dictionary)
 		else if (0 == g_ascii_strcasecmp (key, "mpris:length"))
 			length = g_variant_get_int64 (value);
 		else if (0 == g_ascii_strcasecmp (key, "xesam:trackNumber"))
-			trackNumber = g_variant_get_int32 (value);
+			soundmenu_metatada_set_track_no(metadata, g_variant_get_int32 (value));
 		else if (0 == g_ascii_strcasecmp (key, "xesam:useCount"));
 			/* (Integer) Not use useCount */
 		else if (0 == g_ascii_strcasecmp (key, "xesam:userRating"));
 			/* (Float) Not use userRating */
 		else if (0 == g_ascii_strcasecmp (key, "mpris:artUrl"))
-			metadata->arturl= g_variant_dup_string(value, NULL);
+			soundmenu_metatada_set_arturl(metadata, g_variant_get_string(value, NULL));
 		else if (0 == g_ascii_strcasecmp (key, "xesam:contentCreated"));
 			/* has type 's' */
 		else if (0 == g_ascii_strcasecmp (key, "audio-bitrate"));
@@ -94,8 +93,7 @@ soundmenu_mpris2_get_metadata (GVariant *dictionary)
 				     g_variant_get_type_string (value));
 	}
 
-	metadata->length = length / 1000000l;
-	metadata->trackNumber = trackNumber;
+	soundmenu_metatada_set_length(metadata, length / 1000000l);
 
 	return metadata;
 }
@@ -106,7 +104,7 @@ soundmenu_mpris2_parse_properties(SoundmenuPlugin *soundmenu, GVariant *properti
 	GVariantIter iter;
 	GVariant *value;
 	const gchar *key;
-	gchar *state = NULL;
+	const gchar *state = NULL;
 	gdouble volume = 0;
 	SoundmenuMetadata *metadata;
 
@@ -114,7 +112,7 @@ soundmenu_mpris2_parse_properties(SoundmenuPlugin *soundmenu, GVariant *properti
 	while (g_variant_iter_loop (&iter, "{sv}", &key, &value)) {
 		if (0 == g_ascii_strcasecmp (key, "PlaybackStatus"))
 		{
-			state = g_variant_dup_string(value, NULL);
+			state = g_variant_get_string(value, NULL);
 		}
 		else if (0 == g_ascii_strcasecmp (key, "Volume"))
 		{
@@ -124,7 +122,8 @@ soundmenu_mpris2_parse_properties(SoundmenuPlugin *soundmenu, GVariant *properti
 		else if (0 == g_ascii_strcasecmp (key, "Metadata"))
 		{
 			metadata = soundmenu_mpris2_get_metadata (value);
-			soundmenu_album_art_set_path(soundmenu->album_art, metadata->arturl);
+			soundmenu_album_art_set_path(soundmenu->album_art,
+				soundmenu_metatada_get_arturl(soundmenu->metadata));
 
 			soundmenu_metadata_free(soundmenu->metadata);
 			soundmenu->metadata = metadata;

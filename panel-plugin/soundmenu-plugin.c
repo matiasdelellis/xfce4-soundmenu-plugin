@@ -58,16 +58,16 @@ soundmenu_set_query_tooltip_cb (GtkWidget       *widget,
 {
 	gchar *markup_text = NULL, *length = NULL;
 
-	length = convert_length_str(soundmenu->metadata->length);
+	length = convert_length_str(soundmenu_metatada_get_length(soundmenu->metadata));
 	if(soundmenu->connected) {
 		if (soundmenu->state == ST_STOPPED)
 			markup_text = g_strdup_printf("%s", _("Stopped"));
 		else {
 			markup_text = g_markup_printf_escaped(_("<b>%s</b> (%s)\nby %s in %s"),
-				                                  g_str_nempty0(soundmenu->metadata->title) ? soundmenu->metadata->title :soundmenu->metadata->url,
+				                                  g_str_nempty0(soundmenu_metatada_get_title(soundmenu->metadata)) ? soundmenu_metatada_get_title(soundmenu->metadata)  : soundmenu_metatada_get_url(soundmenu->metadata),
 				                                  length,
-				                                  g_str_nempty0(soundmenu->metadata->artist) ? soundmenu->metadata->artist : _("Unknown Artist"),
-				                                  g_str_nempty0(soundmenu->metadata->album) ? soundmenu->metadata->album : _("Unknown Album"));
+				                                  g_str_nempty0(soundmenu_metatada_get_artist(soundmenu->metadata)) ? soundmenu_metatada_get_artist(soundmenu->metadata) : _("Unknown Artist"),
+				                                  g_str_nempty0(soundmenu_metatada_get_album(soundmenu->metadata)) ? soundmenu_metatada_get_album(soundmenu->metadata) : _("Unknown Album"));
 		}
 	}
 	else
@@ -97,10 +97,11 @@ soundmenu_toggle_play_button_state (SoundmenuPlugin *soundmenu)
 }
 
 void
-soundmenu_update_state(gchar *state, SoundmenuPlugin *soundmenu)
+soundmenu_update_state(const gchar *state, SoundmenuPlugin *soundmenu)
 {
 	if (0 == g_ascii_strcasecmp(state, "Playing")) {
-		soundmenu_album_art_set_path(soundmenu->album_art, soundmenu->metadata->arturl);
+		soundmenu_album_art_set_path(soundmenu->album_art,
+			soundmenu_metatada_get_arturl(soundmenu->metadata));
 		soundmenu->state = ST_PLAYING;
 	}
 	else if (0 == g_ascii_strcasecmp(state, "Paused"))

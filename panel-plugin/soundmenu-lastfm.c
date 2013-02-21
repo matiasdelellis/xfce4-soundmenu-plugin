@@ -39,8 +39,8 @@ do_lastfm_love (gpointer data)
 	SoundmenuPlugin *soundmenu = data;
 
 	rv = LASTFM_track_love (soundmenu->clastfm->session_id,
-		soundmenu->metadata->title,
-		soundmenu->metadata->artist);
+	                        (gchar *)soundmenu_metatada_get_title(soundmenu->metadata),
+	                        (gchar *)soundmenu_metatada_get_artist(soundmenu->metadata));
 
 	if (rv != 0) {
 		g_critical("Love song on Last.fm failed");
@@ -58,8 +58,8 @@ void lastfm_track_love_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 		return;
 	}
 
-	if (g_str_empty0(soundmenu->metadata->artist) ||
-	    g_str_empty0(soundmenu->metadata->title))
+	if (g_str_empty0(soundmenu_metatada_get_artist(soundmenu->metadata)) ||
+	    g_str_empty0(soundmenu_metatada_get_title(soundmenu->metadata)))
 		return;
 
 	#if GLIB_CHECK_VERSION(2,31,0)
@@ -77,8 +77,8 @@ do_lastfm_unlove (gpointer data)
 	SoundmenuPlugin *soundmenu = data;
 
 	rv = LASTFM_track_love (soundmenu->clastfm->session_id,
-		soundmenu->metadata->title,
-		soundmenu->metadata->artist);
+							soundmenu_metatada_get_title(soundmenu->metadata),
+							soundmenu_metatada_get_artist(soundmenu->metadata));
 
 	if (rv != 0) {
 		g_critical("Unlove song on Last.fm failed");
@@ -96,8 +96,8 @@ void lastfm_track_unlove_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 		g_critical("No connection Last.fm has been established.");
 		return;
 	}
-	if (g_str_empty0(soundmenu->metadata->artist) ||
-	    g_str_empty0(soundmenu->metadata->title))
+	if (g_str_empty0(soundmenu_metatada_get_artist(soundmenu->metadata)) ||
+	    g_str_empty0(soundmenu_metatada_get_title(soundmenu->metadata)))
 		return;
 
     #if GLIB_CHECK_VERSION(2,31,0)
@@ -114,12 +114,13 @@ do_lastfm_scrob (gpointer data)
     SoundmenuPlugin *soundmenu = data;
 
     rv = LASTFM_track_scrobble(soundmenu->clastfm->session_id,
-                               soundmenu->metadata->title,
-                               soundmenu->metadata->album ? soundmenu->metadata->album : "",
-                               soundmenu->metadata->artist,
+                               (gchar *)soundmenu_metatada_get_title(soundmenu->metadata),
+                               soundmenu_metatada_get_album(soundmenu->metadata) ?
+                               (gchar *)soundmenu_metatada_get_album(soundmenu->metadata) : "",
+                               (gchar *)soundmenu_metatada_get_artist(soundmenu->metadata),
                                soundmenu->clastfm->playback_started,
-                               soundmenu->metadata->length,
-                               soundmenu->metadata->trackNumber,
+                               soundmenu_metatada_get_length(soundmenu->metadata),
+                               soundmenu_metatada_get_track_no(soundmenu->metadata),
                                0, NULL);
 
     if (rv != 0)
@@ -157,12 +158,13 @@ do_lastfm_now_playing (gpointer data)
 	SoundmenuPlugin *soundmenu = data;
 
 	rv = LASTFM_track_update_now_playing (soundmenu->clastfm->session_id,
-		soundmenu->metadata->title,
-		soundmenu->metadata->album ? soundmenu->metadata->album : "",
-		soundmenu->metadata->artist,
-		soundmenu->metadata->length,
-		soundmenu->metadata->trackNumber,
-		0, NULL);
+	                                      (gchar *)soundmenu_metatada_get_title(soundmenu->metadata),
+	                                      soundmenu_metatada_get_album(soundmenu->metadata) ?
+	                                      (gchar *)soundmenu_metatada_get_album(soundmenu->metadata) : "",
+	                                      (gchar *)soundmenu_metatada_get_artist(soundmenu->metadata),
+	                                      soundmenu_metatada_get_length(soundmenu->metadata),
+	                                      soundmenu_metatada_get_track_no(soundmenu->metadata),
+	                                      0, NULL);
 
 	if (rv != 0) {
 		g_critical("Update current song on Last.fm failed");
@@ -173,7 +175,7 @@ do_lastfm_now_playing (gpointer data)
 
 gboolean lastfm_now_playing_handler (gpointer data)
 {
-	int length = 0;
+	gint length, time = 0;
 
 	SoundmenuPlugin *soundmenu = data;
 
@@ -185,8 +187,8 @@ gboolean lastfm_now_playing_handler (gpointer data)
 		return FALSE;
 	}
 
-	if (g_str_empty0(soundmenu->metadata->artist) ||
-	    g_str_empty0(soundmenu->metadata->title))
+	if (g_str_empty0(soundmenu_metatada_get_artist(soundmenu->metadata)) ||
+	    g_str_empty0(soundmenu_metatada_get_album(soundmenu->metadata)))
 		return FALSE;
 
 	/* Firt update now playing on lastfm */
@@ -200,21 +202,22 @@ gboolean lastfm_now_playing_handler (gpointer data)
 	 * Note: Only scrob if tracks is more than 30s.
 	 * and scrob when track is at 50% or 4mins, whichever comes
 	 * first */
-	if(soundmenu->metadata->length < 30) {
-		if(soundmenu->metadata->length == 0)
+	length = soundmenu_metatada_get_length(soundmenu->metadata);
+	if(length < 30) {
+		if(length == 0)
 			g_critical("The player no emit the length of track");
 		return FALSE;
 	}
-	if((soundmenu->metadata->length / 2) > (240 - WAIT_UPDATE)) {
-		length = 240 - WAIT_UPDATE;
+	if((length / 2) > (240 - WAIT_UPDATE)) {
+		time = 240 - WAIT_UPDATE;
 	}
 	else {
-		length = (soundmenu->metadata->length / 2) - WAIT_UPDATE;
+		time = (length / 2) - WAIT_UPDATE;
 	}
 
     soundmenu->clastfm->lastfm_handler_id =
         g_timeout_add_seconds_full(G_PRIORITY_DEFAULT_IDLE,
-                                   length,
+                                   time,
                                    lastfm_scrob_handler,
                                    soundmenu,
                                    NULL);

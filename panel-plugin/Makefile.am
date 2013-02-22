@@ -29,6 +29,8 @@ libsoundmenu_la_SOURCES = \
 	soundmenu-metadata.h \
 	soundmenu-mpris2.c \
 	soundmenu-mpris2.h \
+	soundmenu-simple-async.c \
+	soundmenu-simple-async.h \
 	soundmenu-utils.c \
 	soundmenu-utils.h
 

@@ -42,6 +42,9 @@ static NMState dbus_check_nm_status (DBusConnection *connection);
 gboolean nm_is_online ();
 #endif
 
+void set_watch_cursor (GtkWidget *widget);
+void remove_watch_cursor (GtkWidget *widget);
+void soundmenu_notify_message(const gchar *message);
 void set_watch_cursor_on_thread(SoundmenuPlugin *soundmenu);
 void remove_watch_cursor_on_thread(gchar *message, SoundmenuPlugin *soundmenu);
 

@@ -27,6 +27,7 @@
 #include "soundmenu-mpris2.h"
 #include "soundmenu-utils.h"
 #include "soundmenu-related.h"
+#include "soundmenu-simple-async.h"
 
 #ifdef HAVE_LIBGLYR
 typedef struct
@@ -100,76 +101,92 @@ soundmenu_show_related_text_info_dialog(glyr_struct *glyr_info,
     gtk_widget_show_all(dialog);
 }
 
-/* Manages the results of glyr threads. */
+static void
+glyr_finished_successfully(glyr_struct *glyr_info)
+{
+	gchar *title_header = NULL, *subtitle_header = NULL;
+
+	switch (glyr_info->head->type) {
+	case GLYR_TYPE_LYRICS:
+		title_header = g_strdup_printf(_("%s by %s"), glyr_info->query.title, glyr_info->query.artist);
+		subtitle_header = g_strdup_printf(_("Lyrics thanks to %s"), glyr_info->head->prov);
+		soundmenu_show_related_text_info_dialog(glyr_info, title_header, subtitle_header);
+		break;
+#if GLYR_CHECK_VERSION (1, 0, 0)
+	case GLYR_TYPE_ARTIST_BIO:
+#else
+	case GLYR_TYPE_ARTISTBIO:
+#endif
+		title_header = g_strdup(glyr_info->query.artist);
+		subtitle_header = g_strdup_printf(_("Artist information thanks to %s"), glyr_info->head->prov);
+		soundmenu_show_related_text_info_dialog(glyr_info, title_header, subtitle_header);
+		break;
+	default:
+		break;
+	}
+
+	g_free(title_header);
+	g_free(subtitle_header);
+
+	glyr_free_list(glyr_info->head);
+}
+
+static void
+glyr_finished_incorrectly(glyr_struct *glyr_info)
+{
+	switch (glyr_info->query.type) {
+	case GLYR_GET_LYRICS:
+#ifdef HAVE_LIBNOTIFY
+		soundmenu_notify_message(_("Lyrics not found."));
+#endif
+		break;
+#if GLYR_CHECK_VERSION (1, 0, 0)
+	case GLYR_GET_ARTIST_BIO:
+#else
+	case GLYR_GET_ARTISTBIO:
+#endif
+#ifdef HAVE_LIBNOTIFY
+		soundmenu_notify_message(_("Artist information not found."));
+#endif
+		break;
+	default:
+		break;
+	}
+}
 
 static gboolean
 glyr_finished_thread_update (gpointer data)
 {
-    glyr_struct *glyr_info = data;
-    gchar *title_header = NULL, *subtitle_header = NULL;
+	glyr_struct *glyr_info = data;
 
-    switch (glyr_info->head->type) {
-    case GLYR_TYPE_LYRICS:
-        title_header = g_strdup_printf(_("%s by %s"), glyr_info->query.title, glyr_info->query.artist);
-        subtitle_header = g_strdup_printf(_("Lyrics thanks to %s"), glyr_info->head->prov);
-        soundmenu_show_related_text_info_dialog(glyr_info, title_header, subtitle_header);
-        break;
-#if GLYR_CHECK_VERSION (1, 0, 0)
-    case GLYR_TYPE_ARTIST_BIO:
-#else
-    case GLYR_TYPE_ARTISTBIO:
-#endif
-        title_header = g_strdup(glyr_info->query.artist);
-        subtitle_header = g_strdup_printf(_("Artist information thanks to %s"), glyr_info->head->prov);
-        soundmenu_show_related_text_info_dialog(glyr_info, title_header, subtitle_header);
-        break;
-    default:
-        break;
-    }
+	remove_watch_cursor (GTK_WIDGET(glyr_info->soundmenu->plugin));
 
-    glyr_free_list(glyr_info->head);
-    glyr_query_destroy(&glyr_info->query);
-    g_slice_free(glyr_struct, glyr_info);
+	if(glyr_info->head != NULL)
+		glyr_finished_successfully(glyr_info);
+	else
+		glyr_finished_incorrectly(glyr_info);
 
-    g_free(title_header);
-    g_free(subtitle_header);
+	glyr_query_destroy(&glyr_info->query);
+	g_slice_free(glyr_struct, glyr_info);
 
-    return FALSE;
+	return FALSE;
 }
 
 /* Get artist bio or lyric on a thread. */
 
 static gpointer
-get_related_text_info_idle_func (gpointer data)
+get_related_info_idle_func (gpointer data)
 {
-    GlyrMemCache *head;
-    GLYR_ERROR error;
+	GlyrMemCache *head;
+	GLYR_ERROR error;
 
-    glyr_struct *glyr_info = data;
+	glyr_struct *glyr_info = data;
 
-    set_watch_cursor_on_thread(glyr_info->soundmenu);
+	head = glyr_get(&glyr_info->query, &error, NULL);
 
-    head = glyr_get(&glyr_info->query, &error, NULL);
+	glyr_info->head = head;
 
-    if(head != NULL) {
-        glyr_info->head = head;
-        g_idle_add(glyr_finished_thread_update, glyr_info);
-
-        remove_watch_cursor_on_thread(NULL, glyr_info->soundmenu);
-    }
-    else {
-        remove_watch_cursor_on_thread((glyr_info->query.type == GLYR_GET_LYRICS) ?
-                                       _("Lyrics not found.") :
-                                       _("Artist information not found."),
-                                       glyr_info->soundmenu);
-
-        g_warning("Error searching song info: %s", glyr_strerror(error));
-
-        glyr_query_destroy(&glyr_info->query);
-        g_slice_free(glyr_struct, glyr_info);
-    }
-
-    return NULL;
+	return glyr_info;
 }
 
 /* Configure the thread to get the artist bio or lyric. */
@@ -180,38 +197,37 @@ configure_and_launch_get_text_info_dialog(GLYR_GET_TYPE type,
                                           const gchar *title,
                                           SoundmenuPlugin *soundmenu)
 {
-    glyr_struct *glyr_info;
-    glyr_info = g_slice_new0 (glyr_struct);
+	glyr_struct *glyr_info;
+	glyr_info = g_slice_new0 (glyr_struct);
 
-    glyr_query_init(&glyr_info->query);
-    glyr_opt_type(&glyr_info->query, type);
+	glyr_query_init(&glyr_info->query);
+	glyr_opt_type(&glyr_info->query, type);
 
-    switch (type) {
+	switch (type) {
 #if GLYR_CHECK_VERSION (1, 0, 0)
-    case GLYR_GET_ARTIST_BIO:
+	case GLYR_GET_ARTIST_BIO:
 #else
-    case GLYR_GET_ARTISTBIO:
+	case GLYR_GET_ARTISTBIO:
 #endif
-        glyr_opt_artist(&glyr_info->query, (char*)artist); //FIXME_GLYR_CAST
+		glyr_opt_artist(&glyr_info->query, (char*)artist); //FIXME_GLYR_CAST
 
-        glyr_opt_lang (&glyr_info->query, "auto");
-        glyr_opt_lang_aware_only (&glyr_info->query, TRUE);
-        break;
-    case GLYR_GET_LYRICS:
-        glyr_opt_artist(&glyr_info->query, (char*)artist); //FIXME_GLYR_CAST
-        glyr_opt_title(&glyr_info->query, (char*)title); //FIXME_GLYR_CAST
-        break;
-    default:
-        break;
-    }
+		glyr_opt_lang (&glyr_info->query, "auto");
+		glyr_opt_lang_aware_only (&glyr_info->query, TRUE);
+		break;
+	case GLYR_GET_LYRICS:
+		glyr_opt_artist(&glyr_info->query, (char*)artist); //FIXME_GLYR_CAST
+		glyr_opt_title(&glyr_info->query, (char*)title); //FIXME_GLYR_CAST
+		break;
+	default:
+		break;
+	}
 
     glyr_info->soundmenu = soundmenu;
 
-    #if GLIB_CHECK_VERSION(2,31,0)
-    g_thread_new("Glyr get text", get_related_text_info_idle_func, glyr_info);
-    #else
-    g_thread_create(get_related_text_info_idle_func, glyr_info, FALSE, NULL);
-    #endif
+	set_watch_cursor (GTK_WIDGET(soundmenu->plugin));
+	soundmenu_async_launch(get_related_info_idle_func,
+	                       glyr_finished_thread_update,
+	                       glyr_info);
 }
 
 /* Functions that respond to menu actions, set the querry and call the thread. */

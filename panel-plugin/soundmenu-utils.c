@@ -107,6 +107,31 @@ nm_is_online ()
 /* Set and remove the watch cursor to suggest background work.*/
 
 void
+set_watch_cursor (GtkWidget *widget)
+{
+	GdkCursor *cursor;
+	GtkWidget  *toplevel;
+
+	toplevel = gtk_widget_get_toplevel(GTK_WIDGET(widget));
+	if (G_LIKELY (toplevel != NULL)) {
+		cursor = gdk_cursor_new (GDK_WATCH);
+
+		gdk_window_set_cursor (gtk_widget_get_window (toplevel), cursor);
+		gdk_cursor_unref (cursor);
+	}
+}
+
+void
+remove_watch_cursor (GtkWidget *widget)
+{
+	GtkWidget  *toplevel;
+
+	toplevel = gtk_widget_get_toplevel(GTK_WIDGET(widget));
+	if (G_LIKELY (toplevel != NULL))
+		gdk_window_set_cursor (gtk_widget_get_window (toplevel), NULL);
+}
+
+void
 set_watch_cursor_on_thread(SoundmenuPlugin *soundmenu)
 {
 	GdkCursor *cursor;
@@ -118,24 +143,29 @@ set_watch_cursor_on_thread(SoundmenuPlugin *soundmenu)
 	gdk_threads_leave ();
 }
 
+#ifdef HAVE_LIBNOTIFY
+void
+soundmenu_notify_message(const gchar *message)
+{
+	NotifyNotification *notify = NULL;
+	#if NOTIFY_CHECK_VERSION (0, 7, 0)
+	notify = notify_notification_new(_("Sound menu Plugin"), message, "xfce4-soundmenu-plugin");
+	#else
+	notify = notify_notification_new(_("Sound menu Plugin"), message, "xfce4-soundmenu-plugin", NULL);
+	#endif
+	if (!notify_notification_show (notify, NULL))
+		g_warning("Failed to send notification: %s", message);
+}
+#endif
+
 void
 remove_watch_cursor_on_thread(gchar *message, SoundmenuPlugin *soundmenu)
 {
-	#ifdef HAVE_LIBNOTIFY
-	NotifyNotification *notify = NULL;
-	#endif
-
 	gdk_threads_enter ();
 	gdk_window_set_cursor(GDK_WINDOW(gtk_widget_get_toplevel (GTK_WIDGET (soundmenu->plugin))->window), NULL);
 	#ifdef HAVE_LIBNOTIFY
 	if(message != NULL) {
-		#if NOTIFY_CHECK_VERSION (0, 7, 0)
-		notify = notify_notification_new(_("Sound menu Plugin"), message, "xfce4-soundmenu-plugin");
-		#else
-		notify = notify_notification_new(_("Sound menu Plugin"), message, "xfce4-soundmenu-plugin", NULL);
-		#endif
-		if (!notify_notification_show (notify, NULL))
-			g_warning("Failed to send notification: %s", message);
+		soundmenu_notify_message(message);
 	}
 	#endif
 	gdk_threads_leave ();

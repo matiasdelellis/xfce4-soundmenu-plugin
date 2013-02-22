@@ -16,6 +16,13 @@
  *  Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#ifndef SOUNDMENU_UTILS_H
+#define SOUNDMENU_UTILS_H
+
 #define g_str_empty0(s) (!(s) || !(s)[0])
 #define g_str_nempty0(s) ((s) && (s)[0])
 
@@ -55,3 +62,5 @@ soundmenu_album_art_frame_press_callback (GtkWidget       *event_box,
                                           SoundmenuPlugin *soundmenu);
 
 gchar* convert_length_str(gint length);
+
+#endif

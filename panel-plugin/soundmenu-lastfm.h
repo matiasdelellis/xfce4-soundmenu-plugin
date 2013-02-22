@@ -1,6 +1,5 @@
-/*  $Id$
- *
- *  Copyright (c) 2011 John Doo <john@foo.org>
+/*
+ *  Copyright (c) 2011-2013 matias <mati86dl@gmail.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,6 +18,11 @@
 
 /* Lastfm Helper */
 
+#ifndef SOUNDMENU_LASTFM_H
+#define SOUNDMENU_LASTFM_H
+
+#include "soundmenu-plugin.h"
+
 void lastfm_track_love_action(GtkWidget *widget, SoundmenuPlugin    *soundmenu);
 void lastfm_track_unlove_action (GtkWidget *widget, SoundmenuPlugin    *soundmenu);
 
@@ -32,3 +36,5 @@ gboolean do_soundmenu_init_lastfm(gpointer data);
 gint init_lastfm_idle_timeout(SoundmenuPlugin *soundmenu);
 gint just_init_lastfm (SoundmenuPlugin *soundmenu);
 gint soundmenu_init_lastfm(SoundmenuPlugin *soundmenu);
+
+#endif

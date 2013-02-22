@@ -20,10 +20,10 @@
 #include <config.h>
 #endif
 
+#include "soundmenu-lastfm.h"
 #include "soundmenu-plugin.h"
 #include "soundmenu-dbus.h"
 #include "soundmenu-dialogs.h"
-#include "soundmenu-lastfm.h"
 #include "soundmenu-mpris2.h"
 #include "soundmenu-utils.h"
 #include "soundmenu-simple-async.h"
@@ -35,16 +35,24 @@ static gpointer
 do_lastfm_current_song_love (gpointer data)
 {
 	AsycMessageData *message_data = NULL;
+	gchar *title, *artist;
 	gint rv;
 
 	SoundmenuPlugin *soundmenu = data;
 
+	soundmenu_mutex_lock(soundmenu->metadata_mtx);
+	title = g_strdup(soundmenu_metatada_get_title(soundmenu->metadata));
+	artist = g_strdup(soundmenu_metatada_get_artist(soundmenu->metadata));
+	soundmenu_mutex_unlock(soundmenu->metadata_mtx);
+
 	rv = LASTFM_track_love (soundmenu->clastfm->session_id,
-	                        (gchar *)soundmenu_metatada_get_title(soundmenu->metadata),
-	                        (gchar *)soundmenu_metatada_get_artist(soundmenu->metadata));
+	                        title, artist);
 
 	message_data = soundmenu_async_finished_message_new(soundmenu,
 		(rv != 0) ? _("Love song on Last.fm failed.") : NULL);
+
+	g_free(title);
+	g_free(artist);
 
 	return message_data;
 }
@@ -73,16 +81,24 @@ static gpointer
 do_lastfm_current_song_unlove (gpointer data)
 {
 	AsycMessageData *message_data = NULL;
+	gchar *title, *artist;
 	gint rv;
 
 	SoundmenuPlugin *soundmenu = data;
 
+	soundmenu_mutex_lock(soundmenu->metadata_mtx);
+	title = g_strdup(soundmenu_metatada_get_title(soundmenu->metadata));
+	artist = g_strdup(soundmenu_metatada_get_artist(soundmenu->metadata));
+	soundmenu_mutex_unlock(soundmenu->metadata_mtx);
+
 	rv = LASTFM_track_love (soundmenu->clastfm->session_id,
-							soundmenu_metatada_get_title(soundmenu->metadata),
-							soundmenu_metatada_get_artist(soundmenu->metadata));
+	                        title, artist);
 
 	message_data = soundmenu_async_finished_message_new(soundmenu,
 		(rv != 0) ? _("Unlove song on Last.fm failed.") : NULL);
+
+	g_free(title);
+	g_free(artist);
 
 	return message_data;
 }
@@ -111,19 +127,32 @@ do_lastfm_scrob (gpointer data)
 {
     gint rv;
     SoundmenuPlugin *soundmenu = data;
+	gchar *title, *artist, *album;
+	gint length, track_no;
 
-    rv = LASTFM_track_scrobble(soundmenu->clastfm->session_id,
-                               (gchar *)soundmenu_metatada_get_title(soundmenu->metadata),
-                               soundmenu_metatada_get_album(soundmenu->metadata) ?
-                               (gchar *)soundmenu_metatada_get_album(soundmenu->metadata) : "",
-                               (gchar *)soundmenu_metatada_get_artist(soundmenu->metadata),
-                               soundmenu->clastfm->playback_started,
-                               soundmenu_metatada_get_length(soundmenu->metadata),
-                               soundmenu_metatada_get_track_no(soundmenu->metadata),
-                               0, NULL);
+	soundmenu_mutex_lock(soundmenu->metadata_mtx);
+	title = g_strdup(soundmenu_metatada_get_title(soundmenu->metadata));
+	artist = g_strdup(soundmenu_metatada_get_artist(soundmenu->metadata));
+	album = g_strdup(soundmenu_metatada_get_album(soundmenu->metadata));
+	length = soundmenu_metatada_get_length(soundmenu->metadata);
+	track_no = soundmenu_metatada_get_track_no(soundmenu->metadata);
+	soundmenu_mutex_unlock(soundmenu->metadata_mtx);
+
+	rv = LASTFM_track_scrobble(soundmenu->clastfm->session_id,
+	                           title,
+	                           album ? album : "",
+	                           artist,
+	                           soundmenu->clastfm->playback_started, // Need mutex.. nop? :(
+	                           length,
+	                           track_no,
+	                           0, NULL);
 
     if (rv != 0)
         g_critical("Last.fm submission failed");
+
+	g_free(title);
+	g_free(artist);
+	g_free(album);
 
     return NULL;
 }
@@ -152,22 +181,34 @@ gboolean lastfm_scrob_handler(gpointer data)
 static gpointer
 do_lastfm_now_playing (gpointer data)
 {
+	SoundmenuPlugin *soundmenu = data;
+	gchar *title, *artist, *album;
+	gint length, track_no;
 	gint rv;
 
-	SoundmenuPlugin *soundmenu = data;
+	soundmenu_mutex_lock(soundmenu->metadata_mtx);
+	title = g_strdup(soundmenu_metatada_get_title(soundmenu->metadata));
+	artist = g_strdup(soundmenu_metatada_get_artist(soundmenu->metadata));
+	album = g_strdup(soundmenu_metatada_get_album(soundmenu->metadata));
+	length = soundmenu_metatada_get_length(soundmenu->metadata);
+	track_no = soundmenu_metatada_get_track_no(soundmenu->metadata);
+	soundmenu_mutex_unlock(soundmenu->metadata_mtx);
 
-	rv = LASTFM_track_update_now_playing (soundmenu->clastfm->session_id,
-	                                      (gchar *)soundmenu_metatada_get_title(soundmenu->metadata),
-	                                      soundmenu_metatada_get_album(soundmenu->metadata) ?
-	                                      (gchar *)soundmenu_metatada_get_album(soundmenu->metadata) : "",
-	                                      (gchar *)soundmenu_metatada_get_artist(soundmenu->metadata),
-	                                      soundmenu_metatada_get_length(soundmenu->metadata),
-	                                      soundmenu_metatada_get_track_no(soundmenu->metadata),
-	                                      0, NULL);
+	rv = LASTFM_track_update_now_playing(soundmenu->clastfm->session_id,
+	                                     title,
+	                                     album ? album : "",
+	                                     artist,
+	                                     length,
+	                                     track_no,
+	                                     0, NULL);
 
 	if (rv != 0) {
 		g_critical("Update current song on Last.fm failed");
 	}
+
+	g_free(title);
+	g_free(artist);
+	g_free(album);
 
 	return NULL;
 }

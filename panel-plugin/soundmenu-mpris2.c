@@ -122,8 +122,11 @@ soundmenu_mpris2_parse_properties(SoundmenuPlugin *soundmenu, GVariant *properti
 		else if (0 == g_ascii_strcasecmp (key, "Metadata"))
 		{
 			metadata = soundmenu_mpris2_get_metadata (value);
+
+			soundmenu_mutex_lock(soundmenu->metadata_mtx);
 			soundmenu_metadata_free(soundmenu->metadata);
 			soundmenu->metadata = metadata;
+			soundmenu_mutex_unlock(soundmenu->metadata_mtx);
 
 			soundmenu_album_art_set_path(soundmenu->album_art,
 				soundmenu_metatada_get_arturl(soundmenu->metadata));

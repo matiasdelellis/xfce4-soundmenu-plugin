@@ -1,6 +1,5 @@
-/*  $Id$
- *
- *  Copyright (c) 2011 John Doo <john@foo.org>
+/*
+ *  Copyright (c) 2011-2013 matias <mati86dl@gmail.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,8 +16,19 @@
  *  Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#ifndef SOUNDMENU_RELATED_H
+#define SOUNDMENU_RELATED_H
+
+#include "soundmenu-plugin.h"
+
 void soundmenu_search_lyric_dialog (GtkWidget *widget, SoundmenuPlugin *soundmenu);
 void soundmenu_search_artistinfo_dialog (GtkWidget *widget, SoundmenuPlugin *soundmenu);
 
 int uninit_glyr_related (SoundmenuPlugin *soundmenu);
 int init_glyr_related (SoundmenuPlugin *soundmenu);
+
+#endif

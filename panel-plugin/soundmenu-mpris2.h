@@ -16,7 +16,15 @@
  *  Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA.
  */
 
-//#include "soundmenu-metadata.h"
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#ifndef SOUNDMENU_MPRIS2_H
+#define SOUNDMENU_MPRIS2_H
+
+#include "soundmenu-metadata.h"
+#include "soundmenu-plugin.h"
 
 SoundmenuMetadata *
 soundmenu_mpris2_get_metadata (GVariant *dictionary);
@@ -38,3 +46,5 @@ gboolean
 soundmenu_panel_button_scrolled (GtkWidget        *widget,
                                  GdkEventScroll   *event,
                                  SoundmenuPlugin *soundmenu);
+
+#endif

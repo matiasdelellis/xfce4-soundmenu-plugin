@@ -16,6 +16,11 @@
  *  Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA.
  */
 
+#ifndef SOUNDMENU_DBUS_H
+#define SOUNDMENU_DBUS_H
+
+#include "soundmenu-plugin.h"
+
 void
 soundmenu_mpris2_send_player_message (SoundmenuPlugin *soundmenu, const char *msg);
 void
@@ -29,3 +34,5 @@ void
 soundmenu_mpris2_reinit_dbus(SoundmenuPlugin *soundmenu);
 
 void init_dbus_session (SoundmenuPlugin *soundmenu);
+
+#endif

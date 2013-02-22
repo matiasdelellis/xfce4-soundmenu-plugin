@@ -16,6 +16,13 @@
  *  Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#ifndef SOUNDMENU_METADATA_H
+#define SOUNDMENU_METADATA_H
+
 #include <glib.h>
 
 typedef struct {
@@ -72,3 +79,5 @@ soundmenu_metatada_get_arturl(SoundmenuMetadata *metadata);
 
 SoundmenuMetadata *soundmenu_metadata_new(void);
 void soundmenu_metadata_free(SoundmenuMetadata *metadata);
+
+#endif

@@ -35,6 +35,10 @@
 #include <libxfce4util/libxfce4util.h>
 #include <libxfce4panel/xfce-hvbox.h>
 
+#include "soundmenu-album-art.h"
+#include "soundmenu-metadata.h"
+//#include "soundmenu-simple-async.h"
+
 #ifdef HAVE_LIBCLASTFM
 #include <clastfm.h>
 #endif
@@ -47,16 +51,33 @@
 #include <libnotify/notify.h>
 #endif
 
-#include "soundmenu-album-art.h"
-#include "soundmenu-metadata.h"
+G_BEGIN_DECLS
 
 #ifndef NOTIFY_CHECK_VERSION
 #define NOTIFY_CHECK_VERSION(x,y,z) 0
 #endif
 
+/*
+ * TODO: Move them to soundmenu-simple-async.h
+ * If try it, resulting in cross reference..
+ */
+
+#if GLIB_CHECK_VERSION (2, 32, 0)
+#define SOUNDMENU_MUTEX(mtx) GMutex mtx
+#define soundmenu_mutex_free(mtx) g_mutex_clear (&(mtx))
+#define soundmenu_mutex_lock(mtx) g_mutex_lock (&(mtx))
+#define soundmenu_mutex_unlock(mtx) g_mutex_unlock (&(mtx))
+#define soundmenu_mutex_create(mtx) g_mutex_init (&(mtx))
+#else
+#define SOUNDMENU_MUTEX(mtx) GMutex *mtx
+#define soundmenu_mutex_free(mtx) g_mutex_free (mtx)
+#define soundmenu_mutex_lock(mtx) g_mutex_lock (mtx)
+#define soundmenu_mutex_unlock(mtx) g_mutex_unlock (mtx)
+#define soundmenu_mutex_create(mtx) (mtx) = g_mutex_new ()
+#endif
+
 #define LASTFM_API_KEY             "70c479ab2632e597fd9215cf35963c1b"
 #define LASTFM_SECRET              "4cb5255d955edc8f651de339fd2f335b"
-G_BEGIN_DECLS
 
 #ifdef HAVE_LIBCLASTFM
 struct lastfm_pref {
@@ -110,6 +131,7 @@ typedef struct
 	/* Player states */
 	enum player_state    state;
 	SoundmenuMetadata   *metadata;
+	SOUNDMENU_MUTEX     (metadata_mtx);
 	gdouble              volume;
 
 	/* Dbus conecction */

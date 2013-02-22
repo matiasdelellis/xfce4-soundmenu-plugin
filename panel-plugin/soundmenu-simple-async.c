@@ -16,8 +16,8 @@
  *  Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA.
  */
 
-#include "soundmenu-plugin.h"
 #include "soundmenu-simple-async.h"
+#include "soundmenu-plugin.h"
 #include "soundmenu-utils.h"
 
 /* Generic function to set a message when finished the async operation.

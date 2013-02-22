@@ -17,6 +17,10 @@
  *  Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #ifndef __SOUNDMENU_DIALOGS_H__
 #define __SOUNDMENU_DIALOGS_H__
 

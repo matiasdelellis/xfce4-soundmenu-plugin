@@ -27,6 +27,7 @@
 #include "soundmenu-mpris2.h"
 #include "soundmenu-utils.h"
 #include "soundmenu-related.h"
+#include "soundmenu-simple-async.h"
 
 #ifdef HAVE_LIBKEYBINDER
 #include "soundmenu-keybinder.h"
@@ -298,6 +299,8 @@ soundmenu_new (XfcePanelPlugin *plugin)
 
 	metadata = soundmenu_metadata_new();
 	soundmenu->metadata = metadata;
+	soundmenu_mutex_create(soundmenu->metadata_mtx);
+
 
 	/* read the user settings */
 	soundmenu_read (soundmenu);
@@ -509,8 +512,12 @@ soundmenu_free (XfcePanelPlugin *plugin,
 		g_free (soundmenu->player);
 	if (G_LIKELY (soundmenu->dbus_name != NULL))
 		g_free (soundmenu->dbus_name);
+
+	soundmenu_mutex_lock(soundmenu->metadata_mtx);
 	if (G_LIKELY (soundmenu->metadata != NULL))
 		soundmenu_metadata_free(soundmenu->metadata);
+	soundmenu_mutex_unlock(soundmenu->metadata_mtx);
+	soundmenu_mutex_free(soundmenu->metadata_mtx);
 
 	/* free the plugin structure */
 	panel_slice_free (SoundmenuPlugin, soundmenu);

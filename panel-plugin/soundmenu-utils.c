@@ -131,18 +131,6 @@ remove_watch_cursor (GtkWidget *widget)
 		gdk_window_set_cursor (gtk_widget_get_window (toplevel), NULL);
 }
 
-void
-set_watch_cursor_on_thread(SoundmenuPlugin *soundmenu)
-{
-	GdkCursor *cursor;
-
-	gdk_threads_enter ();
-	cursor = gdk_cursor_new(GDK_WATCH);
-	gdk_window_set_cursor(GDK_WINDOW(gtk_widget_get_toplevel (GTK_WIDGET (soundmenu->plugin))->window), cursor);
-	gdk_cursor_unref(cursor);
-	gdk_threads_leave ();
-}
-
 #ifdef HAVE_LIBNOTIFY
 void
 soundmenu_notify_message(const gchar *message)
@@ -157,19 +145,6 @@ soundmenu_notify_message(const gchar *message)
 		g_warning("Failed to send notification: %s", message);
 }
 #endif
-
-void
-remove_watch_cursor_on_thread(gchar *message, SoundmenuPlugin *soundmenu)
-{
-	gdk_threads_enter ();
-	gdk_window_set_cursor(GDK_WINDOW(gtk_widget_get_toplevel (GTK_WIDGET (soundmenu->plugin))->window), NULL);
-	#ifdef HAVE_LIBNOTIFY
-	if(message != NULL) {
-		soundmenu_notify_message(message);
-	}
-	#endif
-	gdk_threads_leave ();
-}
 
 /* Launch the player configured. */
 

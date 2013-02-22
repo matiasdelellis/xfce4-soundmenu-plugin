@@ -26,14 +26,15 @@
 #include "soundmenu-lastfm.h"
 #include "soundmenu-mpris2.h"
 #include "soundmenu-utils.h"
-#include "soundmenu-related.h"
+#include "soundmenu-simple-async.h"
 
 #define WAIT_UPDATE 5
 
 #ifdef HAVE_LIBCLASTFM
 static gpointer
-do_lastfm_love (gpointer data)
+do_lastfm_current_song_love (gpointer data)
 {
+	AsycMessageData *message_data = NULL;
 	gint rv;
 
 	SoundmenuPlugin *soundmenu = data;
@@ -42,10 +43,10 @@ do_lastfm_love (gpointer data)
 	                        (gchar *)soundmenu_metatada_get_title(soundmenu->metadata),
 	                        (gchar *)soundmenu_metatada_get_artist(soundmenu->metadata));
 
-	if (rv != 0) {
-		g_critical("Love song on Last.fm failed");
-	}
-	return NULL;
+	message_data = soundmenu_async_finished_message_new(soundmenu,
+		(rv != 0) ? _("Love song on Last.fm failed.") : NULL);
+
+	return message_data;
 }
 
 void lastfm_track_love_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
@@ -62,16 +63,16 @@ void lastfm_track_love_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 	    g_str_empty0(soundmenu_metatada_get_title(soundmenu->metadata)))
 		return;
 
-	#if GLIB_CHECK_VERSION(2,31,0)
-	g_thread_new("Unlove", do_lastfm_love, soundmenu);
-	#else
-	g_thread_create(do_lastfm_love, soundmenu, FALSE, NULL);
-	#endif
+	set_watch_cursor (GTK_WIDGET(soundmenu->plugin));
+	soundmenu_async_launch(do_lastfm_current_song_love,
+	                       soundmenu_async_set_idle_message,
+	                       soundmenu);
 }
 
 static gpointer
-do_lastfm_unlove (gpointer data)
+do_lastfm_current_song_unlove (gpointer data)
 {
+	AsycMessageData *message_data = NULL;
 	gint rv;
 
 	SoundmenuPlugin *soundmenu = data;
@@ -80,11 +81,10 @@ do_lastfm_unlove (gpointer data)
 							soundmenu_metatada_get_title(soundmenu->metadata),
 							soundmenu_metatada_get_artist(soundmenu->metadata));
 
-	if (rv != 0) {
-		g_critical("Unlove song on Last.fm failed");
-	}
+	message_data = soundmenu_async_finished_message_new(soundmenu,
+		(rv != 0) ? _("Unlove song on Last.fm failed.") : NULL);
 
-	return NULL;
+	return message_data;
 }
 
 void lastfm_track_unlove_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
@@ -100,11 +100,10 @@ void lastfm_track_unlove_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 	    g_str_empty0(soundmenu_metatada_get_title(soundmenu->metadata)))
 		return;
 
-    #if GLIB_CHECK_VERSION(2,31,0)
-    g_thread_new("Unlove", do_lastfm_unlove, soundmenu);
-    #else
-    g_thread_create(do_lastfm_unlove, soundmenu, FALSE, NULL);
-    #endif
+	set_watch_cursor (GTK_WIDGET(soundmenu->plugin));
+	soundmenu_async_launch(do_lastfm_current_song_unlove,
+	                       soundmenu_async_set_idle_message,
+	                       soundmenu);
 }
 
 static gpointer

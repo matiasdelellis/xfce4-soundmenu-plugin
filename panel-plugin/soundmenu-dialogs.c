@@ -221,6 +221,7 @@ soundmenu_configure (XfcePanelPlugin *plugin,
         gtk_entry_set_icon_from_stock (GTK_ENTRY(player_entry), GTK_ENTRY_ICON_SECONDARY, GTK_STOCK_REFRESH);
         g_signal_connect (G_OBJECT(player_entry), "icon-press",
 			  G_CALLBACK (refresh_player), soundmenu);
+	gtk_entry_set_activates_default (GTK_ENTRY(player_entry), TRUE);
 	soundmenu->w_player = player_entry;
 
 	show_album_art_check = gtk_check_button_new_with_label(_("Show the cover art on the panel"));
@@ -279,6 +280,7 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 		gtk_entry_set_text(GTK_ENTRY(lastfm_entry_pass), soundmenu->clastfm->lastfm_pass);
 	gtk_entry_set_visibility(GTK_ENTRY(lastfm_entry_pass), FALSE);
 	gtk_entry_set_invisible_char(GTK_ENTRY(lastfm_entry_pass), '*');
+	gtk_entry_set_activates_default (GTK_ENTRY(lastfm_entry_pass), TRUE);
 	soundmenu->lw.lastfm_pass_w = lastfm_entry_pass;
 	#endif
 
@@ -322,6 +324,7 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 				G_CALLBACK(soundmenu_configure_response), soundmenu);
 
 	/* show the entire dialog */
+	gtk_dialog_set_default_response (GTK_DIALOG (dialog), GTK_RESPONSE_OK);
 	gtk_widget_show_all(dialog);
 }
 

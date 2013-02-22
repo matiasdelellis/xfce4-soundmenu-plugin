@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011-2012 matias <mati86dl@gmail.com>
+ *  Copyright (c) 2011-2013 matias <mati86dl@gmail.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -141,6 +141,20 @@ remove_watch_cursor_on_thread(gchar *message, SoundmenuPlugin *soundmenu)
 	gdk_threads_leave ();
 }
 
+/* Launch the player configured. */
+
+void
+soundmenu_launch_player(SoundmenuPlugin *soundmenu)
+{
+	gboolean result;
+
+	if(g_str_nempty0(soundmenu->player)) {
+		result = g_spawn_command_line_async (soundmenu->player, NULL);
+		if (G_UNLIKELY (result == FALSE))
+			soundmenu_configure(soundmenu->plugin, soundmenu);
+	}
+}
+
 /* Open the image when double click.. */
 
 gboolean
@@ -161,22 +175,18 @@ soundmenu_album_art_frame_press_callback (GtkWidget       *event_box,
 	   event->type != GDK_3BUTTON_PRESS)
 		return TRUE;
 
-	if(soundmenu->connected) {
-		url = soundmenu_album_art_get_path(soundmenu->album_art);
-		if(url)
-			command = g_strdup_printf("exo-open \"%s\"", url);
+	if(!soundmenu->connected) {
+		soundmenu_launch_player(soundmenu);
+		return TRUE;
 	}
-	else
-		command = g_strdup(soundmenu->player);
 
-	if(command) {
+	url = soundmenu_album_art_get_path(soundmenu->album_art);
+	if(url) {
+		command = g_strdup_printf("exo-open \"%s\"", url);
 		result = g_spawn_command_line_async (command, NULL);
-		if (G_UNLIKELY (result == FALSE)) {
-			if(!soundmenu->connected)
-				soundmenu_configure(soundmenu->plugin, soundmenu);
-
+		if (G_UNLIKELY (result == FALSE))
 			g_warning ("Unable to launch command: %s", command);
-		}
+
 		g_free(command);
 	}
 

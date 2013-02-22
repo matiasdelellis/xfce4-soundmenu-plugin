@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011-2012 matias <mati86dl@gmail.com>
+ *  Copyright (c) 2011-2013 matias <mati86dl@gmail.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -601,8 +601,8 @@ soundmenu_mode_changed (XfcePanelPlugin *plugin,
 #else
 static void
 soundmenu_orientation_changed (XfcePanelPlugin *plugin,
-                            GtkOrientation   orientation,
-                            SoundmenuPlugin    *soundmenu)
+                               GtkOrientation   orientation,
+                               SoundmenuPlugin *soundmenu)
 {
 	/* change the orienation of the box */
 	xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->hvbox), orientation);
@@ -613,8 +613,58 @@ soundmenu_orientation_changed (XfcePanelPlugin *plugin,
 }
 #endif
 
-void soundmenu_update_layout_changes (SoundmenuPlugin    *soundmenu)
+void soundmenu_update_layout_changes (SoundmenuPlugin *soundmenu)
 {
+	if(soundmenu->connected) {
+		/* Sensitive all controls */
+
+		gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->prev_button), TRUE);
+		gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->play_button), TRUE);
+		gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->stop_button), TRUE);
+		gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->next_button), TRUE);
+
+		/* Set visible acording preferences */
+
+		gtk_widget_show(GTK_WIDGET(soundmenu->hvbox_buttons));
+
+		if(soundmenu->show_album_art)
+			gtk_widget_show(soundmenu->ev_album_art);
+		else
+			gtk_widget_hide(soundmenu->ev_album_art);
+
+		if(soundmenu->show_stop)
+			gtk_widget_show_all(soundmenu->stop_button);
+		else
+			gtk_widget_hide(soundmenu->stop_button);
+	}
+	else {
+		/* Insensitive controls */
+
+		gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->prev_button), FALSE);
+		gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->play_button), TRUE);
+		gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->stop_button), FALSE);
+		gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->next_button), FALSE);
+
+		/* Set visible acording preferences */
+
+		if(soundmenu->hide_controls_if_loose) {
+			gtk_widget_hide(GTK_WIDGET(soundmenu->hvbox_buttons));
+			gtk_widget_show(soundmenu->ev_album_art);
+		}
+		else {
+			gtk_widget_show(GTK_WIDGET(soundmenu->hvbox_buttons));
+			if(soundmenu->show_album_art)
+				gtk_widget_show(soundmenu->ev_album_art);
+			else
+				gtk_widget_hide(soundmenu->ev_album_art);
+
+			if(soundmenu->show_stop)
+				gtk_widget_show_all(soundmenu->stop_button);
+			else
+				gtk_widget_hide(soundmenu->stop_button);
+		}
+	}
+
 	/* Update orientations and size. */
 
 	soundmenu_mode_changed(soundmenu->plugin, xfce_panel_plugin_get_mode (soundmenu->plugin), soundmenu);

@@ -113,11 +113,6 @@ toggle_show_album_art(GtkToggleButton *button,
 {
 	soundmenu->show_album_art = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button));
 
-	if(soundmenu->show_album_art)
-		gtk_widget_show(soundmenu->ev_album_art);
-	else
-		gtk_widget_hide(soundmenu->ev_album_art);
-
 	soundmenu_update_layout_changes (soundmenu);
 }
 
@@ -128,8 +123,7 @@ toggle_huge_on_deskbar_mode(GtkToggleButton *button,
 {
 	soundmenu->huge_on_deskbar_mode = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button));
 
-	if(soundmenu->show_album_art)
-		soundmenu_update_layout_changes (soundmenu);
+	soundmenu_update_layout_changes (soundmenu);
 }
 #endif
 
@@ -139,11 +133,6 @@ toggle_show_stop(GtkToggleButton *button,
 {
 	soundmenu->show_stop = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button));
 
-	if(soundmenu->show_stop)
-		gtk_widget_show_all(soundmenu->stop_button);
-	else
-		gtk_widget_hide(soundmenu->stop_button);
-
 	soundmenu_update_layout_changes (soundmenu);
 }
 
@@ -152,6 +141,8 @@ toggle_hide_controls_if_loose(GtkToggleButton *button,
                               SoundmenuPlugin *soundmenu)
 {
 	soundmenu->hide_controls_if_loose = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button));
+
+	soundmenu_update_layout_changes (soundmenu);
 }
 
 #ifdef HAVE_LIBKEYBINDER

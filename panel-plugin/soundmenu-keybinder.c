@@ -26,23 +26,35 @@
 static void
 keybind_play_handler (const char *keystring, SoundmenuPlugin *soundmenu)
 {
+	if(!soundmenu->connected)
+		return;
+
 	soundmenu_mpris2_send_player_message (soundmenu, "PlayPause");
 }
 static void
 keybind_stop_handler (const char *keystring, SoundmenuPlugin *soundmenu)
 {
+	if(!soundmenu->connected)
+		return;
+
 	soundmenu_mpris2_send_player_message (soundmenu, "Stop");
 }
 
 static void
 keybind_prev_handler (const char *keystring, SoundmenuPlugin *soundmenu)
 {
+	if(!soundmenu->connected)
+		return;
+
 	soundmenu_mpris2_send_player_message (soundmenu, "Previous");
 }
 
 static void
 keybind_next_handler (const char *keystring, SoundmenuPlugin *soundmenu)
 {
+	if(!soundmenu->connected)
+		return;
+
 	soundmenu_mpris2_send_player_message (soundmenu, "Next");
 }
 

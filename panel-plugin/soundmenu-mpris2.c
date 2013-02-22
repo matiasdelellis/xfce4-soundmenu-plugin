@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011-2012 matias <mati86dl@gmail.com>
+ *  Copyright (c) 2011-2013 matias <mati86dl@gmail.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -158,24 +158,38 @@ soundmenu_mpris2_forse_update(SoundmenuPlugin *soundmenu)
 void
 prev_button_handler(GtkButton *button, SoundmenuPlugin *soundmenu)
 {
+	if(!soundmenu->connected)
+		return;
+
 	soundmenu_mpris2_send_player_message (soundmenu, "Previous");
 }
 
 void
 play_button_handler(GtkButton *button, SoundmenuPlugin *soundmenu)
 {
+	if(!soundmenu->connected) {
+		soundmenu_launch_player(soundmenu);
+		return;
+	}
+
 	soundmenu_mpris2_send_player_message (soundmenu, "PlayPause");
 }
 
 void
 stop_button_handler(GtkButton *button, SoundmenuPlugin    *soundmenu)
 {
+	if(!soundmenu->connected)
+		return;
+
 	soundmenu_mpris2_send_player_message (soundmenu, "Stop");
 }
 
 void
 next_button_handler(GtkButton *button, SoundmenuPlugin    *soundmenu)
 {
+	if(!soundmenu->connected)
+		return;
+
 	soundmenu_mpris2_send_player_message (soundmenu, "Next");
 }
 
@@ -184,6 +198,9 @@ soundmenu_panel_button_scrolled (GtkWidget        *widget,
                                  GdkEventScroll   *event,
                                  SoundmenuPlugin *soundmenu)
 {
+	if(!soundmenu->connected)
+		return FALSE;
+
 	switch (event->direction) {
 		case GDK_SCROLL_UP:
 		case GDK_SCROLL_RIGHT:

@@ -45,6 +45,9 @@ gboolean nm_is_online ();
 void set_watch_cursor_on_thread(SoundmenuPlugin *soundmenu);
 void remove_watch_cursor_on_thread(gchar *message, SoundmenuPlugin *soundmenu);
 
+void
+soundmenu_launch_player(SoundmenuPlugin *soundmenu);
+
 gboolean
 soundmenu_album_art_frame_press_callback (GtkWidget       *event_box,
                                           GdkEventButton  *event,

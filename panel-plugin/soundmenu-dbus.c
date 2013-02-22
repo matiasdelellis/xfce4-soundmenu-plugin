@@ -198,13 +198,9 @@ soundmenu_mpris2_dbus_conected(GDBusConnection *connection,
 {
 	SoundmenuPlugin *soundmenu = user_data;
 
-	gtk_widget_show(GTK_WIDGET(soundmenu->hvbox_buttons));
-	gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->hvbox_buttons), TRUE);
-
-	if(!soundmenu->show_album_art)
-		gtk_widget_hide(GTK_WIDGET(soundmenu->ev_album_art));
-
 	soundmenu->connected = TRUE;
+
+	soundmenu_update_layout_changes(soundmenu);
 
 	soundmenu_mpris2_forse_update(soundmenu);
 }
@@ -216,16 +212,11 @@ soundmenu_mpris2_dbus_losed(GDBusConnection *connection,
 {
 	SoundmenuPlugin *soundmenu = user_data;
 
-	if(soundmenu->hide_controls_if_loose)
-		gtk_widget_hide(GTK_WIDGET(soundmenu->hvbox_buttons));
-	else
-		gtk_widget_show(GTK_WIDGET(soundmenu->hvbox_buttons));
-	gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->hvbox_buttons), FALSE);
-
-	gtk_widget_show(GTK_WIDGET(soundmenu->ev_album_art));
-	soundmenu_album_art_set_path(soundmenu->album_art, NULL);
-
 	soundmenu->connected = FALSE;
+
+	soundmenu_update_layout_changes(soundmenu);
+
+	soundmenu_album_art_set_path(soundmenu->album_art, NULL);
 }
 
 /*

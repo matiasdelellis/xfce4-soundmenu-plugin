@@ -69,7 +69,4 @@ soundmenu_async_worker(gpointer data);
 void
 soundmenu_async_launch (GThreadFunc worker_func, GSourceFunc finish_func, gpointer user_data);
 
-GThread *
-soundmenu_async_launch_full (GThreadFunc worker_func, GSourceFunc finish_func, gpointer userdata);
-
 #endif

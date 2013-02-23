@@ -82,23 +82,17 @@ soundmenu_async_worker(gpointer data)
 void
 soundmenu_async_launch (GThreadFunc worker_func, GSourceFunc finish_func, gpointer user_data)
 {
-	g_thread_unref (soundmenu_async_launch_full (worker_func, finish_func, user_data));
-}
-
-GThread *
-soundmenu_async_launch_full (GThreadFunc worker_func, GSourceFunc finish_func, gpointer userdata)
-{
 	AsyncSimple *as;
 
 	as = g_slice_new0(AsyncSimple);
 	as->func_w = worker_func;
 	as->func_f = finish_func;
-	as->userdata = userdata;
+	as->userdata = user_data;
 	as->finished_data = NULL;
 
 	#if GLIB_CHECK_VERSION(2,31,0)
-	return g_thread_new("Launch async", soundmenu_async_worker, as);
+	g_thread_new("Launch async", soundmenu_async_worker, as);
 	#else
-	return g_thread_create(soundmenu_async_worker, as, TRUE, NULL);
+	g_thread_create(soundmenu_async_worker, as, FALSE, NULL);
 	#endif
 }

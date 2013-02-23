@@ -23,6 +23,8 @@
 
 #include "soundmenu-plugin.h"
 
+#ifdef HAVE_LIBCLASTFM
+
 void lastfm_track_love_action(GtkWidget *widget, SoundmenuPlugin    *soundmenu);
 void lastfm_track_unlove_action (GtkWidget *widget, SoundmenuPlugin    *soundmenu);
 
@@ -37,4 +39,5 @@ gint init_lastfm_idle_timeout(SoundmenuPlugin *soundmenu);
 gint just_init_lastfm (SoundmenuPlugin *soundmenu);
 gint soundmenu_init_lastfm(SoundmenuPlugin *soundmenu);
 
+#endif
 #endif

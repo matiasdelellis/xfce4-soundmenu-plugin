@@ -129,11 +129,13 @@ do_lastfm_scrob (gpointer data)
     SoundmenuPlugin *soundmenu = data;
 	gchar *title, *artist, *album;
 	gint length, track_no;
+	time_t playback_started;
 
 	soundmenu_mutex_lock(soundmenu->metadata_mtx);
 	title = g_strdup(soundmenu_metatada_get_title(soundmenu->metadata));
 	artist = g_strdup(soundmenu_metatada_get_artist(soundmenu->metadata));
 	album = g_strdup(soundmenu_metatada_get_album(soundmenu->metadata));
+	playback_started = soundmenu->clastfm->playback_started;
 	length = soundmenu_metatada_get_length(soundmenu->metadata);
 	track_no = soundmenu_metatada_get_track_no(soundmenu->metadata);
 	soundmenu_mutex_unlock(soundmenu->metadata_mtx);
@@ -142,7 +144,7 @@ do_lastfm_scrob (gpointer data)
 	                           title,
 	                           album ? album : "",
 	                           artist,
-	                           soundmenu->clastfm->playback_started, // Need mutex.. nop? :(
+	                           playback_started,
 	                           length,
 	                           track_no,
 	                           0, NULL);
@@ -272,7 +274,9 @@ void update_lastfm (SoundmenuPlugin *soundmenu)
     if(soundmenu->state != ST_PLAYING)
         return;
 
+	soundmenu_mutex_lock(soundmenu->metadata_mtx);
     time(&soundmenu->clastfm->playback_started);
+	soundmenu_mutex_unlock(soundmenu->metadata_mtx);
 
     soundmenu->clastfm->lastfm_handler_id =
 	    g_timeout_add_seconds_full(G_PRIORITY_DEFAULT_IDLE,

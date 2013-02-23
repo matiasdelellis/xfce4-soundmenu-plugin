@@ -91,8 +91,8 @@ do_lastfm_current_song_unlove (gpointer data)
 	artist = g_strdup(soundmenu_metatada_get_artist(soundmenu->metadata));
 	soundmenu_mutex_unlock(soundmenu->metadata_mtx);
 
-	rv = LASTFM_track_love (soundmenu->clastfm->session_id,
-	                        title, artist);
+	rv = LASTFM_track_unlove (soundmenu->clastfm->session_id,
+	                          title, artist);
 
 	message_data = soundmenu_async_finished_message_new(soundmenu,
 		(rv != 0) ? _("Unlove song on Last.fm failed.") : NULL);

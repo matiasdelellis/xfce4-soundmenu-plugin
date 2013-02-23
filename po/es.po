@@ -7,23 +7,22 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.2.git\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-03-06 11:59-0300\n"
-"PO-Revision-Date: 2012-02-23 12:38-0300\n"
+"POT-Creation-Date: 2013-02-23 12:16-0300\n"
+"PO-Revision-Date: 2013-02-23 12:17-0300\n"
 "Last-Translator: Matias De lellis <mati86dl@gmail.com>\n"
 "Language-Team: Spanish <LL@li.org>\n"
-"Language: \n"
+"Language: es_ES\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: Spanish\n"
-"X-Poedit-Country: SPAIN\n"
 "X-Poedit-SourceCharset: utf-8\n"
+"X-Generator: Poedit 1.5.4\n"
 
-#: ../panel-plugin/soundmenu-plugin.c:126
+#: ../panel-plugin/soundmenu-plugin.c:65
 msgid "Stopped"
 msgstr "Detenido"
 
-#: ../panel-plugin/soundmenu-plugin.c:128
+#: ../panel-plugin/soundmenu-plugin.c:67
 #, c-format
 msgid ""
 "<b>%s</b> (%s)\n"
@@ -32,93 +31,119 @@ msgstr ""
 "<b>%s</b> (%s)\n"
 "por %s en %s"
 
-#: ../panel-plugin/soundmenu-plugin.c:133
+#: ../panel-plugin/soundmenu-plugin.c:70
 msgid "Unknown Artist"
 msgstr "Artista Desconocido"
 
-#: ../panel-plugin/soundmenu-plugin.c:135
+#: ../panel-plugin/soundmenu-plugin.c:71
 msgid "Unknown Album"
 msgstr "Álbum desconocido"
 
-#: ../panel-plugin/soundmenu-plugin.c:345
+#: ../panel-plugin/soundmenu-plugin.c:75
+msgid "Double-click to launch the music player"
+msgstr "Haga doble click para lanzar el reproductor"
+
+#: ../panel-plugin/soundmenu-plugin.c:244
+#: ../panel-plugin/soundmenu-dialogs.c:305
 msgid "Last.fm"
 msgstr "Last.fm"
 
-#: ../panel-plugin/soundmenu-plugin.c:352
+#: ../panel-plugin/soundmenu-plugin.c:254
 msgid "Love"
 msgstr "Favorita"
 
-#: ../panel-plugin/soundmenu-plugin.c:355
+#: ../panel-plugin/soundmenu-plugin.c:257
 msgid "Unlove"
 msgstr "No es mas favorita"
 
-#: ../panel-plugin/soundmenu-plugin.c:369
+#: ../panel-plugin/soundmenu-plugin.c:271
 msgid "Search lyrics"
 msgstr "Buscar letra de la canción"
 
-#: ../panel-plugin/soundmenu-plugin.c:374
+#: ../panel-plugin/soundmenu-plugin.c:276
 msgid "Search artist info"
 msgstr "Obtener información del artista"
 
 #. create the dialog
-#: ../panel-plugin/soundmenu-dialogs.c:177
+#: ../panel-plugin/soundmenu-dialogs.c:200
 #: ../panel-plugin/soundmenu.desktop.in.in.h:1
-#: ../panel-plugin/soundmenu-utils.c:104 ../panel-plugin/soundmenu-utils.c:106
+#: ../panel-plugin/soundmenu-utils.c:140 ../panel-plugin/soundmenu-utils.c:142
 msgid "Sound menu Plugin"
 msgstr "Plugin de audio"
 
-#: ../panel-plugin/soundmenu-dialogs.c:193
+#: ../panel-plugin/soundmenu-dialogs.c:216
+#: ../panel-plugin/soundmenu-dialogs.c:289
 msgid "Player"
 msgstr "Reproductor"
 
-#: ../panel-plugin/soundmenu-dialogs.c:203
+#: ../panel-plugin/soundmenu-dialogs.c:227
 msgid "Show the cover art on the panel"
 msgstr "Mostrar la portada del álbum en el panel."
 
-#: ../panel-plugin/soundmenu-dialogs.c:209
+#: ../panel-plugin/soundmenu-dialogs.c:234
+msgid "Show huge cover art when deskbar panel mode"
+msgstr "Mostrar la portada del álbum grande en el modo deskbar."
+
+#: ../panel-plugin/soundmenu-dialogs.c:241
 msgid "Show stop button"
 msgstr "Mostrar el botón Detener"
 
-#: ../panel-plugin/soundmenu-dialogs.c:216
+#: ../panel-plugin/soundmenu-dialogs.c:247
+msgid "Hide the controls if the player is not present"
+msgstr "Ocultar los controles cuando el reproductor no esta presente"
+
+#: ../panel-plugin/soundmenu-dialogs.c:254
 msgid "Use multimedia keys"
 msgstr "Usar las teclas multimedias"
 
-#: ../panel-plugin/soundmenu-dialogs.c:224
+#: ../panel-plugin/soundmenu-dialogs.c:262
 msgid "Scrobble on Last.fm"
 msgstr "Scrobble en Last.fm"
 
-#: ../panel-plugin/soundmenu-dialogs.c:229
-msgid "Last.fm user"
-msgstr "Usuario de Last.fm"
+#: ../panel-plugin/soundmenu-dialogs.c:267
+msgid "User"
+msgstr "Usuario"
 
-#: ../panel-plugin/soundmenu-dialogs.c:237
-msgid "Last.fm password"
-msgstr "Contraseña Last.fm"
+#: ../panel-plugin/soundmenu-dialogs.c:275
+msgid "Password"
+msgstr "Contraseña"
 
-#: ../panel-plugin/soundmenu-related.c:26
-msgid "en"
-msgstr "es"
+#: ../panel-plugin/soundmenu-dialogs.c:292
+msgid "Appearance"
+msgstr "Apariencia"
 
-#: ../panel-plugin/soundmenu-related.c:54
+#: ../panel-plugin/soundmenu-dialogs.c:300
+msgid "Behavior"
+msgstr "Comportamiento"
+
+#: ../panel-plugin/soundmenu-lastfm.c:52
+msgid "Love song on Last.fm failed."
+msgstr "Hubo un error al agregar la canción a tus favoritos"
+
+#: ../panel-plugin/soundmenu-lastfm.c:98
+msgid "Unlove song on Last.fm failed."
+msgstr "Hubo un error al sacar la canción de tus favoritos."
+
+#: ../panel-plugin/soundmenu-related.c:111
 #, c-format
 msgid "%s by %s"
 msgstr "%s por %s"
 
-#: ../panel-plugin/soundmenu-related.c:55
+#: ../panel-plugin/soundmenu-related.c:112
 #, c-format
 msgid "Lyrics thanks to %s"
 msgstr "Letras gracias a %s"
 
-#: ../panel-plugin/soundmenu-related.c:59
+#: ../panel-plugin/soundmenu-related.c:121
 #, c-format
 msgid "Artist information thanks to %s"
 msgstr "Información del artista gracias a %s"
 
-#: ../panel-plugin/soundmenu-related.c:133
+#: ../panel-plugin/soundmenu-related.c:140
 msgid "Lyrics not found."
 msgstr "No se encontró la letra de la canción."
 
-#: ../panel-plugin/soundmenu-related.c:133
+#: ../panel-plugin/soundmenu-related.c:149
 msgid "Artist information not found."
 msgstr "No se encontró la Información del artista."
 
@@ -126,13 +151,22 @@ msgstr "No se encontró la Información del artista."
 msgid "Sound menu plugin for the Xfce panel"
 msgstr "Sound menu plugin para el panel de Xfce"
 
-#: ../panel-plugin/soundmenu-utils.c:126
+#: ../panel-plugin/soundmenu-utils.c:212
 msgid "days"
 msgstr "días"
 
-#: ../panel-plugin/soundmenu-utils.c:126
+#: ../panel-plugin/soundmenu-utils.c:212
 msgid "day"
 msgstr "día"
+
+#~ msgid "Last.fm user"
+#~ msgstr "Usuario de Last.fm"
+
+#~ msgid "Last.fm password"
+#~ msgstr "Contraseña Last.fm"
+
+#~ msgid "en"
+#~ msgstr "es"
 
 #~ msgid "Playcount:"
 #~ msgstr "Reproducciones registradas:"

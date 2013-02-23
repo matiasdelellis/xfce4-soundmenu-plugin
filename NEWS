@@ -1,65 +1,93 @@
+==============================================================
+Overview of changes in xfce4-soundmenu-plugin v0.6.0
+==============================================================
+
+News
+	Port to GDbus.. This allowed much of the next:
+	Detects if the player is running or not. (The player need has enabled mpris2).
+	* Add option to hide controls when not available.
+	* Launch player double clicking on the plugin icon. (If it fails, open preferences.)
+	Can control the volume of player with mouse whell over albumart.
+	Now xfce4-soundmenu-plugin have their API key of lastfm. =) =) ;)
+	Stop building static archive by default using new xfce4-dev-tools. See issue #1
+	Better HIG to preferences.
+	Update album art when metadata chage.
+	Insensitive lastfm option when not init lastfm.
+	Backport a lot of changes from Pragha.
+	 * Fix get arstist bio with glyr v1.0.0
+	 * Minimize memory duplication
+	 * Use lang autodetection to get artist bio.
+	 * Add SoundmenuAlbumArt Gobject.
+	 * Remove gdk_threads.. gdk_locks... etc.
+	 * Better detect of lastfm init fails.
+	 * Use glib to detect if network is available when glib > 2.32
+	 * In general better code.
+
+==============================================================
+OTHERS REALESES:
+==============================================================
 V0.4.10
-Support to Xfce 4.10 thanks to Andrzej.
-Add option to show a tiny album art, or use all panel size in deskbar mode.
-Show contect menu on RMB click on album_art icon thanks to Andrzej.
-Set invisible event box to album art.
+	Support to Xfce 4.10 thanks to Andrzej.
+	Add option to show a tiny album art, or use all panel size in deskbar mode.
+	Show contect menu on RMB click on album_art icon thanks to Andrzej.
+	Set invisible event box to album art.
 
 V0.4.1
-Now is compiled as a module as recommended in the documentation.
-[PATCH] Use Xfce 4.8 locations for plugin and desktop file.
-[PATCH 2/3] Update FSFE address.
-[PATCH 3/3] Fix author name.
-PATCHS thanks to Christoph Wickert.
-Fix compile with libnotify <= 0.7
-Fix transparency issue when no show the cover art.
-Test some NULL string before use it.
-Change plugin website to github.
-Clean changelog. Update it whit make dist.
-Update es.po and pot file.
+	Now is compiled as a module as recommended in the documentation.
+	[PATCH] Use Xfce 4.8 locations for plugin and desktop file.
+	[PATCH 2/3] Update FSFE address.
+	[PATCH 3/3] Fix author name.
+	PATCHS thanks to Christoph Wickert.
+	Fix compile with libnotify <= 0.7
+	Fix transparency issue when no show the cover art.
+	Test some NULL string before use it.
+	Change plugin website to github.
+	Clean changelog. Update it whit make dist.
+	Update es.po and pot file.
 
 NOTE: Lastfm scrobble now depend on libclastfm >= 0.5
 
 V0.4.0
-You can show the cover art on the panel if it is informed by the player.
-Open the image when double click on panel image.
-Nos has a true xfce4-soundmenu-plugin icon.
-Check status of network manager when init the plugin. If is online, init lastfm, otherwise wait 30 seconds.
-Now depend of libnotify to show errors of glyr (And much more later.) when is available.
-Change/add/remove some functions to remove duplicate code. So, much better code, and no freeze never more the plugin when search info.
-When just add the plugin detect current player with dbus.
-Avoid use of posix pthread.. Use more gdk_threads..
+	You can show the cover art on the panel if it is informed by the player.
+	Open the image when double click on panel image.
+	Nos has a true xfce4-soundmenu-plugin icon.
+	Check status of network manager when init the plugin. If is online, init lastfm, otherwise wait 30 seconds.
+	Now depend of libnotify to show errors of glyr (And much more later.) when is available.
+	Change/add/remove some functions to remove duplicate code. So, much better code, and no freeze never more the plugin when search info.
+	When just add the plugin detect current player with dbus.
+	Avoid use of posix pthread.. Use more gdk_threads..
 
 V0.2.4.2
-Fix double-free every time that logout.
+	Fix double-free every time that logout.
 
 V0.2.4.1
-Fix compile without libclastfm.
+	Fix compile without libclastfm.
 
 V0.2.4
-Registrer multimedia keys when keybinder is abiable.
-Lastfm support when libclasfm is abiable. Scroble, love, unlove and get artist info.
-Search Lyrics and Artist information dialog when libglyr is abiable. Soon, search more information related to the current song.
+	Registrer multimedia keys when keybinder is abiable.
+	Lastfm support when libclasfm is abiable. Scroble, love, unlove and get artist info.
+	Search Lyrics and Artist information dialog when libglyr is abiable. Soon, search more information related to the current song.
 
 V0.2.2
-Parse and show volume on tooltips.
-Set tooltips dynamically.
-Get Volume, Metadata and Volume on-demand.
-So.. get all when you add the plugin or set another player.
+	Parse and show volume on tooltips.
+	Set tooltips dynamically.
+	Get Volume, Metadata and Volume on-demand.
+	So.. get all when you add the plugin or set another player.
 
 V0.2.0
-Parse metadata info.
-Show basic metadata in a tooltip on the control buttons.
+	Parse metadata info.
+	Show basic metadata in a tooltip on the control buttons.
 
 V0.1.0
 Now YESS!-) is a generic MPRIS 2 control pluging.
 
 V0.0.5
-Now is a generic MPRIS 2 control pluging.
-Add show stop button option in preferences.
+	Now is a generic MPRIS 2 control pluging.
+	Add show stop button option in preferences.
 
 V0.0.2
-Description:
-A very basic xfce4-panel plugin to control pragha.
+	Description:
+	A very basic xfce4-panel plugin to control pragha.
 
 Based on last xfce4-sample-plugin (http://git.xfce.org/panel-plugins/xfce4-sample-plugin)
 and written with the excuse to learn dbus thank to http://www.aliov.org/?page_id=47 :)

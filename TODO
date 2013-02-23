@@ -1,11 +1,25 @@
+==========================================================
 TODO list for a "hypothetical" xfce4-soundmenu-plugin 1.0.
+==========================================================
+
+Priorities
+ * Append a label to show tags of current song.
+
+Goodies, but planed:
+ * Control master volume with gstreamer.
+ * Add time elapsed control.
+ * Add a new mode: Icon on panel, and controls/art/tags on popup widget.
+
+==========================================================
+CLosed on v0.6.0
+==========================================================
 
 Priorities
 * Check player status when add the plugin. FIXED.
-* Ping player to know that still runs.
-* Run player if not found.
+* Ping player to know that still runs. FIXED.
+* Run player if not found. FIXED.
 
 Goodies, but planed:
-* All volumes control. Master with gstreamer and playback with mpris2.
+* All volumes control. Master with gstreamer and playback with mpris2. With mpris2 FIXED.
 * Add multimedia keys support. keybinder. FIXED.
 * Scrobbling on lastfm. libclastfm. FIXED.

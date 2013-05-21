@@ -25,16 +25,7 @@
 
 #include <glib.h>
 
-typedef struct {
-	gchar *trackid;
-	gchar *url;
-	gchar *title;
-	gchar *artist;
-	gchar *album;
-	guint length;
-	guint track_no;
-	gchar *arturl;
-} SoundmenuMetadata;
+typedef struct _SoundmenuMetadata SoundmenuMetadata;
 
 void
 soundmenu_metatada_set_trackid(SoundmenuMetadata *metadata, const gchar *trackid);

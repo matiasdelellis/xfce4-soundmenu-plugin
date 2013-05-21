@@ -18,6 +18,17 @@
 
 #include "soundmenu-metadata.h"
 
+struct _SoundmenuMetadata {
+	gchar *trackid;
+	gchar *url;
+	gchar *title;
+	gchar *artist;
+	gchar *album;
+	guint length;
+	guint track_no;
+	gchar *arturl;
+};
+
 /*
  * Set and get metadata.
  */

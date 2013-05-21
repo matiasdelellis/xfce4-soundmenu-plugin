@@ -76,8 +76,8 @@ soundmenu_set_query_tooltip_cb (GtkWidget       *widget,
 
 			markup_text = g_markup_printf_escaped(_("<b>%s</b> (%s)\nby %s in %s"),
 				                                  name, length,
-				                                  artist ? artist : _("Unknown Artist"),
-				                                  album ? album : _("Unknown Album"));
+				                                  g_str_nempty0(artist) ? artist : _("Unknown Artist"),
+				                                  g_str_nempty0(album) ? album : _("Unknown Album"));
 			g_free(filename);
 			g_free(name);
 			g_free(length);

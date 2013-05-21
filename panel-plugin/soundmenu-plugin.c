@@ -57,18 +57,30 @@ soundmenu_set_query_tooltip_cb (GtkWidget       *widget,
                                 GtkTooltip      *tooltip,
                                 SoundmenuPlugin *soundmenu)
 {
-	gchar *markup_text = NULL, *length = NULL;
+	const gchar *title, *artist, *album, *url;
+	gchar *markup_text = NULL, *length = NULL, *filename = NULL,*name = NULL;
 
-	length = convert_length_str(soundmenu_metatada_get_length(soundmenu->metadata));
 	if(soundmenu->connected) {
 		if (soundmenu->state == ST_STOPPED)
 			markup_text = g_strdup_printf("%s", _("Stopped"));
 		else {
+			title = soundmenu_metatada_get_title(soundmenu->metadata);
+			artist = soundmenu_metatada_get_artist(soundmenu->metadata);
+			album = soundmenu_metatada_get_album(soundmenu->metadata);
+			url = soundmenu_metatada_get_url(soundmenu->metadata);
+
+			filename = g_filename_from_uri(url, NULL, NULL);
+
+			name = g_str_nempty0(title) ? g_strdup(title) : g_filename_display_basename(filename);
+			length = convert_length_str(soundmenu_metatada_get_length(soundmenu->metadata));
+
 			markup_text = g_markup_printf_escaped(_("<b>%s</b> (%s)\nby %s in %s"),
-				                                  g_str_nempty0(soundmenu_metatada_get_title(soundmenu->metadata)) ? soundmenu_metatada_get_title(soundmenu->metadata)  : soundmenu_metatada_get_url(soundmenu->metadata),
-				                                  length,
-				                                  g_str_nempty0(soundmenu_metatada_get_artist(soundmenu->metadata)) ? soundmenu_metatada_get_artist(soundmenu->metadata) : _("Unknown Artist"),
-				                                  g_str_nempty0(soundmenu_metatada_get_album(soundmenu->metadata)) ? soundmenu_metatada_get_album(soundmenu->metadata) : _("Unknown Album"));
+				                                  name, length,
+				                                  artist ? artist : _("Unknown Artist"),
+				                                  album ? album : _("Unknown Album"));
+			g_free(filename);
+			g_free(name);
+			g_free(length);
 		}
 	}
 	else
@@ -80,7 +92,6 @@ soundmenu_set_query_tooltip_cb (GtkWidget       *widget,
 		soundmenu_album_art_get_pixbuf(soundmenu->album_art));
 
 	g_free(markup_text);
-	g_free(length);
 
 	return TRUE;
 }

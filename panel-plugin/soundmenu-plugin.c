@@ -604,7 +604,6 @@ soundmenu_mode_changed (XfcePanelPlugin *plugin,
 	/* update size after orientation change */
 	soundmenu_size_changed (plugin, xfce_panel_plugin_get_size (plugin), soundmenu);
 }
-
 #else
 static void
 soundmenu_orientation_changed (XfcePanelPlugin *plugin,
@@ -673,8 +672,9 @@ void soundmenu_update_layout_changes (SoundmenuPlugin *soundmenu)
 	}
 
 	/* Update orientations and size. */
-
+#if LIBXFCE4PANEL_CHECK_VERSION (4,9,0)
 	soundmenu_mode_changed(soundmenu->plugin, xfce_panel_plugin_get_mode (soundmenu->plugin), soundmenu);
+#endif
 }
 
 static void

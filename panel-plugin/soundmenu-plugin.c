@@ -35,7 +35,7 @@
 
 /* default settings */
 
-#define DEFAULT_PLAYER "pragha"
+#define DEFAULT_PLAYER "unknown"
 #define DEFAULT_SHOW_STOP TRUE
 #define DEFAULT_GLOBAL_KEYS TRUE
 #define DEFAULT_LASTFM FALSE
@@ -59,6 +59,7 @@ soundmenu_set_query_tooltip_cb (GtkWidget       *widget,
 {
 	const gchar *title, *artist, *album, *url;
 	gchar *markup_text = NULL, *length = NULL, *filename = NULL,*name = NULL;
+	GError *error = NULL;
 
 	if(soundmenu->connected) {
 		if (soundmenu->state == ST_STOPPED)
@@ -69,9 +70,18 @@ soundmenu_set_query_tooltip_cb (GtkWidget       *widget,
 			album = soundmenu_metatada_get_album(soundmenu->metadata);
 			url = soundmenu_metatada_get_url(soundmenu->metadata);
 
-			filename = g_filename_from_uri(url, NULL, NULL);
-
-			name = g_str_nempty0(title) ? g_strdup(title) : g_filename_display_basename(filename);
+			if (g_str_nempty0(title)) {
+				name = g_strdup(title);
+			}
+			else {
+				filename = g_filename_from_uri (url, NULL, &error);
+				if (filename) {
+					name = g_filename_display_basename(filename);
+				}
+				else {
+					name = g_strdup(url);
+				}
+			}
 			length = convert_length_str(soundmenu_metatada_get_length(soundmenu->metadata));
 
 			markup_text = g_markup_printf_escaped(_("<b>%s</b> (%s)\nby %s in %s"),
@@ -311,7 +321,6 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	metadata = soundmenu_metadata_new();
 	soundmenu->metadata = metadata;
 	soundmenu_mutex_create(soundmenu->metadata_mtx);
-
 
 	/* read the user settings */
 	soundmenu_read (soundmenu);

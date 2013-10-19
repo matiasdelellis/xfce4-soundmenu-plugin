@@ -240,7 +240,7 @@ soundmenu_mpris2_connect_dbus(SoundmenuPlugin *soundmenu)
 	if(soundmenu->player)
 		soundmenu->dbus_name = g_strdup_printf("org.mpris.MediaPlayer2.%s", soundmenu->player);
 	else
-		soundmenu->dbus_name = g_strdup_printf("org.mpris.MediaPlayer2.pragha");
+		soundmenu->dbus_name = g_strdup_printf("org.mpris.MediaPlayer2.unknown");
 
 	watch_id = g_bus_watch_name_on_connection(soundmenu->gconnection,
 	                                          soundmenu->dbus_name,

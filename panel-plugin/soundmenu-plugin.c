@@ -70,6 +70,9 @@ soundmenu_set_query_tooltip_cb (GtkWidget       *widget,
 			album = soundmenu_metatada_get_album(soundmenu->metadata);
 			url = soundmenu_metatada_get_url(soundmenu->metadata);
 
+			if (g_str_empty0(url))
+			    return TRUE;
+
 			if (g_str_nempty0(title)) {
 				name = g_strdup(title);
 			}

@@ -94,7 +94,8 @@ struct con_lastfm {
 	enum LASTFM_STATUS_CODES status;
 	gint lastfm_handler_id;
 	time_t playback_started;
-	GtkWidget *lastfm_menu;
+	GtkWidget *lastfm_love_item;
+	GtkWidget *lastfm_unlove_item;
 };
 #endif
 
@@ -127,6 +128,7 @@ typedef struct
 	GtkWidget		*image_play;
 	GtkWidget       *loop_menu_item;
 	GtkWidget       *shuffle_menu_item;
+	GtkWidget       *tools_submenu;
 
 	/* Helper to obtain player name of preferences */
 	GtkWidget	*w_player;

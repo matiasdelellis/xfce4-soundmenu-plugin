@@ -303,26 +303,17 @@ soundmenu_read (SoundmenuPlugin *soundmenu)
 static void
 soundmenu_add_lastfm_menu_item (SoundmenuPlugin *soundmenu)
 {
-	GtkWidget *submenu, *item;
-
-	item = gtk_menu_item_new_with_mnemonic (_("Last.fm"));
-	xfce_panel_plugin_menu_insert_item (soundmenu->plugin, GTK_MENU_ITEM(item));
-
-	soundmenu->clastfm->lastfm_menu = item;
-	gtk_widget_set_sensitive(item, FALSE);
-	gtk_widget_show (item);
-
-	submenu = gtk_menu_new ();
-	gtk_menu_item_set_submenu (GTK_MENU_ITEM (item), submenu);
+	GtkWidget *item;
 
 	item = gtk_menu_item_new_with_label (_("Love"));
 	g_signal_connect (G_OBJECT (item), "activate", G_CALLBACK (lastfm_track_love_action), soundmenu);
-	gtk_menu_append (GTK_MENU(submenu), item);
+	gtk_menu_append (GTK_MENU(soundmenu->tools_submenu), item);
+
 	item = gtk_menu_item_new_with_label (_("Unlove"));
 	g_signal_connect (G_OBJECT (item), "activate", G_CALLBACK (lastfm_track_unlove_action), soundmenu);
-	gtk_menu_append (GTK_MENU(submenu), item);
+	gtk_menu_append (GTK_MENU(soundmenu->tools_submenu), item);
 
-	gtk_widget_show_all (submenu);
+	gtk_widget_show_all (soundmenu->tools_submenu);
 }
 #endif
 
@@ -334,13 +325,13 @@ soundmenu_add_lyrics_menu_item (SoundmenuPlugin *soundmenu)
 
 	item = gtk_menu_item_new_with_mnemonic (_("Search lyrics"));
 	g_signal_connect (G_OBJECT (item), "activate", G_CALLBACK (soundmenu_search_lyric_dialog), soundmenu);
-	gtk_widget_show (item);
-	xfce_panel_plugin_menu_insert_item (soundmenu->plugin, GTK_MENU_ITEM(item));
+	gtk_menu_append (GTK_MENU(soundmenu->tools_submenu), item);
 
 	item = gtk_menu_item_new_with_mnemonic (_("Search artist info"));
 	g_signal_connect (G_OBJECT (item), "activate", G_CALLBACK (soundmenu_search_artistinfo_dialog), soundmenu);
-	gtk_widget_show (item);
-	xfce_panel_plugin_menu_insert_item (soundmenu->plugin, GTK_MENU_ITEM(item));
+	gtk_menu_append (GTK_MENU(soundmenu->tools_submenu), item);
+
+	gtk_widget_show_all (soundmenu->tools_submenu);
 }
 #endif
 
@@ -350,7 +341,7 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	SoundmenuPlugin   *soundmenu;
 	GtkOrientation panel_orientation, orientation;
 	GtkWidget *ev_album_art, *play_button, *stop_button, *prev_button, *next_button;
-	GtkWidget *loop_menu_item, *shuffle_menu_item;
+	GtkWidget *separator, *loop_menu_item, *shuffle_menu_item, *tools_menu_item, *tools_submenu;
 	SoundmenuAlbumArt *album_art;
 	SoundmenuMetadata *metadata;
 
@@ -486,6 +477,12 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	g_signal_connect(G_OBJECT(next_button), "query-tooltip",
 			G_CALLBACK(soundmenu_set_query_tooltip_cb), soundmenu);
 
+	/* Attach menus actions */
+
+	separator = gtk_separator_menu_item_new();
+	xfce_panel_plugin_menu_insert_item (soundmenu->plugin, GTK_MENU_ITEM(separator));
+	gtk_widget_show (separator);
+
 	loop_menu_item = gtk_check_menu_item_new_with_mnemonic (_("Loop playlist"));
 	xfce_panel_plugin_menu_insert_item (soundmenu->plugin, GTK_MENU_ITEM(loop_menu_item));
 	g_signal_connect (G_OBJECT (loop_menu_item), "toggled",
@@ -498,6 +495,16 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	                  G_CALLBACK (soundmenu_toggled_shuffle_action), soundmenu);
 	gtk_widget_show (shuffle_menu_item);
 
+	separator = gtk_separator_menu_item_new();
+	xfce_panel_plugin_menu_insert_item (soundmenu->plugin, GTK_MENU_ITEM(separator));
+	gtk_widget_show (separator);
+
+	tools_submenu = gtk_menu_new ();
+	tools_menu_item = gtk_menu_item_new_with_mnemonic (_("Tools"));
+	gtk_menu_item_set_submenu (GTK_MENU_ITEM (tools_menu_item), tools_submenu);
+	xfce_panel_plugin_menu_insert_item (soundmenu->plugin, GTK_MENU_ITEM(tools_menu_item));
+	gtk_widget_show (tools_menu_item);
+
 	soundmenu->album_art = album_art;
 	soundmenu->ev_album_art = ev_album_art;
 	soundmenu->prev_button = prev_button;
@@ -506,6 +513,16 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	soundmenu->next_button = next_button;
 	soundmenu->loop_menu_item = loop_menu_item;
 	soundmenu->shuffle_menu_item = shuffle_menu_item;
+	soundmenu->tools_submenu = tools_submenu;
+
+	/* Add lastfm and glyr options in panel plugin. */
+
+	#ifdef HAVE_LIBCLASTFM
+	soundmenu_add_lastfm_menu_item(soundmenu);
+	#endif
+	#ifdef HAVE_LIBGLYR
+	soundmenu_add_lyrics_menu_item (soundmenu);
+	#endif
 
 	return soundmenu;
 }
@@ -539,15 +556,6 @@ static void init_soundmenu_plugin(SoundmenuPlugin *soundmenu)
 	#endif
 	#ifdef HAVE_LIBNOTIFY
 	notify_init ("xfce4-soundmenu-plugin");
-	#endif
-
-	/* Add lastfm and glyr options in panel plugin. */
-
-	#ifdef HAVE_LIBCLASTFM
-	soundmenu_add_lastfm_menu_item(soundmenu);
-	#endif
-	#ifdef HAVE_LIBGLYR
-	soundmenu_add_lyrics_menu_item (soundmenu);
 	#endif
 }
 

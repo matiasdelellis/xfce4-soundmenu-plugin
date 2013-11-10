@@ -288,7 +288,8 @@ void update_lastfm (SoundmenuPlugin *soundmenu)
 
 void soundmenu_update_lastfm_menu (struct con_lastfm *clastfm)
 {
-	gtk_widget_set_sensitive(clastfm->lastfm_menu, (clastfm->status == LASTFM_STATUS_OK));
+	gtk_widget_set_sensitive(clastfm->lastfm_love_item, (clastfm->status == LASTFM_STATUS_OK));
+	gtk_widget_set_sensitive(clastfm->lastfm_unlove_item, (clastfm->status == LASTFM_STATUS_OK));
 }
 
 gboolean

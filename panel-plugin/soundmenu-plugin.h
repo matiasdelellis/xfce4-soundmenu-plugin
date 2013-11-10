@@ -126,6 +126,7 @@ typedef struct
 	GtkWidget		*image_pause;
 	GtkWidget		*image_play;
 	GtkWidget       *loop_menu_item;
+	GtkWidget       *shuffle_menu_item;
 
 	/* Helper to obtain player name of preferences */
 	GtkWidget	*w_player;
@@ -139,6 +140,7 @@ typedef struct
 	SoundmenuMetadata   *metadata;
 	SOUNDMENU_MUTEX     (metadata_mtx);
 	PlaybackLoop         loops_status;
+	gboolean             shuffle;
 	gdouble              volume;
 
 	/* Dbus conecction */
@@ -167,6 +169,7 @@ void
 soundmenu_update_state(const gchar *state, SoundmenuPlugin *soundmenu);
 
 void soundmenu_update_loop_status (SoundmenuPlugin *soundmenu, const gchar *loop_status);
+void soundmenu_update_shuffle (SoundmenuPlugin *soundmenu, gboolean shuffle);
 
 void
 soundmenu_save (XfcePanelPlugin *plugin,

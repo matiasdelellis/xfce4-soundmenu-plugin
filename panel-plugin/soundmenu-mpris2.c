@@ -105,8 +105,11 @@ soundmenu_mpris2_parse_properties(SoundmenuPlugin *soundmenu, GVariant *properti
 	GVariant *value;
 	const gchar *key;
 	const gchar *state = NULL, *loop_status = NULL;
+	gboolean shuffle;
 	gdouble volume = 0;
 	SoundmenuMetadata *metadata;
+
+	shuffle = soundmenu->shuffle;
 
 	g_variant_iter_init (&iter, properties);
 	while (g_variant_iter_loop (&iter, "{sv}", &key, &value)) {
@@ -117,6 +120,10 @@ soundmenu_mpris2_parse_properties(SoundmenuPlugin *soundmenu, GVariant *properti
 		else if (0 == g_ascii_strcasecmp (key, "LoopStatus"))
 		{
 			loop_status = g_variant_get_string(value, NULL);
+		}
+		else if (0 == g_ascii_strcasecmp (key, "Shuffle"))
+		{
+			shuffle = g_variant_get_boolean(value);
 		}
 		else if (0 == g_ascii_strcasecmp (key, "Volume"))
 		{
@@ -143,9 +150,11 @@ soundmenu_mpris2_parse_properties(SoundmenuPlugin *soundmenu, GVariant *properti
 	}
 	if (state != NULL)
 		soundmenu_update_state (state, soundmenu);
-
 	if (loop_status != NULL)
 		soundmenu_update_loop_status (soundmenu, loop_status);
+	if (shuffle != soundmenu->shuffle)
+		soundmenu_update_shuffle (soundmenu, shuffle);
+
 }
 
 void

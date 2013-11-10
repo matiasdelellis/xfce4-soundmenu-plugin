@@ -21,9 +21,10 @@
 
 #include "soundmenu-plugin.h"
 
-void      soundmenu_mpris2_send_player_message    (SoundmenuPlugin *soundmenu, const char *msg);
-void      soundmenu_mpris2_properties_set_by_name (SoundmenuPlugin *soundmenu, const gchar *name, const gchar *prop);
-void      soundmenu_mpris2_properties_set_volume  (SoundmenuPlugin *soundmenu, gdouble volume);
+void      soundmenu_mpris2_send_player_message         (SoundmenuPlugin *soundmenu, const char *msg);
+void      soundmenu_mpris2_properties_set_by_name      (SoundmenuPlugin *soundmenu, const gchar *name, const gchar *prop);
+void      soundmenu_mpris2_properties_set_bool_by_name (SoundmenuPlugin *soundmenu, const gchar *name, gboolean prop);
+void      soundmenu_mpris2_properties_set_volume       (SoundmenuPlugin *soundmenu, gdouble volume);
 
 gchar    *soundmenu_get_mpris2_player_running     (SoundmenuPlugin *soundmenu);
 

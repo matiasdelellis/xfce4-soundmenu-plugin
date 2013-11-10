@@ -168,6 +168,20 @@ soundmenu_toggled_loop_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 	}
 }
 
+void
+soundmenu_update_shuffle (SoundmenuPlugin *soundmenu, gboolean shuffle)
+{
+	soundmenu->shuffle = shuffle;
+	gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(soundmenu->shuffle_menu_item), shuffle);
+}
+
+static void
+soundmenu_toggled_shuffle_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
+{
+	soundmenu->shuffle = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget));
+	soundmenu_mpris2_properties_set_bool_by_name (soundmenu, "Shuffle", soundmenu->shuffle);
+}
+
 /* Sound menu plugin construct */
 
 void
@@ -336,7 +350,7 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	SoundmenuPlugin   *soundmenu;
 	GtkOrientation panel_orientation, orientation;
 	GtkWidget *ev_album_art, *play_button, *stop_button, *prev_button, *next_button;
-	GtkWidget *loop_menu_item;
+	GtkWidget *loop_menu_item, *shuffle_menu_item;
 	SoundmenuAlbumArt *album_art;
 	SoundmenuMetadata *metadata;
 
@@ -478,6 +492,12 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	                  G_CALLBACK (soundmenu_toggled_loop_action), soundmenu);
 	gtk_widget_show (loop_menu_item);
 
+	shuffle_menu_item = gtk_check_menu_item_new_with_mnemonic (_("Shuffle"));
+	xfce_panel_plugin_menu_insert_item (soundmenu->plugin, GTK_MENU_ITEM(shuffle_menu_item));
+	g_signal_connect (G_OBJECT (shuffle_menu_item), "toggled",
+	                  G_CALLBACK (soundmenu_toggled_shuffle_action), soundmenu);
+	gtk_widget_show (shuffle_menu_item);
+
 	soundmenu->album_art = album_art;
 	soundmenu->ev_album_art = ev_album_art;
 	soundmenu->prev_button = prev_button;
@@ -485,6 +505,7 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	soundmenu->stop_button = stop_button;
 	soundmenu->next_button = next_button;
 	soundmenu->loop_menu_item = loop_menu_item;
+	soundmenu->shuffle_menu_item = shuffle_menu_item;
 
 	return soundmenu;
 }

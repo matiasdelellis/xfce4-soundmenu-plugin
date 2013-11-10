@@ -104,7 +104,7 @@ soundmenu_mpris2_parse_properties(SoundmenuPlugin *soundmenu, GVariant *properti
 	GVariantIter iter;
 	GVariant *value;
 	const gchar *key;
-	const gchar *state = NULL;
+	const gchar *state = NULL, *loop_status = NULL;
 	gdouble volume = 0;
 	SoundmenuMetadata *metadata;
 
@@ -113,6 +113,10 @@ soundmenu_mpris2_parse_properties(SoundmenuPlugin *soundmenu, GVariant *properti
 		if (0 == g_ascii_strcasecmp (key, "PlaybackStatus"))
 		{
 			state = g_variant_get_string(value, NULL);
+		}
+		else if (0 == g_ascii_strcasecmp (key, "LoopStatus"))
+		{
+			loop_status = g_variant_get_string(value, NULL);
 		}
 		else if (0 == g_ascii_strcasecmp (key, "Volume"))
 		{
@@ -139,6 +143,9 @@ soundmenu_mpris2_parse_properties(SoundmenuPlugin *soundmenu, GVariant *properti
 	}
 	if (state != NULL)
 		soundmenu_update_state (state, soundmenu);
+
+	if (loop_status != NULL)
+		soundmenu_update_loop_status (soundmenu, loop_status);
 }
 
 void

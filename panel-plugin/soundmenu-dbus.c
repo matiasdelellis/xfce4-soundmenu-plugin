@@ -60,6 +60,38 @@ soundmenu_mpris2_send_player_message (SoundmenuPlugin *soundmenu, const char *ms
 }
 
 /*
+ * Change any simple string propertie using org.freedesktop.DBus.Properties interfase.
+ */
+void
+soundmenu_mpris2_properties_set_by_name(SoundmenuPlugin *soundmenu, const gchar *name, const gchar *prop)
+{
+	GVariant *reply;
+	GError   *error = NULL;
+
+	reply = g_dbus_connection_call_sync (soundmenu->gconnection,
+	                                     soundmenu->dbus_name,
+	                                     "/org/mpris/MediaPlayer2",
+	                                     "org.freedesktop.DBus.Properties",
+	                                     "Set",
+	                                     g_variant_new ("(ssv)",
+	                                                    "org.mpris.MediaPlayer2.Player",
+	                                                    name,
+	                                                    g_variant_new_string(prop)),
+	                                     NULL,
+	                                     G_DBUS_CALL_FLAGS_NONE,
+	                                     -1,
+	                                     NULL,
+	                                     NULL);
+
+	if (reply == NULL) {
+		g_warning ("Unable to set session: %s", error->message);
+		g_error_free (error);
+		return;
+	}
+	g_variant_unref(reply);
+}
+
+/*
  * Change the player volume using org.freedesktop.DBus.Properties interfase.
  */
 void

@@ -104,6 +104,11 @@ enum player_state {
 	ST_PAUSED
 };
 
+typedef enum {
+	LOOP_PLAYLIST = 1,
+	LOOP_NONE
+} PlaybackLoop;
+
 /* plugin structure */
 typedef struct
 {
@@ -120,6 +125,7 @@ typedef struct
 	GtkWidget		*next_button;
 	GtkWidget		*image_pause;
 	GtkWidget		*image_play;
+	GtkWidget       *loop_menu_item;
 
 	/* Helper to obtain player name of preferences */
 	GtkWidget	*w_player;
@@ -132,6 +138,7 @@ typedef struct
 	enum player_state    state;
 	SoundmenuMetadata   *metadata;
 	SOUNDMENU_MUTEX     (metadata_mtx);
+	PlaybackLoop         loops_status;
 	gdouble              volume;
 
 	/* Dbus conecction */
@@ -158,6 +165,8 @@ soundmenu_update_layout_changes (SoundmenuPlugin    *soundmenu);
 
 void
 soundmenu_update_state(const gchar *state, SoundmenuPlugin *soundmenu);
+
+void soundmenu_update_loop_status (SoundmenuPlugin *soundmenu, const gchar *loop_status);
 
 void
 soundmenu_save (XfcePanelPlugin *plugin,

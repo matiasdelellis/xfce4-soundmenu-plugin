@@ -98,11 +98,11 @@ struct con_lastfm {
 };
 #endif
 
-enum player_state {
+typedef enum {
 	ST_PLAYING = 1,
 	ST_STOPPED,
 	ST_PAUSED
-};
+} PlaybackStatus;
 
 typedef enum {
 	LOOP_PLAYLIST = 1,
@@ -136,7 +136,7 @@ typedef struct
 	#endif
 
 	/* Player states */
-	enum player_state    state;
+	PlaybackStatus       state;
 	SoundmenuMetadata   *metadata;
 	SOUNDMENU_MUTEX     (metadata_mtx);
 	PlaybackLoop         loops_status;

@@ -20,58 +20,53 @@
 #include <config.h>
 #endif
 
-#include "soundmenu-plugin.h"
-#include "soundmenu-dbus.h"
-#include "soundmenu-dialog-hig.h"
 #include "soundmenu-dialogs.h"
-#include "soundmenu-lastfm.h"
+#include "soundmenu-dialog-hig.h"
+#include "soundmenu-dbus.h"
 #include "soundmenu-mpris2.h"
 #include "soundmenu-utils.h"
-#include "soundmenu-related.h"
+#include "soundmenu-plugin.h"
 
 #ifdef HAVE_LIBKEYBINDER
 #include "soundmenu-keybinder.h"
+#endif
+#ifdef HAVE_CLASTFM
+#include "soundmenu-lastfm.h"
 #endif
 
 #define PLUGIN_WEBSITE "https://github.com/matiasdelellis/xfce4-soundmenu-plugin/"
 
 static void
-soundmenu_configure_response (GtkWidget    *dialog,
-                           gint          response,
-                           SoundmenuPlugin *soundmenu)
+soundmenu_configure_response (GtkWidget       *dialog,
+                              gint             response,
+                              SoundmenuPlugin *soundmenu)
 {
 	gboolean result;
-	gchar *player = NULL;
+	const gchar *player = NULL;
 
-	if (response == GTK_RESPONSE_HELP)
-	{
-		/* show help */
+	if (response == GTK_RESPONSE_HELP) {
 		result = g_spawn_command_line_async ("exo-open --launch WebBrowser " PLUGIN_WEBSITE, NULL);
 
 		if (G_UNLIKELY (result == FALSE))
 			g_warning ("Unable to open the following url: %s", PLUGIN_WEBSITE);
 	}
-	else
-	{
-		player = g_strdup(gtk_entry_get_text(GTK_ENTRY(soundmenu->w_player)));
-		if(G_LIKELY (player != NULL))
-		{
-			if (G_LIKELY (soundmenu->player != NULL))
+	else {
+		player = gtk_entry_get_text (GTK_ENTRY(soundmenu->w_player));
+		if (g_str_nempty0 (player)) {
+			if (g_str_nempty0(soundmenu->player))
 				g_free (soundmenu->player);
-			soundmenu->player = player;
+			soundmenu->player = g_strdup(player);
 
-			soundmenu_mpris2_reinit_dbus(soundmenu);
+			soundmenu_mpris2_reinit_dbus (soundmenu);
 		}
+
 		#ifdef HAVE_LIBCLASTFM
-		soundmenu->clastfm->lastfm_support = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(soundmenu->lw.lastfm_w));
-
-		if (G_LIKELY (soundmenu->clastfm->lastfm_user != NULL))
-			g_free (soundmenu->clastfm->lastfm_user);
-		soundmenu->clastfm->lastfm_user = g_strdup(gtk_entry_get_text(GTK_ENTRY(soundmenu->lw.lastfm_uname_w)));
-
-		if (G_LIKELY (soundmenu->clastfm->lastfm_pass != NULL))
-			g_free (soundmenu->clastfm->lastfm_pass);
-		soundmenu->clastfm->lastfm_pass = g_strdup(gtk_entry_get_text(GTK_ENTRY(soundmenu->lw.lastfm_pass_w)));
+		soundmenu_lastfm_set_supported (soundmenu->clastfm,
+		                                gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(soundmenu->lw.lastfm_w)));
+		soundmenu_lastfm_set_user (soundmenu->clastfm,
+		                           gtk_entry_get_text(GTK_ENTRY(soundmenu->lw.lastfm_uname_w)));
+		soundmenu_lastfm_set_password (soundmenu->clastfm,
+		                               gtk_entry_get_text(GTK_ENTRY(soundmenu->lw.lastfm_pass_w)));
 		#endif
 
 		/* remove the dialog data from the plugin */
@@ -87,8 +82,7 @@ soundmenu_configure_response (GtkWidget    *dialog,
 		gtk_widget_destroy (dialog);
 	}
 	#ifdef HAVE_LIBCLASTFM
-    if (soundmenu->clastfm->lastfm_support &&
-        soundmenu->clastfm->session_id == NULL)
+    if (soundmenu_lastfm_is_supported (soundmenu->clastfm))
 		soundmenu_init_lastfm(soundmenu);
 	#endif
 }
@@ -170,11 +164,8 @@ toggle_lastfm(GtkToggleButton *button,
 	gtk_widget_set_sensitive(soundmenu->lw.lastfm_uname_w, is_active);
 	gtk_widget_set_sensitive(soundmenu->lw.lastfm_pass_w, is_active);
 
-	if(!is_active && soundmenu->clastfm->session_id) {
-		LASTFM_dinit(soundmenu->clastfm->session_id);
-		soundmenu->clastfm->session_id = NULL;
-	}
-	soundmenu_update_lastfm_menu(soundmenu->clastfm);
+	if(!is_active && soundmenu_lastfm_is_initiated (soundmenu->clastfm))
+		soundmenu_lastfm_uninit (soundmenu->clastfm);
 }
 #endif
 
@@ -268,16 +259,14 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 	gtk_misc_set_alignment(GTK_MISC (lastfm_label_user), 0, 0);
 
 	lastfm_entry_user = gtk_entry_new();
-	if (G_LIKELY (soundmenu->clastfm->lastfm_user != NULL))
-		gtk_entry_set_text(GTK_ENTRY(lastfm_entry_user), soundmenu->clastfm->lastfm_user);
+	gtk_entry_set_text (GTK_ENTRY(lastfm_entry_user), soundmenu_lastfm_get_user (soundmenu->clastfm));
 	soundmenu->lw.lastfm_uname_w = lastfm_entry_user;
 
 	lastfm_label_pass = gtk_label_new(_("Password"));
 	gtk_misc_set_alignment(GTK_MISC (lastfm_label_pass), 0, 0);
 
 	lastfm_entry_pass = gtk_entry_new();
-	if (G_LIKELY (soundmenu->clastfm->lastfm_pass != NULL))
-		gtk_entry_set_text(GTK_ENTRY(lastfm_entry_pass), soundmenu->clastfm->lastfm_pass);
+	gtk_entry_set_text (GTK_ENTRY(lastfm_entry_pass), soundmenu_lastfm_get_password (soundmenu->clastfm));
 	gtk_entry_set_visibility(GTK_ENTRY(lastfm_entry_pass), FALSE);
 	gtk_entry_set_invisible_char(GTK_ENTRY(lastfm_entry_pass), '*');
 	gtk_entry_set_activates_default (GTK_ENTRY(lastfm_entry_pass), TRUE);
@@ -312,7 +301,8 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 	gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), pref_table, TRUE, TRUE, 6);
 
 	#ifdef HAVE_LIBCLASTFM
-	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(support_lastfm), soundmenu->clastfm->lastfm_support);
+	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON(support_lastfm),
+	                              soundmenu_lastfm_is_supported (soundmenu->clastfm));
 	#endif
 
 	/* link the dialog to the plugin, so we can destroy it when the plugin

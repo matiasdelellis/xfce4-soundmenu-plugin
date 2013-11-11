@@ -16,32 +16,17 @@
  *  Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA.
  */
 
+#ifndef SIMPLE_ASYNC_H
+#define SIMPLE_ASYNC_H
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
-#ifndef SIMPLE_ASYNC_H
-#define SIMPLE_ASYNC_H
+#include <glib.h>
+typedef struct _SoundmenuPlugin SoundmenuPlugin;
 
-#include "soundmenu-plugin.h"
-
-typedef struct {
-	const gchar *message;
-	SoundmenuPlugin *soundmenu;
-} AsycMessageData;
-
-typedef struct {
-	gpointer userdata;
-	gpointer finished_data;
-	GThreadFunc func_w;
-	GSourceFunc func_f;
-} AsyncSimple;
-
-/*
- * These definitions are now in soundmenu-plugin.h
- * If move here, resulting in cross reference..
- */
-/*#if GLIB_CHECK_VERSION (2, 32, 0)
+#if GLIB_CHECK_VERSION (2, 32, 0)
 #define SOUNDMENU_MUTEX(mtx) GMutex mtx
 #define soundmenu_mutex_free(mtx) g_mutex_clear (&(mtx))
 #define soundmenu_mutex_lock(mtx) g_mutex_lock (&(mtx))
@@ -53,7 +38,12 @@ typedef struct {
 #define soundmenu_mutex_lock(mtx) g_mutex_lock (mtx)
 #define soundmenu_mutex_unlock(mtx) g_mutex_unlock (mtx)
 #define soundmenu_mutex_create(mtx) (mtx) = g_mutex_new ()
-#endif*/
+#endif
+
+typedef struct {
+	const gchar *message;
+	SoundmenuPlugin *soundmenu;
+} AsycMessageData;
 
 gboolean
 soundmenu_async_set_idle_message (gpointer user_data);
@@ -69,4 +59,4 @@ soundmenu_async_worker(gpointer data);
 void
 soundmenu_async_launch (GThreadFunc worker_func, GSourceFunc finish_func, gpointer user_data);
 
-#endif
+#endif /* SIMPLE_ASYNC_H */

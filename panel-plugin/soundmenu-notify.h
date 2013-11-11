@@ -1,6 +1,5 @@
-/*  $Id$
- *
- *  Copyright (c) 2006-2007 John Doo <john@foo.org>
+/*
+ *  Copyright (c) 2011-2013 matias <mati86dl@gmail.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,20 +16,11 @@
  *  Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA.
  */
 
-#ifndef __SOUNDMENU_DIALOGS_H__
-#define __SOUNDMENU_DIALOGS_H__
+#ifndef SOUNDMENU_NOTIFY_H
+#define SOUNDMENU_NOTIFY_H
 
-#include "soundmenu-plugin.h"
-
-G_BEGIN_DECLS
-
-void
-soundmenu_configure (XfcePanelPlugin *plugin,
-                     SoundmenuPlugin    *soundmenu);
-
-void
-soundmenu_about (XfcePanelPlugin *plugin);
-
-G_END_DECLS
+void soundmenu_notify_message (const gchar *message);
+void soundmenu_notify_uninit  (void);
+void soundmenu_notify_init    (void);
 
 #endif

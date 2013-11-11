@@ -16,12 +16,16 @@
  *  Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA.
  */
 
+#ifndef SOUNDMENU_UTILS_H
+#define SOUNDMENU_UTILS_H
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
-#ifndef SOUNDMENU_UTILS_H
-#define SOUNDMENU_UTILS_H
+#include <glib.h>
+#include <gtk/gtk.h>
+typedef struct _SoundmenuPlugin SoundmenuPlugin;
 
 #define g_str_empty0(s) (!(s) || !(s)[0])
 #define g_str_nempty0(s) ((s) && (s)[0])
@@ -51,7 +55,6 @@ gboolean nm_is_online ();
 
 void set_watch_cursor (GtkWidget *widget);
 void remove_watch_cursor (GtkWidget *widget);
-void soundmenu_notify_message(const gchar *message);
 
 void
 soundmenu_launch_player(SoundmenuPlugin *soundmenu);

@@ -20,13 +20,13 @@
 #include <config.h>
 #endif
 
-#include "soundmenu-plugin.h"
+#include "soundmenu-utils.h"
 #include "soundmenu-dbus.h"
 #include "soundmenu-dialogs.h"
 #include "soundmenu-lastfm.h"
 #include "soundmenu-mpris2.h"
-#include "soundmenu-utils.h"
 #include "soundmenu-related.h"
+#include "soundmenu-plugin.h"
 
 const gchar *
 g_avariant_get_string(GVariant * variant)
@@ -130,21 +130,6 @@ remove_watch_cursor (GtkWidget *widget)
 	if (G_LIKELY (toplevel != NULL))
 		gdk_window_set_cursor (gtk_widget_get_window (toplevel), NULL);
 }
-
-#ifdef HAVE_LIBNOTIFY
-void
-soundmenu_notify_message(const gchar *message)
-{
-	NotifyNotification *notify = NULL;
-	#if NOTIFY_CHECK_VERSION (0, 7, 0)
-	notify = notify_notification_new(_("Sound menu Plugin"), message, "xfce4-soundmenu-plugin");
-	#else
-	notify = notify_notification_new(_("Sound menu Plugin"), message, "xfce4-soundmenu-plugin", NULL);
-	#endif
-	if (!notify_notification_show (notify, NULL))
-		g_warning("Failed to send notification: %s", message);
-}
-#endif
 
 /* Launch the player configured. */
 

@@ -16,28 +16,34 @@
  *  Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA.
  */
 
-/* Lastfm Helper */
-
 #ifndef SOUNDMENU_LASTFM_H
 #define SOUNDMENU_LASTFM_H
 
+#include <gtk/gtk.h>
+typedef struct _SoundmenuLastfm SoundmenuLastfm;
+
 #include "soundmenu-plugin.h"
 
-#ifdef HAVE_LIBCLASTFM
-
-void lastfm_track_love_action(GtkWidget *widget, SoundmenuPlugin    *soundmenu);
-void lastfm_track_unlove_action (GtkWidget *widget, SoundmenuPlugin    *soundmenu);
-
-gboolean lastfm_scrob_handler(gpointer data);
-gboolean lastfm_now_playing_handler (gpointer data);
+void lastfm_track_love_action   (GtkWidget *widget, SoundmenuPlugin *soundmenu);
+void lastfm_track_unlove_action (GtkWidget *widget, SoundmenuPlugin *soundmenu);
 
 void update_lastfm (SoundmenuPlugin    *soundmenu);
-void soundmenu_update_lastfm_menu (struct con_lastfm *clastfm);
+void soundmenu_update_lastfm_menu (SoundmenuLastfm *clastfm);
 
-gboolean do_soundmenu_init_lastfm(gpointer data);
-gint init_lastfm_idle_timeout(SoundmenuPlugin *soundmenu);
-gint just_init_lastfm (SoundmenuPlugin *soundmenu);
-gint soundmenu_init_lastfm(SoundmenuPlugin *soundmenu);
+gint             soundmenu_init_lastfm          (SoundmenuPlugin *soundmenu);
+void             soundmenu_lastfm_uninit        (SoundmenuLastfm *lastfm);
+gboolean         soundmenu_lastfm_is_initiated  (SoundmenuLastfm *lastfm);
 
-#endif
-#endif
+gboolean         soundmenu_lastfm_is_supported  (SoundmenuLastfm *lastfm);
+void             soundmenu_lastfm_set_supported (SoundmenuLastfm *lastfm, gboolean support);
+
+const gchar     *soundmenu_lastfm_get_user      (SoundmenuLastfm *lastfm);
+void             soundmenu_lastfm_set_user      (SoundmenuLastfm *lastfm, const gchar *user);
+
+const gchar     *soundmenu_lastfm_get_password  (SoundmenuLastfm *lastfm);
+void             soundmenu_lastfm_set_password  (SoundmenuLastfm *lastfm, const gchar *password);
+
+void             soundmenu_lastfm_free          (SoundmenuLastfm *lastfm);
+SoundmenuLastfm *soundmenu_lastfm_new           (void);
+
+#endif /* SOUNDMENU_LASTFM_H */

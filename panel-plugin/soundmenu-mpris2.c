@@ -20,14 +20,13 @@
 #include <config.h>
 #endif
 
-#include "soundmenu-plugin.h"
+#include "soundmenu-mpris2.h"
 #include "soundmenu-album-art.h"
 #include "soundmenu-dbus.h"
-#include "soundmenu-dialogs.h"
 #include "soundmenu-lastfm.h"
-#include "soundmenu-mpris2.h"
 #include "soundmenu-utils.h"
 #include "soundmenu-related.h"
+#include "soundmenu-plugin.h"
 
 SoundmenuMetadata *
 soundmenu_mpris2_get_metadata (GVariant *dictionary)
@@ -143,7 +142,7 @@ soundmenu_mpris2_parse_properties(SoundmenuPlugin *soundmenu, GVariant *properti
 				soundmenu_metatada_get_arturl(soundmenu->metadata));
 
 			#ifdef HAVE_LIBCLASTFM
-			if (soundmenu->clastfm->lastfm_support)
+			if (soundmenu_lastfm_is_supported (soundmenu->clastfm))
 				update_lastfm(soundmenu);
 			#endif
 		}
@@ -154,7 +153,6 @@ soundmenu_mpris2_parse_properties(SoundmenuPlugin *soundmenu, GVariant *properti
 		soundmenu_update_loop_status (soundmenu, loop_status);
 	if (shuffle != soundmenu->shuffle)
 		soundmenu_update_shuffle (soundmenu, shuffle);
-
 }
 
 void

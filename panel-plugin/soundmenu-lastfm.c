@@ -20,17 +20,34 @@
 #include <config.h>
 #endif
 
+#include <clastfm.h>
 #include "soundmenu-lastfm.h"
-#include "soundmenu-plugin.h"
-#include "soundmenu-dbus.h"
-#include "soundmenu-dialogs.h"
-#include "soundmenu-mpris2.h"
 #include "soundmenu-utils.h"
 #include "soundmenu-simple-async.h"
+#include "soundmenu-plugin.h"
 
 #define WAIT_UPDATE 5
 
-#ifdef HAVE_LIBCLASTFM
+#define LASTFM_API_KEY "70c479ab2632e597fd9215cf35963c1b"
+#define LASTFM_SECRET  "4cb5255d955edc8f651de339fd2f335b"
+
+struct  _SoundmenuLastfm {
+	SoundmenuPlugin *soundmenu;
+
+	gboolean        lastfm_support;
+	gchar          *lastfm_user;
+	gchar          *lastfm_pass;
+
+	LASTFM_SESSION *session_id;
+	enum LASTFM_STATUS_CODES status;
+
+	gint            lastfm_handler_id;
+	time_t          playback_started;
+
+	GtkWidget      *lastfm_love_item;
+	GtkWidget      *lastfm_unlove_item;
+};
+
 static gpointer
 do_lastfm_current_song_love (gpointer data)
 {
@@ -159,7 +176,8 @@ do_lastfm_scrob (gpointer data)
     return NULL;
 }
 
-gboolean lastfm_scrob_handler(gpointer data)
+static gboolean
+lastfm_scrob_handler(gpointer data)
 {
 	SoundmenuPlugin *soundmenu = data;
 
@@ -215,7 +233,8 @@ do_lastfm_now_playing (gpointer data)
 	return NULL;
 }
 
-gboolean lastfm_now_playing_handler (gpointer data)
+static gboolean
+lastfm_now_playing_handler (gpointer data)
 {
 	gint length, time = 0;
 
@@ -286,41 +305,40 @@ void update_lastfm (SoundmenuPlugin *soundmenu)
 	                               NULL);
 }
 
-void soundmenu_update_lastfm_menu (struct con_lastfm *clastfm)
+void soundmenu_update_lastfm_menu (SoundmenuLastfm *clastfm)
 {
 	gtk_widget_set_sensitive(clastfm->lastfm_love_item, (clastfm->status == LASTFM_STATUS_OK));
 	gtk_widget_set_sensitive(clastfm->lastfm_unlove_item, (clastfm->status == LASTFM_STATUS_OK));
 }
 
-gboolean
+static gboolean
 do_soundmenu_init_lastfm(gpointer data)
 {
-    struct con_lastfm *clastfm = data;
+	SoundmenuLastfm *clastfm = data;
 
-    clastfm->session_id = LASTFM_init(LASTFM_API_KEY, LASTFM_SECRET);
+	clastfm->session_id = LASTFM_init(LASTFM_API_KEY, LASTFM_SECRET);
+	if (clastfm->session_id != NULL) {
+		clastfm->status = LASTFM_login (clastfm->session_id,
+		                                clastfm->lastfm_user,
+		                                clastfm->lastfm_pass);
 
-    if (clastfm->session_id != NULL) {
-		if((strlen(clastfm->lastfm_user) != 0) &&
-		   (strlen(clastfm->lastfm_pass) != 0)) {
-            clastfm->status = LASTFM_login (clastfm->session_id,
-                                            clastfm->lastfm_user,
-                                            clastfm->lastfm_pass);
-
-			if(clastfm->status != LASTFM_STATUS_OK) {
-                LASTFM_dinit(clastfm->session_id);
-                clastfm->session_id = NULL;
-            }
-        }
-    }
-
+		if (clastfm->status != LASTFM_STATUS_OK) {
+			LASTFM_dinit(clastfm->session_id);
+			clastfm->session_id = NULL;
+		}
+	}
 	soundmenu_update_lastfm_menu(clastfm);
 
-    return FALSE;
+	return FALSE;
 }
 
 gint
 soundmenu_init_lastfm(SoundmenuPlugin *soundmenu)
 {
+	if (g_str_empty0(soundmenu->clastfm->lastfm_user) ||
+	    g_str_empty0(soundmenu->clastfm->lastfm_pass))
+		return FALSE;
+
     /* Test internet and launch threads.*/
 #if GLIB_CHECK_VERSION(2,32,0)
     if (g_network_monitor_get_network_available (g_network_monitor_get_default ()))
@@ -338,4 +356,89 @@ soundmenu_init_lastfm(SoundmenuPlugin *soundmenu)
 
     return 0;
 }
-#endif
+
+void
+soundmenu_lastfm_uninit (SoundmenuLastfm *lastfm)
+{
+	LASTFM_dinit (lastfm->session_id);
+	lastfm->session_id = NULL;
+
+	soundmenu_update_lastfm_menu (lastfm);
+}
+
+gboolean
+soundmenu_lastfm_is_initiated (SoundmenuLastfm *lastfm)
+{
+	return (lastfm->session_id != NULL);
+}
+
+gboolean
+soundmenu_lastfm_is_supported (SoundmenuLastfm *lastfm)
+{
+	return lastfm->lastfm_support;
+}
+
+void
+soundmenu_lastfm_set_supported (SoundmenuLastfm *lastfm, gboolean support)
+{
+	lastfm->lastfm_support = support;
+}
+
+const gchar *
+soundmenu_lastfm_get_user (SoundmenuLastfm *lastfm)
+{
+	return lastfm->lastfm_user;
+}
+
+void
+soundmenu_lastfm_set_user (SoundmenuLastfm *lastfm, const gchar *user)
+{
+	if (g_str_nempty0(lastfm->lastfm_user))
+		g_free (lastfm->lastfm_user);
+
+	lastfm->lastfm_user = g_strdup(user);
+}
+
+const gchar *
+soundmenu_lastfm_get_password (SoundmenuLastfm *lastfm)
+{
+	return lastfm->lastfm_pass;
+}
+
+void
+soundmenu_lastfm_set_password (SoundmenuLastfm *lastfm, const gchar *password)
+{
+	if (g_str_nempty0(lastfm->lastfm_pass))
+		g_free (lastfm->lastfm_pass);
+
+	lastfm->lastfm_pass = g_strdup(password);
+}
+
+void
+soundmenu_lastfm_free (SoundmenuLastfm *lastfm)
+{
+	if (lastfm->session_id)
+		LASTFM_dinit (lastfm->session_id);
+
+	if (g_str_nempty0(lastfm->lastfm_user))
+		g_free (lastfm->lastfm_user);
+	if (g_str_nempty0(lastfm->lastfm_pass))
+		g_free (lastfm->lastfm_pass);
+
+	g_slice_free(SoundmenuLastfm, lastfm);
+}
+
+SoundmenuLastfm *
+soundmenu_lastfm_new (void)
+{
+	SoundmenuLastfm *lastfm = NULL;
+
+	lastfm = g_slice_new0(SoundmenuLastfm);
+
+	lastfm->lastfm_support = FALSE;
+	lastfm->lastfm_user    = NULL;
+	lastfm->lastfm_pass    = NULL;
+	lastfm->session_id     = NULL;
+
+	return lastfm;
+}

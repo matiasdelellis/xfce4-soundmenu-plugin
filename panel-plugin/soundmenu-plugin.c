@@ -20,17 +20,22 @@
 #include <config.h>
 #endif
 
-#include "soundmenu-plugin.h"
 #include "soundmenu-dbus.h"
 #include "soundmenu-dialogs.h"
-#include "soundmenu-lastfm.h"
 #include "soundmenu-mpris2.h"
 #include "soundmenu-utils.h"
 #include "soundmenu-related.h"
 #include "soundmenu-simple-async.h"
+#include "soundmenu-plugin.h"
 
 #ifdef HAVE_LIBKEYBINDER
 #include "soundmenu-keybinder.h"
+#endif
+#ifdef HAVE_LIBCLASTFM
+#include "soundmenu-lastfm.h"
+#endif
+#ifdef HAVE_LIBNOTIFY
+#include "soundmenu-notify.h"
 #endif
 
 /* default settings */
@@ -137,7 +142,7 @@ soundmenu_update_state(const gchar *state, SoundmenuPlugin *soundmenu)
 	}
 	soundmenu_toggle_play_button_state(soundmenu);
 	#ifdef HAVE_LIBCLASTFM
-	if (soundmenu->clastfm->lastfm_support)
+	if (soundmenu_lastfm_is_supported(soundmenu->clastfm))
 		update_lastfm(soundmenu);
 	#endif
 }
@@ -217,12 +222,12 @@ soundmenu_save (XfcePanelPlugin *plugin,
 		xfce_rc_write_bool_entry (rc, "use_global_keys", soundmenu->use_global_keys);
 		#endif
 		#ifdef HAVE_LIBCLASTFM
-		xfce_rc_write_bool_entry (rc, "use_lastfm", soundmenu->clastfm->lastfm_support);
-		if(soundmenu->clastfm->lastfm_support) {
-			if (soundmenu->clastfm->lastfm_user)
-				xfce_rc_write_entry(rc, "lastfm_user", soundmenu->clastfm->lastfm_user);
-			if (soundmenu->clastfm->lastfm_pass)
-				xfce_rc_write_entry(rc, "lastfm_pass", soundmenu->clastfm->lastfm_pass);
+		xfce_rc_write_bool_entry (rc, "use_lastfm", soundmenu_lastfm_is_supported (soundmenu->clastfm));
+		if(soundmenu_lastfm_is_supported (soundmenu->clastfm)) {
+			if (soundmenu_lastfm_get_user (soundmenu->clastfm))
+				xfce_rc_write_entry(rc, "lastfm_user", soundmenu_lastfm_get_user (soundmenu->clastfm));
+			if (soundmenu_lastfm_get_password (soundmenu->clastfm))
+				xfce_rc_write_entry(rc, "lastfm_pass", soundmenu_lastfm_get_password (soundmenu->clastfm));
 		}
 		else {
 			xfce_rc_delete_entry(rc, "lastfm_user", TRUE);
@@ -262,11 +267,9 @@ soundmenu_read (SoundmenuPlugin *soundmenu)
 			soundmenu->use_global_keys = xfce_rc_read_bool_entry (rc, "use_global_keys", DEFAULT_GLOBAL_KEYS);
 			#endif
 			#ifdef HAVE_LIBCLASTFM
-			soundmenu->clastfm->lastfm_support = xfce_rc_read_bool_entry (rc, "use_lastfm", DEFAULT_LASTFM);
-			soundmenu->clastfm->lastfm_user = g_strdup(xfce_rc_read_entry (rc, "lastfm_user", NULL));
-			soundmenu->clastfm->lastfm_pass = g_strdup(xfce_rc_read_entry (rc, "lastfm_pass", NULL));
-			/* Also init session id */
-			soundmenu->clastfm->session_id = NULL;
+			soundmenu_lastfm_set_supported (soundmenu->clastfm, xfce_rc_read_bool_entry (rc, "use_lastfm", DEFAULT_LASTFM));
+			soundmenu_lastfm_set_user (soundmenu->clastfm, xfce_rc_read_entry (rc, "lastfm_user", NULL));
+			soundmenu_lastfm_set_password (soundmenu->clastfm, xfce_rc_read_entry (rc, "lastfm_pass", NULL));
 			#endif
 			soundmenu->state = ST_STOPPED;
 
@@ -288,13 +291,6 @@ soundmenu_read (SoundmenuPlugin *soundmenu)
 	soundmenu->hide_controls_if_loose = FALSE;
 	#ifdef HAVE_LIBKEYBINDER
 	soundmenu->use_global_keys = DEFAULT_GLOBAL_KEYS;
-	#endif
-	#ifdef HAVE_LIBCLASTFM
-	/* Read lastfm support and init session id */
-	soundmenu->clastfm->lastfm_support = DEFAULT_LASTFM;
-	soundmenu->clastfm->lastfm_user = NULL;
-	soundmenu->clastfm->lastfm_pass = NULL;
-	soundmenu->clastfm->session_id = NULL;
 	#endif
 	soundmenu->state = ST_STOPPED;
 }
@@ -350,7 +346,7 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	soundmenu->plugin = plugin;
 
 	#ifdef HAVE_LIBCLASTFM
-	soundmenu->clastfm = g_slice_new0(struct con_lastfm);
+	soundmenu->clastfm = soundmenu_lastfm_new ();
 	#endif
 
 	metadata = soundmenu_metadata_new();
@@ -548,14 +544,14 @@ static void init_soundmenu_plugin(SoundmenuPlugin *soundmenu)
 		keybinder_bind_keys(soundmenu);
 	#endif
 	#ifdef HAVE_LIBCLASTFM
-	if(soundmenu->clastfm->lastfm_support)
-        soundmenu_init_lastfm(soundmenu);
+	if (soundmenu_lastfm_is_supported (soundmenu->clastfm))
+		soundmenu_init_lastfm(soundmenu);
 	#endif
 	#ifdef HAVE_LIBGLYR
 	init_glyr_related(soundmenu);
 	#endif
 	#ifdef HAVE_LIBNOTIFY
-	notify_init ("xfce4-soundmenu-plugin");
+	soundmenu_notify_init();
 	#endif
 }
 
@@ -570,19 +566,13 @@ soundmenu_free (XfcePanelPlugin *plugin,
 	#endif
 
 	#ifdef HAVE_LIBCLASTFM
-	if (soundmenu->clastfm->session_id)
-		LASTFM_dinit(soundmenu->clastfm->session_id);
-	g_slice_free(struct con_lastfm, soundmenu->clastfm);
-	if (G_LIKELY (soundmenu->clastfm->lastfm_user != NULL))
-		g_free (soundmenu->clastfm->lastfm_user);
-	if (G_LIKELY (soundmenu->clastfm->lastfm_pass != NULL))
-		g_free (soundmenu->clastfm->lastfm_pass);
+	soundmenu_lastfm_free (soundmenu->clastfm);
 	#endif
 	#ifdef HAVE_LIBGLYR
 	uninit_glyr_related(soundmenu);
 	#endif
 	#ifdef HAVE_LIBNOTIFY
-	notify_uninit();
+	soundmenu_notify_uninit();
 	#endif
 
 	/* check if the dialog is still open. if so, destroy it */

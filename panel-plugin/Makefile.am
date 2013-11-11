@@ -52,6 +52,12 @@ libsoundmenu_la_SOURCES += \
 	soundmenu-related.h
 endif
 
+if HAVE_LIBNOTIFY
+libsoundmenu_la_SOURCES += \
+	soundmenu-notify.c \
+	soundmenu-notify.h
+endif
+
 libsoundmenu_la_CFLAGS = \
 	$(DBUS_GLIB_CFLAGS) \
 	$(LIBXFCE4UTIL_CFLAGS) \

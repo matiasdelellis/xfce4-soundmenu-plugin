@@ -17,11 +17,10 @@
  */
 
 #include <keybinder.h>
-
-#include "soundmenu-plugin.h"
+#include "soundmenu-keybinder.h"
 #include "soundmenu-mpris2.h"
 #include "soundmenu-dbus.h"
-#include "soundmenu-keybinder.h"
+#include "soundmenu-plugin.h"
 
 static void
 keybind_play_handler (const char *keystring, SoundmenuPlugin *soundmenu)

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2012-2013 matias <mati86dl@gmail.com>
+ *  Copyright (c) 2011-2013 matias <mati86dl@gmail.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,34 +16,36 @@
  *  Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA.
  */
 
-#ifndef SOUNDMENU_HIG_H
-#define SOUNDMENU_HIG_H
-
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
-#include <gtk/gtk.h>
+#include <libnotify/notify.h>
+#include <glib/gi18n.h>
+
+#include "soundmenu-notify.h"
 
 void
-gtk_label_set_attribute_bold(GtkLabel *label);
-
-GtkWidget *
-soundmenu_hig_workarea_table_add_section_title(GtkWidget *table, guint *row, const char *section_title);
-
-void
-soundmenu_hig_workarea_table_add_wide_control(GtkWidget *table, guint *row, GtkWidget *widget);
-
-void
-soundmenu_hig_workarea_table_add_wide_tall_control(GtkWidget *table, guint *row, GtkWidget *widget);
-
-void
-soundmenu_hig_workarea_table_add_row(GtkWidget *table, guint *row, GtkWidget *label, GtkWidget *control);
-
-GtkWidget *
-soundmenu_hig_workarea_table_new();
+soundmenu_notify_message (const gchar *message)
+{
+	NotifyNotification *notify = NULL;
+	#if NOTIFY_CHECK_VERSION (0, 7, 0)
+	notify = notify_notification_new(_("Sound menu Plugin"), message, "xfce4-soundmenu-plugin");
+	#else
+	notify = notify_notification_new(_("Sound menu Plugin"), message, "xfce4-soundmenu-plugin", NULL);
+	#endif
+	if (!notify_notification_show (notify, NULL))
+		g_warning("Failed to send notification: %s", message);
+}
 
 void
-soundmenu_hig_workarea_table_finish(GtkWidget *table, guint *row);
+soundmenu_notify_uninit (void)
+{
+	notify_uninit ();
+}
 
-#endif
+void
+soundmenu_notify_init (void)
+{
+	notify_init ("xfce4-soundmenu-plugin");
+}

@@ -20,10 +20,10 @@
 #include <config.h>
 #endif
 
-#include "soundmenu-plugin.h"
 #include "soundmenu-dbus.h"
 #include "soundmenu-mpris2.h"
 #include "soundmenu-utils.h"
+#include "soundmenu-plugin.h"
 
 /*
  * Send mesages to use methods of org.mpris.MediaPlayer2.Player interfase.

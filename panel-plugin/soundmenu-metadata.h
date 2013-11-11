@@ -16,12 +16,12 @@
  *  Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA.
  */
 
+#ifndef SOUNDMENU_METADATA_H
+#define SOUNDMENU_METADATA_H
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-
-#ifndef SOUNDMENU_METADATA_H
-#define SOUNDMENU_METADATA_H
 
 #include <glib.h>
 

@@ -16,9 +16,24 @@
  *  Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include "soundmenu-simple-async.h"
-#include "soundmenu-plugin.h"
 #include "soundmenu-utils.h"
+#include "soundmenu-plugin.h"
+
+#ifdef HAVE_LIBNOTIFY
+#include "soundmenu-notify.h"
+#endif
+
+typedef struct {
+	gpointer userdata;
+	gpointer finished_data;
+	GThreadFunc func_w;
+	GSourceFunc func_f;
+} AsyncSimple;
 
 /* Generic function to set a message when finished the async operation.
  * You need set 'soundmenu_async_set_idle_message' as finish_func

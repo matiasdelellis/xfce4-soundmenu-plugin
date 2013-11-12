@@ -36,6 +36,11 @@ typedef struct {
 	GSourceFunc func_f;
 } AsyncSimple;
 
+struct _AsycMessageData {
+	const gchar *message;
+	SoundmenuPlugin *soundmenu;
+};
+
 /* Generic function to set a message when finished the async operation.
  * You need set 'soundmenu_async_set_idle_message' as finish_func
  * and then return a 'const gchar *' on worker_func. */
@@ -56,7 +61,7 @@ soundmenu_async_set_idle_message (gpointer user_data)
 }
 
 AsycMessageData *
-soundmenu_async_finished_message_new(SoundmenuPlugin *soundmenu, const gchar *message)
+soundmenu_async_finished_message_new (SoundmenuPlugin *soundmenu, const gchar *message)
 {
 	AsycMessageData *data;
 
@@ -72,7 +77,7 @@ soundmenu_async_finished_message_new(SoundmenuPlugin *soundmenu, const gchar *me
  * function (finish_func) in the main loop using the information returned by
  * the asynchronous operation. */
 
-gboolean
+static gboolean
 soundmenu_async_finished(gpointer data)
 {
 	AsyncSimple *as = data;
@@ -83,7 +88,7 @@ soundmenu_async_finished(gpointer data)
 	return FALSE;
 }
 
-gpointer
+static gpointer
 soundmenu_async_worker(gpointer data)
 {
 	AsyncSimple *as = data;

@@ -65,7 +65,9 @@ typedef enum {
 /*
  * Soundmenu plugin structure
  */
-typedef struct _SoundmenuPlugin {
+typedef struct _SoundmenuPlugin SoundmenuPlugin;
+
+struct _SoundmenuPlugin {
 	XfcePanelPlugin	*plugin;
 
 	/* panel widgets */
@@ -112,8 +114,7 @@ typedef struct _SoundmenuPlugin {
 	gboolean		show_stop;
 	gboolean		hide_controls_if_loose;
 	gboolean		use_global_keys;
-} _SoundmenuPlugin;
-typedef struct _SoundmenuPlugin SoundmenuPlugin;
+};
 
 void update_panel_album_art(SoundmenuPlugin *soundmenu);
 

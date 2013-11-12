@@ -25,8 +25,13 @@
 
 #include <glib.h>
 typedef struct _SoundmenuPlugin SoundmenuPlugin;
+/*
+ * #include "soundmenu-plugin.h" ???????????????????? Why no work!!!!??
+ */
 
 G_BEGIN_DECLS
+
+typedef struct _AsycMessageData AsycMessageData;
 
 #if GLIB_CHECK_VERSION (2, 32, 0)
 #define SOUNDMENU_MUTEX(mtx) GMutex mtx
@@ -42,21 +47,10 @@ G_BEGIN_DECLS
 #define soundmenu_mutex_create(mtx) (mtx) = g_mutex_new ()
 #endif
 
-typedef struct {
-	const gchar *message;
-	SoundmenuPlugin *soundmenu;
-} AsycMessageData;
-
 gboolean
 soundmenu_async_set_idle_message (gpointer user_data);
 AsycMessageData *
 soundmenu_async_finished_message_new(SoundmenuPlugin *soundmenu, const gchar *message);
-
-gboolean
-soundmenu_async_finished(gpointer data);
-
-gpointer
-soundmenu_async_worker(gpointer data);
 
 void
 soundmenu_async_launch (GThreadFunc worker_func, GSourceFunc finish_func, gpointer user_data);

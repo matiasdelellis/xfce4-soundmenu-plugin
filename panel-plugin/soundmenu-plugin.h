@@ -120,16 +120,11 @@ struct _SoundmenuPlugin {
 	gboolean		use_global_keys;
 };
 
-void update_panel_album_art(SoundmenuPlugin *soundmenu);
+void soundmenu_update_layout_changes  (SoundmenuPlugin *soundmenu);
 
-void
-soundmenu_update_layout_changes (SoundmenuPlugin    *soundmenu);
-
-void
-soundmenu_update_state(const gchar *state, SoundmenuPlugin *soundmenu);
-
-void soundmenu_update_loop_status (SoundmenuPlugin *soundmenu, const gchar *loop_status);
-void soundmenu_update_shuffle     (SoundmenuPlugin *soundmenu, gboolean shuffle);
+void soundmenu_update_playback_status (SoundmenuPlugin *soundmenu, const gchar *playback_status);
+void soundmenu_update_loop_status     (SoundmenuPlugin *soundmenu, const gchar *loop_status);
+void soundmenu_update_shuffle         (SoundmenuPlugin *soundmenu, gboolean shuffle);
 
 void soundmenu_save (XfcePanelPlugin *plugin, SoundmenuPlugin *soundmenu);
 

@@ -165,14 +165,14 @@ soundmenu_toggle_play_button_state (SoundmenuPlugin *soundmenu)
 }
 
 void
-soundmenu_update_state(const gchar *state, SoundmenuPlugin *soundmenu)
+soundmenu_update_playback_status (SoundmenuPlugin *soundmenu, const gchar *playback_status)
 {
-	if (0 == g_ascii_strcasecmp(state, "Playing")) {
+	if (0 == g_ascii_strcasecmp(playback_status, "Playing")) {
 		soundmenu_album_art_set_path(soundmenu->album_art,
 			soundmenu_metatada_get_arturl(soundmenu->metadata));
 		soundmenu->state = ST_PLAYING;
 	}
-	else if (0 == g_ascii_strcasecmp(state, "Paused"))
+	else if (0 == g_ascii_strcasecmp(playback_status, "Paused"))
 		soundmenu->state = ST_PAUSED;
 	else {
 		soundmenu->state = ST_STOPPED;

@@ -152,7 +152,7 @@ soundmenu_mpris2_parse_properties(SoundmenuPlugin *soundmenu, GVariant *properti
 		}
 	}
 	if (state != NULL)
-		soundmenu_update_state (state, soundmenu);
+		soundmenu_update_playback_status (soundmenu, state);
 	if (loop_status != NULL)
 		soundmenu_update_loop_status (soundmenu, loop_status);
 	if (shuffle != soundmenu->shuffle)

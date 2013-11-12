@@ -95,7 +95,11 @@ struct _SoundmenuPlugin {
 	/* Player states */
 	PlaybackStatus       state;
 	SoundmenuMetadata   *metadata;
-	SOUNDMENU_MUTEX     (metadata_mtx);
+	#if GLIB_CHECK_VERSION (2, 32, 0)
+	GMutex metadata_mtx;
+	#else
+	GMutex *metadata_mtx;
+	#endif
 	PlaybackLoop         loops_status;
 	gboolean             shuffle;
 	gdouble              volume;

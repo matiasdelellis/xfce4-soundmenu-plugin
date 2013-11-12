@@ -34,13 +34,11 @@ G_BEGIN_DECLS
 typedef struct _AsycMessageData AsycMessageData;
 
 #if GLIB_CHECK_VERSION (2, 32, 0)
-#define SOUNDMENU_MUTEX(mtx) GMutex mtx
 #define soundmenu_mutex_free(mtx) g_mutex_clear (&(mtx))
 #define soundmenu_mutex_lock(mtx) g_mutex_lock (&(mtx))
 #define soundmenu_mutex_unlock(mtx) g_mutex_unlock (&(mtx))
 #define soundmenu_mutex_create(mtx) g_mutex_init (&(mtx))
 #else
-#define SOUNDMENU_MUTEX(mtx) GMutex *mtx
 #define soundmenu_mutex_free(mtx) g_mutex_free (mtx)
 #define soundmenu_mutex_lock(mtx) g_mutex_lock (mtx)
 #define soundmenu_mutex_unlock(mtx) g_mutex_unlock (mtx)

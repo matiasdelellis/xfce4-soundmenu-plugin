@@ -25,6 +25,8 @@
 
 #include <glib.h>
 
+G_BEGIN_DECLS
+
 typedef struct _SoundmenuMetadata SoundmenuMetadata;
 
 void
@@ -70,5 +72,7 @@ soundmenu_metatada_get_arturl(SoundmenuMetadata *metadata);
 
 SoundmenuMetadata *soundmenu_metadata_new(void);
 void soundmenu_metadata_free(SoundmenuMetadata *metadata);
+
+G_END_DECLS
 
 #endif

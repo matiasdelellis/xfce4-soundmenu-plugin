@@ -30,7 +30,7 @@
 #ifdef HAVE_LIBKEYBINDER
 #include "soundmenu-keybinder.h"
 #endif
-#ifdef HAVE_CLASTFM
+#ifdef HAVE_LIBCLASTFM
 #include "soundmenu-lastfm.h"
 #endif
 
@@ -83,7 +83,7 @@ soundmenu_configure_response (GtkWidget       *dialog,
 	}
 	#ifdef HAVE_LIBCLASTFM
     if (soundmenu_lastfm_is_supported (soundmenu->clastfm))
-		soundmenu_init_lastfm(soundmenu);
+		soundmenu_lastfm_init (soundmenu->clastfm);
 	#endif
 }
 

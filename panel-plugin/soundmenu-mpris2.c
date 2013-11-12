@@ -26,6 +26,10 @@
 #include "soundmenu-lastfm.h"
 #include "soundmenu-utils.h"
 #include "soundmenu-related.h"
+#ifdef HAVE_LIBCLASTFM
+#include "soundmenu-lastfm.h"
+#endif
+
 #include "soundmenu-plugin.h"
 
 SoundmenuMetadata *
@@ -185,7 +189,7 @@ void
 play_button_handler(GtkButton *button, SoundmenuPlugin *soundmenu)
 {
 	if(!soundmenu->connected) {
-		soundmenu_launch_player(soundmenu);
+		soundmenu_launch_player (soundmenu->player);
 		return;
 	}
 

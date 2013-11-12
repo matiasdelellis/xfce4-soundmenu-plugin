@@ -25,6 +25,10 @@
 
 #include "soundmenu-notify.h"
 
+#ifndef NOTIFY_CHECK_VERSION
+#define NOTIFY_CHECK_VERSION(x,y,z) 0
+#endif
+
 void
 soundmenu_notify_message (const gchar *message)
 {

@@ -19,8 +19,12 @@
 #ifndef SOUNDMENU_NOTIFY_H
 #define SOUNDMENU_NOTIFY_H
 
+G_BEGIN_DECLS
+
 void soundmenu_notify_message (const gchar *message);
 void soundmenu_notify_uninit  (void);
 void soundmenu_notify_init    (void);
+
+G_END_DECLS
 
 #endif

@@ -19,14 +19,15 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+
+#include <glib.h>
+#include <glib/gprintf.h>
+#include <glib/gi18n.h>
 
 #include "soundmenu-utils.h"
-#include "soundmenu-dbus.h"
-#include "soundmenu-dialogs.h"
-#include "soundmenu-lastfm.h"
-#include "soundmenu-mpris2.h"
-#include "soundmenu-related.h"
-#include "soundmenu-plugin.h"
 
 const gchar *
 g_avariant_get_string(GVariant * variant)
@@ -133,54 +134,15 @@ remove_watch_cursor (GtkWidget *widget)
 
 /* Launch the player configured. */
 
-void
-soundmenu_launch_player(SoundmenuPlugin *soundmenu)
-{
-	gboolean result;
-
-	if(g_str_nempty0(soundmenu->player)) {
-		result = g_spawn_command_line_async (soundmenu->player, NULL);
-		if (G_UNLIKELY (result == FALSE))
-			soundmenu_configure(soundmenu->plugin, soundmenu);
-	}
-}
-
-/* Open the image when double click.. */
-
 gboolean
-soundmenu_album_art_frame_press_callback (GtkWidget       *event_box,
-                                          GdkEventButton  *event,
-                                          SoundmenuPlugin *soundmenu)
+soundmenu_launch_player (const gchar *player)
 {
-	gchar *command = NULL;
-	const gchar *url;
-	gboolean result;
+	gboolean result = FALSE;
 
-	if(event->button == 3) {
-		g_signal_emit_by_name (G_OBJECT (soundmenu->play_button), "button-press-event", event, &result);
-		return TRUE;
-	}
+	if (g_str_nempty0(player))
+		result = g_spawn_command_line_async (player, NULL);
 
-	if(event->type != GDK_2BUTTON_PRESS &&
-	   event->type != GDK_3BUTTON_PRESS)
-		return TRUE;
-
-	if(!soundmenu->connected) {
-		soundmenu_launch_player(soundmenu);
-		return TRUE;
-	}
-
-	url = soundmenu_album_art_get_path(soundmenu->album_art);
-	if(url) {
-		command = g_strdup_printf("exo-open \"%s\"", url);
-		result = g_spawn_command_line_async (command, NULL);
-		if (G_UNLIKELY (result == FALSE))
-			g_warning ("Unable to launch command: %s", command);
-
-		g_free(command);
-	}
-
-	return TRUE;
+	return result;
 }
 
 gchar* convert_length_str(gint length)

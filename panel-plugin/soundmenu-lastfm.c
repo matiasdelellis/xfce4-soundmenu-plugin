@@ -31,7 +31,7 @@
 #define LASTFM_API_KEY "70c479ab2632e597fd9215cf35963c1b"
 #define LASTFM_SECRET  "4cb5255d955edc8f651de339fd2f335b"
 
-struct  _SoundmenuLastfm {
+struct _SoundmenuLastfm {
 	SoundmenuPlugin *soundmenu;
 
 	gboolean        lastfm_support;
@@ -41,7 +41,7 @@ struct  _SoundmenuLastfm {
 	LASTFM_SESSION *session_id;
 	enum LASTFM_STATUS_CODES status;
 
-	gint            lastfm_handler_id;
+	guint           lastfm_handler_id;
 	time_t          playback_started;
 
 	GtkWidget      *lastfm_love_item;
@@ -56,13 +56,14 @@ do_lastfm_current_song_love (gpointer data)
 	gint rv;
 
 	SoundmenuPlugin *soundmenu = data;
+	SoundmenuLastfm *lastfm = soundmenu->clastfm;
 
 	soundmenu_mutex_lock(soundmenu->metadata_mtx);
 	title = g_strdup(soundmenu_metatada_get_title(soundmenu->metadata));
 	artist = g_strdup(soundmenu_metatada_get_artist(soundmenu->metadata));
 	soundmenu_mutex_unlock(soundmenu->metadata_mtx);
 
-	rv = LASTFM_track_love (soundmenu->clastfm->session_id,
+	rv = LASTFM_track_love (lastfm->session_id,
 	                        title, artist);
 
 	message_data = soundmenu_async_finished_message_new(soundmenu,
@@ -76,10 +77,14 @@ do_lastfm_current_song_love (gpointer data)
 
 void lastfm_track_love_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 {
+	SoundmenuLastfm *lastfm = NULL;
+
 	if(soundmenu->state == ST_STOPPED)
 		return;
 
-	if (soundmenu->clastfm->session_id == NULL) {
+	lastfm = soundmenu->clastfm;
+
+	if (lastfm->session_id == NULL) {
 		g_critical("No connection Last.fm has been established.");
 		return;
 	}
@@ -102,13 +107,14 @@ do_lastfm_current_song_unlove (gpointer data)
 	gint rv;
 
 	SoundmenuPlugin *soundmenu = data;
+	SoundmenuLastfm *lastfm = soundmenu->clastfm;
 
 	soundmenu_mutex_lock(soundmenu->metadata_mtx);
 	title = g_strdup(soundmenu_metatada_get_title(soundmenu->metadata));
 	artist = g_strdup(soundmenu_metatada_get_artist(soundmenu->metadata));
 	soundmenu_mutex_unlock(soundmenu->metadata_mtx);
 
-	rv = LASTFM_track_unlove (soundmenu->clastfm->session_id,
+	rv = LASTFM_track_unlove (lastfm->session_id,
 	                          title, artist);
 
 	message_data = soundmenu_async_finished_message_new(soundmenu,
@@ -122,10 +128,14 @@ do_lastfm_current_song_unlove (gpointer data)
 
 void lastfm_track_unlove_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 {
+	SoundmenuLastfm *lastfm = NULL;
+
 	if(soundmenu->state == ST_STOPPED)
 		return;
 
-	if (soundmenu->clastfm->session_id == NULL) {
+	lastfm = soundmenu->clastfm;
+
+	if (lastfm->session_id == NULL) {
 		g_critical("No connection Last.fm has been established.");
 		return;
 	}
@@ -148,23 +158,25 @@ do_lastfm_scrob (gpointer data)
 	gint length, track_no;
 	time_t playback_started;
 
+	SoundmenuLastfm *lastfm = soundmenu->clastfm;
+
 	soundmenu_mutex_lock(soundmenu->metadata_mtx);
 	title = g_strdup(soundmenu_metatada_get_title(soundmenu->metadata));
 	artist = g_strdup(soundmenu_metatada_get_artist(soundmenu->metadata));
 	album = g_strdup(soundmenu_metatada_get_album(soundmenu->metadata));
-	playback_started = soundmenu->clastfm->playback_started;
+	playback_started = lastfm->playback_started;
 	length = soundmenu_metatada_get_length(soundmenu->metadata);
 	track_no = soundmenu_metatada_get_track_no(soundmenu->metadata);
 	soundmenu_mutex_unlock(soundmenu->metadata_mtx);
 
-	rv = LASTFM_track_scrobble(soundmenu->clastfm->session_id,
-	                           title,
-	                           album ? album : "",
-	                           artist,
-	                           playback_started,
-	                           length,
-	                           track_no,
-	                           0, NULL);
+	rv = LASTFM_track_scrobble (lastfm->session_id,
+	                            title,
+	                            album ? album : "",
+	                            artist,
+	                            playback_started,
+	                            length,
+	                            track_no,
+	                            0, NULL);
 
     if (rv != 0)
         g_critical("Last.fm submission failed");
@@ -179,12 +191,15 @@ do_lastfm_scrob (gpointer data)
 static gboolean
 lastfm_scrob_handler(gpointer data)
 {
+	SoundmenuLastfm *lastfm = NULL;
 	SoundmenuPlugin *soundmenu = data;
 
 	if(soundmenu->state == ST_STOPPED)
 		return FALSE;
 
-	if (soundmenu->clastfm->status != LASTFM_STATUS_OK) {
+	lastfm = soundmenu->clastfm;
+
+	if (lastfm->status != LASTFM_STATUS_OK) {
 		g_critical("No connection Last.fm has been established.");
 		return FALSE;
 	}
@@ -206,6 +221,8 @@ do_lastfm_now_playing (gpointer data)
 	gint length, track_no;
 	gint rv;
 
+	SoundmenuLastfm *lastfm = soundmenu->clastfm;
+
 	soundmenu_mutex_lock(soundmenu->metadata_mtx);
 	title = g_strdup(soundmenu_metatada_get_title(soundmenu->metadata));
 	artist = g_strdup(soundmenu_metatada_get_artist(soundmenu->metadata));
@@ -214,13 +231,13 @@ do_lastfm_now_playing (gpointer data)
 	track_no = soundmenu_metatada_get_track_no(soundmenu->metadata);
 	soundmenu_mutex_unlock(soundmenu->metadata_mtx);
 
-	rv = LASTFM_track_update_now_playing(soundmenu->clastfm->session_id,
-	                                     title,
-	                                     album ? album : "",
-	                                     artist,
-	                                     length,
-	                                     track_no,
-	                                     0, NULL);
+	rv = LASTFM_track_update_now_playing (lastfm->session_id,
+	                                      title,
+	                                      album ? album : "",
+	                                      artist,
+	                                      length,
+	                                      track_no,
+	                                      0, NULL);
 
 	if (rv != 0) {
 		g_critical("Update current song on Last.fm failed");
@@ -239,11 +256,12 @@ lastfm_now_playing_handler (gpointer data)
 	gint length, time = 0;
 
 	SoundmenuPlugin *soundmenu = data;
+	SoundmenuLastfm *lastfm = soundmenu->clastfm;
 
 	if(soundmenu->state == ST_STOPPED)
 		return FALSE;
 
-	if (soundmenu->clastfm->session_id == NULL) {
+	if (lastfm->session_id == NULL) {
 		g_critical("No connection Last.fm has been established.");
 		return FALSE;
 	}
@@ -276,33 +294,33 @@ lastfm_now_playing_handler (gpointer data)
 		time = (length / 2) - WAIT_UPDATE;
 	}
 
-    soundmenu->clastfm->lastfm_handler_id =
-        g_timeout_add_seconds_full(G_PRIORITY_DEFAULT_IDLE,
-                                   time,
-                                   lastfm_scrob_handler,
-                                   soundmenu,
-                                   NULL);
+    lastfm->lastfm_handler_id = g_timeout_add_seconds_full (G_PRIORITY_DEFAULT_IDLE,
+                                                            time,
+                                                            lastfm_scrob_handler,
+                                                            soundmenu,
+                                                            NULL);
 	return FALSE;
 }
 
 void update_lastfm (SoundmenuPlugin *soundmenu)
 {
-    if(soundmenu->clastfm->lastfm_handler_id)
-        g_source_remove(soundmenu->clastfm->lastfm_handler_id);
+	SoundmenuLastfm *lastfm = soundmenu->clastfm;
 
-    if(soundmenu->state != ST_PLAYING)
-        return;
+	if (lastfm->lastfm_handler_id)
+		g_source_remove (lastfm->lastfm_handler_id);
+
+	if (soundmenu->state != ST_PLAYING)
+		return;
 
 	soundmenu_mutex_lock(soundmenu->metadata_mtx);
-    time(&soundmenu->clastfm->playback_started);
+	time (&lastfm->playback_started);
 	soundmenu_mutex_unlock(soundmenu->metadata_mtx);
 
-    soundmenu->clastfm->lastfm_handler_id =
-	    g_timeout_add_seconds_full(G_PRIORITY_DEFAULT_IDLE,
-	                               WAIT_UPDATE,
-	                               lastfm_now_playing_handler,
-	                               soundmenu,
-	                               NULL);
+	lastfm->lastfm_handler_id = g_timeout_add_seconds_full (G_PRIORITY_DEFAULT_IDLE,
+	                                                        WAIT_UPDATE,
+	                                                        lastfm_now_playing_handler,
+	                                                        soundmenu,
+	                                                        NULL);
 }
 
 void soundmenu_update_lastfm_menu (SoundmenuLastfm *clastfm)
@@ -332,11 +350,20 @@ do_soundmenu_init_lastfm(gpointer data)
 	return FALSE;
 }
 
-gint
-soundmenu_init_lastfm(SoundmenuPlugin *soundmenu)
+void
+soundmenu_lastfm_uninit (SoundmenuLastfm *lastfm)
 {
-	if (g_str_empty0(soundmenu->clastfm->lastfm_user) ||
-	    g_str_empty0(soundmenu->clastfm->lastfm_pass))
+	LASTFM_dinit (lastfm->session_id);
+	lastfm->session_id = NULL;
+
+	soundmenu_update_lastfm_menu (lastfm);
+}
+
+gint
+soundmenu_lastfm_init (SoundmenuLastfm *lastfm)
+{
+	if (g_str_empty0(lastfm->lastfm_user) ||
+	    g_str_empty0(lastfm->lastfm_pass))
 		return FALSE;
 
     /* Test internet and launch threads.*/
@@ -345,25 +372,15 @@ soundmenu_init_lastfm(SoundmenuPlugin *soundmenu)
 #else
     if(nm_is_online () == TRUE)
 #endif
-        g_idle_add(do_soundmenu_init_lastfm,
-                   soundmenu->clastfm);
+        g_idle_add (do_soundmenu_init_lastfm, lastfm);
     else
         g_timeout_add_seconds_full(G_PRIORITY_DEFAULT_IDLE,
                                    30,
                                    do_soundmenu_init_lastfm,
-                                   soundmenu->clastfm,
+                                   lastfm,
                                    NULL);
 
     return 0;
-}
-
-void
-soundmenu_lastfm_uninit (SoundmenuLastfm *lastfm)
-{
-	LASTFM_dinit (lastfm->session_id);
-	lastfm->session_id = NULL;
-
-	soundmenu_update_lastfm_menu (lastfm);
 }
 
 gboolean

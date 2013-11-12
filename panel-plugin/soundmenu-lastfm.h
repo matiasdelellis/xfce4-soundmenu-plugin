@@ -24,14 +24,16 @@ typedef struct _SoundmenuLastfm SoundmenuLastfm;
 
 #include "soundmenu-plugin.h"
 
+G_BEGIN_DECLS
+
 void lastfm_track_love_action   (GtkWidget *widget, SoundmenuPlugin *soundmenu);
 void lastfm_track_unlove_action (GtkWidget *widget, SoundmenuPlugin *soundmenu);
 
 void update_lastfm (SoundmenuPlugin    *soundmenu);
 void soundmenu_update_lastfm_menu (SoundmenuLastfm *clastfm);
 
-gint             soundmenu_init_lastfm          (SoundmenuPlugin *soundmenu);
 void             soundmenu_lastfm_uninit        (SoundmenuLastfm *lastfm);
+gint             soundmenu_lastfm_init          (SoundmenuLastfm *lastfm);
 gboolean         soundmenu_lastfm_is_initiated  (SoundmenuLastfm *lastfm);
 
 gboolean         soundmenu_lastfm_is_supported  (SoundmenuLastfm *lastfm);
@@ -45,5 +47,7 @@ void             soundmenu_lastfm_set_password  (SoundmenuLastfm *lastfm, const 
 
 void             soundmenu_lastfm_free          (SoundmenuLastfm *lastfm);
 SoundmenuLastfm *soundmenu_lastfm_new           (void);
+
+G_END_DECLS
 
 #endif /* SOUNDMENU_LASTFM_H */

@@ -114,6 +114,44 @@ soundmenu_set_query_tooltip_cb (GtkWidget       *widget,
 	return TRUE;
 }
 
+/* Open the image when double click.. */
+
+static gboolean
+soundmenu_album_art_frame_press_callback (GtkWidget       *event_box,
+                                          GdkEventButton  *event,
+                                          SoundmenuPlugin *soundmenu)
+{
+	gchar *command = NULL;
+	const gchar *url;
+	gboolean result = FALSE;
+ 
+	if (event->button == 3) {
+		g_signal_emit_by_name (G_OBJECT (soundmenu->play_button), "button-press-event", event, &result);
+		return TRUE;
+	}
+
+	if (event->type != GDK_2BUTTON_PRESS &&
+	    event->type != GDK_3BUTTON_PRESS)
+		return TRUE;
+
+	if (!soundmenu->connected) {
+		soundmenu_launch_player (soundmenu->player);
+		return TRUE;
+	}
+
+	url = soundmenu_album_art_get_path(soundmenu->album_art);
+	if (url) {
+		command = g_strdup_printf("exo-open \"%s\"", url);
+		result = g_spawn_command_line_async (command, NULL);
+		if (G_UNLIKELY (result == FALSE))
+			g_warning ("Unable to launch command: %s", command);
+
+		g_free(command);
+	}
+
+	return TRUE;
+}
+
 static void
 soundmenu_toggle_play_button_state (SoundmenuPlugin *soundmenu)
 {
@@ -545,7 +583,7 @@ static void init_soundmenu_plugin(SoundmenuPlugin *soundmenu)
 	#endif
 	#ifdef HAVE_LIBCLASTFM
 	if (soundmenu_lastfm_is_supported (soundmenu->clastfm))
-		soundmenu_init_lastfm(soundmenu);
+		soundmenu_lastfm_init (soundmenu->clastfm);
 	#endif
 	#ifdef HAVE_LIBGLYR
 	init_glyr_related(soundmenu);

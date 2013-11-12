@@ -45,10 +45,6 @@
 
 G_BEGIN_DECLS
 
-#ifndef NOTIFY_CHECK_VERSION
-#define NOTIFY_CHECK_VERSION(x,y,z) 0
-#endif
-
 struct lastfm_pref {
 	GtkWidget *lastfm_w;
 	GtkWidget *lastfm_uname_w;

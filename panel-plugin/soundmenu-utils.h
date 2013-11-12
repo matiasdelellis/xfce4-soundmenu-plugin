@@ -25,7 +25,8 @@
 
 #include <glib.h>
 #include <gtk/gtk.h>
-typedef struct _SoundmenuPlugin SoundmenuPlugin;
+
+G_BEGIN_DECLS
 
 #define g_str_empty0(s) (!(s) || !(s)[0])
 #define g_str_nempty0(s) ((s) && (s)[0])
@@ -56,14 +57,10 @@ gboolean nm_is_online ();
 void set_watch_cursor (GtkWidget *widget);
 void remove_watch_cursor (GtkWidget *widget);
 
-void
-soundmenu_launch_player(SoundmenuPlugin *soundmenu);
-
-gboolean
-soundmenu_album_art_frame_press_callback (GtkWidget       *event_box,
-                                          GdkEventButton  *event,
-                                          SoundmenuPlugin *soundmenu);
+gboolean soundmenu_launch_player (const gchar *player);
 
 gchar* convert_length_str(gint length);
+
+G_END_DECLS
 
 #endif

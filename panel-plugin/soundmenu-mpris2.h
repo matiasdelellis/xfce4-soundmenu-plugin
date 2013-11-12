@@ -26,6 +26,8 @@
 #include "soundmenu-metadata.h"
 #include "soundmenu-plugin.h"
 
+G_BEGIN_DECLS
+
 SoundmenuMetadata *
 soundmenu_mpris2_get_metadata (GVariant *dictionary);
 void
@@ -46,5 +48,7 @@ gboolean
 soundmenu_panel_button_scrolled (GtkWidget        *widget,
                                  GdkEventScroll   *event,
                                  SoundmenuPlugin *soundmenu);
+
+G_END_DECLS
 
 #endif

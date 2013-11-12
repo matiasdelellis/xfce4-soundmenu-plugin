@@ -26,6 +26,8 @@
 #include <glib.h>
 typedef struct _SoundmenuPlugin SoundmenuPlugin;
 
+G_BEGIN_DECLS
+
 #if GLIB_CHECK_VERSION (2, 32, 0)
 #define SOUNDMENU_MUTEX(mtx) GMutex mtx
 #define soundmenu_mutex_free(mtx) g_mutex_clear (&(mtx))
@@ -58,5 +60,7 @@ soundmenu_async_worker(gpointer data);
 
 void
 soundmenu_async_launch (GThreadFunc worker_func, GSourceFunc finish_func, gpointer user_data);
+
+G_END_DECLS
 
 #endif /* SIMPLE_ASYNC_H */

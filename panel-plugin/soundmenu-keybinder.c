@@ -18,8 +18,8 @@
 
 #include <keybinder.h>
 #include "soundmenu-keybinder.h"
-#include "soundmenu-mpris2.h"
 #include "soundmenu-dbus.h"
+
 #include "soundmenu-plugin.h"
 
 static void

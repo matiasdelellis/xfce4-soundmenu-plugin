@@ -25,7 +25,7 @@
 #include "soundmenu-dbus.h"
 #include "soundmenu-lastfm.h"
 #include "soundmenu-utils.h"
-#include "soundmenu-related.h"
+
 #ifdef HAVE_LIBCLASTFM
 #include "soundmenu-lastfm.h"
 #endif

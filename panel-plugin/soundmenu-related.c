@@ -22,17 +22,14 @@
 
 #include <glyr/glyr.h>
 #include "soundmenu-related.h"
-#include "soundmenu-dbus.h"
-#include "soundmenu-dialogs.h"
-#include "soundmenu-lastfm.h"
-#include "soundmenu-mpris2.h"
 #include "soundmenu-utils.h"
 #include "soundmenu-simple-async.h"
-#include "soundmenu-plugin.h"
 
 #ifdef HAVE_LIBNOTIFY
 #include "soundmenu-notify.h"
 #endif
+
+#include "soundmenu-plugin.h"
 
 typedef struct
 {

@@ -22,11 +22,12 @@
 
 #include "soundmenu-simple-async.h"
 #include "soundmenu-utils.h"
-#include "soundmenu-plugin.h"
 
 #ifdef HAVE_LIBNOTIFY
 #include "soundmenu-notify.h"
 #endif
+
+#include "soundmenu-plugin.h"
 
 typedef struct {
 	gpointer userdata;

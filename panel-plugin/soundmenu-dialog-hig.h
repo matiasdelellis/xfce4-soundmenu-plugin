@@ -25,6 +25,8 @@
 
 #include <gtk/gtk.h>
 
+G_BEGIN_DECLS
+
 void
 gtk_label_set_attribute_bold(GtkLabel *label);
 
@@ -45,5 +47,7 @@ soundmenu_hig_workarea_table_new();
 
 void
 soundmenu_hig_workarea_table_finish(GtkWidget *table, guint *row);
+
+G_END_DECLS
 
 #endif

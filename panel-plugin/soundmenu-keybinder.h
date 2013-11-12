@@ -21,9 +21,13 @@
 
 #include "soundmenu-plugin.h"
 
+G_BEGIN_DECLS
+
 void keybinder_bind_keys(SoundmenuPlugin *soundmenu);
 void keybinder_unbind_keys(SoundmenuPlugin *soundmenu);
 
 void soundmenu_init_keybinder(void);
+
+G_END_DECLS
 
 #endif

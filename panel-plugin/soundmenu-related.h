@@ -21,10 +21,14 @@
 
 #include "soundmenu-plugin.h"
 
+G_BEGIN_DECLS
+
 void soundmenu_search_lyric_dialog (GtkWidget *widget, SoundmenuPlugin *soundmenu);
 void soundmenu_search_artistinfo_dialog (GtkWidget *widget, SoundmenuPlugin *soundmenu);
 
 int uninit_glyr_related (SoundmenuPlugin *soundmenu);
 int init_glyr_related (SoundmenuPlugin *soundmenu);
+
+G_END_DECLS
 
 #endif

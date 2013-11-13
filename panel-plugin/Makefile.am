@@ -5,6 +5,8 @@ INCLUDES = \
 	-DBASEICONDIR=\"$(datadir)/icons/hicolor\" \
 	$(PLATFORM_CPPFLAGS)
 
+bin_PROGRAMS = xfce4-soundmenu-icon
+
 #
 # Soundmenu plugin
 #
@@ -15,8 +17,8 @@ plugindir = \
 	$(libdir)/xfce4/panel/plugins
 
 libsoundmenu_la_SOURCES = \
-	soundmenu-plugin.c \
-	soundmenu-plugin.h \
+	soundmenu-panel-plugin.c \
+	soundmenu-panel-plugin.h \
 	soundmenu-album-art.c \
 	soundmenu-album-art.h \
 	soundmenu-dbus.c \
@@ -96,6 +98,22 @@ if HAVE_LIBNOTIFY
 libsoundmenu_la_CFLAGS += $(LIBNOTIFY_CFLAGS)
 libsoundmenu_la_LIBADD += $(LIBNOTIFY_LIBS)
 endif
+
+#
+# Status Icon
+#
+xfce4_soundmenu_icon_SOURCES = \
+	soundmenu-status-icon.c    \
+	libmpris2control.c         \
+	libmpris2control.h
+
+xfce4_soundmenu_icon_CFLAGS =  \
+	$(DBUS_GLIB_CFLAGS)        \
+	$(GTK_CFLAGS)
+
+xfce4_soundmenu_icon_LDADD =   \
+	$(DBUS_GLIB_LIBS)          \
+	$(GTK_LIBS)
 
 #
 # Desktop file

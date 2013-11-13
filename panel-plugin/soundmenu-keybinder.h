@@ -19,7 +19,7 @@
 #ifndef SOUNDMENU_KEYBINDER_H
 #define SOUNDMENU_KEYBINDER_H
 
-#include "soundmenu-plugin.h"
+#include "soundmenu-panel-plugin.h"
 
 G_BEGIN_DECLS
 

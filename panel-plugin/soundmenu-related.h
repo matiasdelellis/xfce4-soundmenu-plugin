@@ -19,7 +19,7 @@
 #ifndef SOUNDMENU_RELATED_H
 #define SOUNDMENU_RELATED_H
 
-#include "soundmenu-plugin.h"
+#include "soundmenu-panel-plugin.h"
 
 G_BEGIN_DECLS
 

@@ -26,7 +26,7 @@
 #include "soundmenu-utils.h"
 #include "soundmenu-related.h"
 #include "soundmenu-simple-async.h"
-#include "soundmenu-plugin.h"
+#include "soundmenu-panel-plugin.h"
 
 #ifdef HAVE_LIBKEYBINDER
 #include "soundmenu-keybinder.h"

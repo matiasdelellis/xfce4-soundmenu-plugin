@@ -32,7 +32,7 @@
 #include "soundmenu-lastfm.h"
 #endif
 
-#include "soundmenu-plugin.h"
+#include "soundmenu-panel-plugin.h"
 
 #define PLUGIN_WEBSITE "https://github.com/matiasdelellis/xfce4-soundmenu-plugin/"
 

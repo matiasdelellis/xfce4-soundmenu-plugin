@@ -30,7 +30,7 @@
 #include "soundmenu-lastfm.h"
 #endif
 
-#include "soundmenu-plugin.h"
+#include "soundmenu-panel-plugin.h"
 
 SoundmenuMetadata *
 soundmenu_mpris2_get_metadata (GVariant *dictionary)

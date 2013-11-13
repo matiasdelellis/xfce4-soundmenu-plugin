@@ -24,7 +24,7 @@
 #include "soundmenu-lastfm.h"
 #include "soundmenu-utils.h"
 #include "soundmenu-simple-async.h"
-#include "soundmenu-plugin.h"
+#include "soundmenu-panel-plugin.h"
 
 #define WAIT_UPDATE 5
 

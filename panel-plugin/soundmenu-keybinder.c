@@ -20,7 +20,7 @@
 #include "soundmenu-keybinder.h"
 #include "soundmenu-dbus.h"
 
-#include "soundmenu-plugin.h"
+#include "soundmenu-panel-plugin.h"
 
 static void
 keybind_play_handler (const char *keystring, SoundmenuPlugin *soundmenu)

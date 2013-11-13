@@ -19,7 +19,7 @@
 #ifndef SOUNDMENU_DBUS_H
 #define SOUNDMENU_DBUS_H
 
-#include "soundmenu-plugin.h"
+#include "soundmenu-panel-plugin.h"
 
 G_BEGIN_DECLS
 

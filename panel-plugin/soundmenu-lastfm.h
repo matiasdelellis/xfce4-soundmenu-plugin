@@ -22,7 +22,7 @@
 #include <gtk/gtk.h>
 typedef struct _SoundmenuLastfm SoundmenuLastfm;
 
-#include "soundmenu-plugin.h"
+#include "soundmenu-panel-plugin.h"
 
 G_BEGIN_DECLS
 

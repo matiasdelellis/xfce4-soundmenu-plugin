@@ -27,7 +27,7 @@
 #include "soundmenu-notify.h"
 #endif
 
-#include "soundmenu-plugin.h"
+#include "soundmenu-panel-plugin.h"
 
 typedef struct {
 	gpointer userdata;

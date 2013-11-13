@@ -105,9 +105,8 @@ static void
 toggle_show_album_art(GtkToggleButton *button,
                       SoundmenuPlugin *soundmenu)
 {
-	soundmenu->show_album_art = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button));
-
-	soundmenu_update_layout_changes (soundmenu);
+	soundmenu_set_visible_album_art (soundmenu,
+	                                 gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)));
 }
 
 #if LIBXFCE4PANEL_CHECK_VERSION (4,9,0)
@@ -115,9 +114,8 @@ static void
 toggle_huge_on_deskbar_mode(GtkToggleButton *button,
                             SoundmenuPlugin *soundmenu)
 {
-	soundmenu->huge_on_deskbar_mode = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button));
-
-	soundmenu_update_layout_changes (soundmenu);
+	soundmenu_set_huge_album_art (soundmenu,
+	                              gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)));
 }
 #endif
 
@@ -125,9 +123,8 @@ static void
 toggle_show_stop(GtkToggleButton *button,
                  SoundmenuPlugin *soundmenu)
 {
-	soundmenu->show_stop = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button));
-
-	soundmenu_update_layout_changes (soundmenu);
+	soundmenu_set_visible_stop_button (soundmenu,
+	                                   gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)));
 }
 
 static void
@@ -216,24 +213,24 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 	soundmenu->w_player = player_entry;
 
 	show_album_art_check = gtk_check_button_new_with_label(_("Show the cover art on the panel"));
-	if(soundmenu->show_album_art)
+	if (soundmenu_get_visible_album_art(soundmenu))
 		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(show_album_art_check), TRUE);
 	g_signal_connect (G_OBJECT(show_album_art_check), "toggled",
-				G_CALLBACK(toggle_show_album_art), soundmenu);
+	                  G_CALLBACK(toggle_show_album_art), soundmenu);
 
 	#if LIBXFCE4PANEL_CHECK_VERSION (4,9,0)
 	huge_on_deskbar_mode_check = gtk_check_button_new_with_label(_("Show huge cover art when deskbar panel mode"));
-	if(soundmenu->huge_on_deskbar_mode)
+	if (soundmenu_get_huge_album_art(soundmenu))
 		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(huge_on_deskbar_mode_check), TRUE);
 	g_signal_connect (G_OBJECT(huge_on_deskbar_mode_check), "toggled",
-				G_CALLBACK(toggle_huge_on_deskbar_mode), soundmenu);
+	                  G_CALLBACK(toggle_huge_on_deskbar_mode), soundmenu);
 	#endif
 
 	show_stop_check = gtk_check_button_new_with_label(_("Show stop button"));
-	if(soundmenu->show_stop)
+	if (soundmenu_get_visible_stop_button (soundmenu))
 		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(show_stop_check), TRUE);
 	g_signal_connect (G_OBJECT(show_stop_check), "toggled",
-				G_CALLBACK(toggle_show_stop), soundmenu);
+	                  G_CALLBACK(toggle_show_stop), soundmenu);
 
 	hide_controls_if_loose_check = gtk_check_button_new_with_label(_("Hide the controls if the player is not present"));
 	if(soundmenu->hide_controls_if_loose)

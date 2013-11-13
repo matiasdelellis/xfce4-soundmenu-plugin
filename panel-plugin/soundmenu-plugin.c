@@ -54,6 +54,59 @@ soundmenu_construct (XfcePanelPlugin *plugin);
 
 XFCE_PANEL_PLUGIN_REGISTER (soundmenu_construct);
 
+/*
+ * Public Api.
+ */
+
+void
+soundmenu_set_visible_stop_button (SoundmenuPlugin *soundmenu,
+                                   gboolean         visible)
+{
+	soundmenu->show_stop = visible;
+
+	soundmenu_update_layout_changes (soundmenu);
+}
+
+gboolean
+soundmenu_get_visible_stop_button (SoundmenuPlugin *soundmenu)
+{
+	return soundmenu->show_stop;
+}
+
+void
+soundmenu_set_visible_album_art (SoundmenuPlugin *soundmenu,
+                                 gboolean         visible)
+{
+	soundmenu->show_album_art = visible;
+
+	soundmenu_update_layout_changes (soundmenu);
+}
+
+gboolean
+soundmenu_get_visible_album_art (SoundmenuPlugin *soundmenu)
+{
+	return soundmenu->show_album_art;
+}
+
+void
+soundmenu_set_huge_album_art (SoundmenuPlugin *soundmenu,
+                              gboolean         huge)
+{
+	soundmenu->huge_on_deskbar_mode = huge;
+
+	soundmenu_update_layout_changes (soundmenu);
+}
+
+gboolean
+soundmenu_get_huge_album_art (SoundmenuPlugin *soundmenu)
+{
+	return soundmenu->huge_on_deskbar_mode;
+}
+
+/*
+ * Some Private api.
+ */
+
 static gboolean
 soundmenu_set_query_tooltip_cb (GtkWidget       *widget,
                                 gint             x,

@@ -120,6 +120,23 @@ struct _SoundmenuPlugin {
 	gboolean		use_global_keys;
 };
 
+/*
+ * Public api.
+ */
+
+void     soundmenu_set_visible_stop_button (SoundmenuPlugin *soundmenu, gboolean visible);
+gboolean soundmenu_get_visible_stop_button (SoundmenuPlugin *soundmenu);
+
+void     soundmenu_set_visible_album_art   (SoundmenuPlugin *soundmenu, gboolean visible);
+gboolean soundmenu_get_visible_album_art   (SoundmenuPlugin *soundmenu);
+
+void     soundmenu_set_huge_album_art      (SoundmenuPlugin *soundmenu, gboolean huge);
+gboolean soundmenu_get_huge_album_art      (SoundmenuPlugin *soundmenu);
+
+/*
+ * Panel plugin api.
+ */
+
 void soundmenu_update_layout_changes  (SoundmenuPlugin *soundmenu);
 
 void soundmenu_update_playback_status (SoundmenuPlugin *soundmenu, const gchar *playback_status);

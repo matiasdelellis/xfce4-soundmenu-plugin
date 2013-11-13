@@ -59,15 +59,23 @@ mpris2_status_icon_activate (GtkStatusIcon *icon,
 {
 	if (!mpris2_control_is_connected(mpris2))
 		mpris2_control_auto_set_player (mpris2);
+	else
+		mpris2_control_raise_player (mpris2);
+
+	gtk_status_icon_set_tooltip (status_icon,
+	                             mpris2_control_get_player_identity(mpris2));
 }
 
-static void 
+static void
 mpris2_status_icon_show_popup (GtkStatusIcon *icon,
                                guint          button,
                                guint          activate_time,
                                Mpris2Control *mpris2)
 {
 	GtkWidget *item;
+
+	if (!mpris2_control_is_connected(mpris2))
+		return;
 
 	if (!popup_menu) {
 		popup_menu = gtk_menu_new();

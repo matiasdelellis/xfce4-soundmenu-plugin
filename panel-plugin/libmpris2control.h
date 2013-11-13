@@ -36,16 +36,21 @@ struct _Mpris2ControlClass {
 	void (*connection) (Mpris2Control *mpris2);
 };
 
-void           mpris2_control_play_pause      (Mpris2Control *mpris2);
-void           mpris2_control_stop            (Mpris2Control *mpris2);
-void           mpris2_control_prev            (Mpris2Control *mpris2);
-void           mpris2_control_next            (Mpris2Control *mpris2);
+void           mpris2_control_play_pause          (Mpris2Control *mpris2);
+void           mpris2_control_stop                (Mpris2Control *mpris2);
+void           mpris2_control_prev                (Mpris2Control *mpris2);
+void           mpris2_control_next                (Mpris2Control *mpris2);
 
-gboolean       mpris2_control_is_connected    (Mpris2Control *mpris2);
-void           mpris2_control_set_player      (Mpris2Control *mpris2, const gchar *player);
-gchar         *mpris2_control_auto_set_player (Mpris2Control *mpris2);
+void           mpris2_control_quit_player         (Mpris2Control *mpris2);
+void           mpris2_control_raise_player        (Mpris2Control *mpris2);
 
-GType          mpris2_control_get_type        (void) G_GNUC_CONST;
+const gchar   *mpris2_control_get_player_identity (Mpris2Control *mpris2);
+
+gboolean       mpris2_control_is_connected        (Mpris2Control *mpris2);
+void           mpris2_control_set_player          (Mpris2Control *mpris2, const gchar *player);
+gchar         *mpris2_control_auto_set_player     (Mpris2Control *mpris2);
+
+GType          mpris2_control_get_type (void) G_GNUC_CONST;
 Mpris2Control *mpris2_control_new (void);
 
 #endif

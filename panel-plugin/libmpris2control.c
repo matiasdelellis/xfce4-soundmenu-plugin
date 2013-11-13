@@ -34,6 +34,14 @@ struct _Mpris2Control
 
 	/* Status */
 	gboolean         connected;
+
+	/* Interface MediaPlayer2 */
+	gboolean         can_quit;
+	gboolean         can_raise;
+	gboolean         hastrackList;
+	gchar           *identity;
+	gchar          **supported_uri_schemes;
+	gchar          **supported_mime_types;
 };
 
 enum
@@ -51,6 +59,8 @@ G_DEFINE_TYPE (Mpris2Control, mpris2_control, G_TYPE_OBJECT)
 static void   mpris2_control_call_method  (Mpris2Control *mpris2, const char *method);
 static gchar *mpris2_control_get_player   (Mpris2Control *mpris2);
 static void   mpris2_control_connect_dbus (Mpris2Control *mpris2);
+
+GVariant     *mpris2_control_get_player_properties (Mpris2Control *mpris2, const gchar *prop);
 
 /*
  *  Basic control of gdbus functions
@@ -90,6 +100,30 @@ mpris2_control_next (Mpris2Control *mpris2)
 		return;
 
 	mpris2_control_call_method (mpris2, "Next");
+}
+
+void
+mpris2_control_quit_player (Mpris2Control *mpris2)
+{
+	if (!mpris2->can_quit)
+		return;
+
+	mpris2_control_call_method (mpris2, "Quit");
+}
+
+void
+mpris2_control_raise_player (Mpris2Control *mpris2)
+{
+	if (!mpris2->can_raise)
+		return;
+
+	mpris2_control_call_method (mpris2, "Raise");
+}
+
+const gchar *
+mpris2_control_get_player_identity (Mpris2Control *mpris2)
+{
+	return mpris2->identity;
 }
 
 void
@@ -203,6 +237,38 @@ mpris2_control_get_player (Mpris2Control *mpris2)
 	return player;
 }
 
+GVariant *
+mpris2_control_get_player_properties (Mpris2Control *mpris2, const gchar *prop)
+{
+	GVariant *v, *iter;
+	GError *error = NULL;
+
+	v = g_dbus_connection_call_sync (mpris2->gconnection,
+	                                 mpris2->dbus_name,
+	                                 "/org/mpris/MediaPlayer2",
+	                                 "org.freedesktop.DBus.Properties",
+	                                 "Get",
+	                                  g_variant_new ("(ss)",
+                                                     "org.mpris.MediaPlayer2",
+                                                     prop),
+	                                 G_VARIANT_TYPE ("(v)"),
+	                                 G_DBUS_CALL_FLAGS_NONE,
+	                                 -1,
+	                                 NULL,
+	                                 &error);
+	if (error) {
+		g_critical ("Could not get a list of names registered on the session bus, %s",
+		            error ? error->message : "no error given");
+		g_clear_error (&error);
+		return NULL;
+	}
+
+	g_variant_get (v, "(v)", &iter);
+
+	return iter;
+}
+
+
 /* Functions that detect when the player is connected to mpris2 */
 
 static void
@@ -211,9 +277,22 @@ mpris2_control_connected_dbus (GDBusConnection *connection,
                                const gchar *name_owner,
                                gpointer user_data)
 {
+	GVariant *vprop;
+
 	Mpris2Control *mpris2 = user_data;
 
 	mpris2->connected = TRUE;
+
+	/* Get Properties..*/
+	vprop = mpris2_control_get_player_properties (mpris2, "Identity");
+	mpris2->identity = g_strdup(g_variant_get_string(vprop, NULL));
+
+	vprop = mpris2_control_get_player_properties (mpris2, "CanRaise");
+	mpris2->can_raise = g_variant_get_boolean (vprop);
+
+	vprop = mpris2_control_get_player_properties (mpris2, "CanQuit");
+	mpris2->can_raise = g_variant_get_boolean (vprop);
+
 	g_signal_emit (mpris2, signals[CONNECTION], 0);
 }
 
@@ -225,6 +304,11 @@ mpris2_control_lose_dbus (GDBusConnection *connection,
 	Mpris2Control *mpris2 = user_data;
 
 	mpris2->connected = FALSE;
+	if (mpris2->identity) {
+		g_free (mpris2->identity);
+		mpris2->identity = NULL;
+	}
+
 	g_signal_emit (mpris2, signals[CONNECTION], 0);
 }
 

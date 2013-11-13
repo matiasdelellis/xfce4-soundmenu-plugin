@@ -24,34 +24,53 @@
 static GtkWidget     *popup_menu = NULL;
 static GtkStatusIcon *status_icon = NULL;
 
+/*
+ * Callbacks
+ */
+
 static void
-mpris2_status_icon_prev (GtkStatusIcon *widget, 
+mpris2_status_icon_prev (GtkStatusIcon *widget,
                         Mpris2Control *mpris2)
 {
 	mpris2_control_prev (mpris2);
 }
 
 static void
-mpris2_status_icon_play_pause (GtkStatusIcon *widget, 
+mpris2_status_icon_play_pause (GtkStatusIcon *widget,
                                Mpris2Control *mpris2)
 {
 	mpris2_control_play_pause (mpris2);
 }
 
 static void
-mpris2_status_icon_stop (GtkStatusIcon *widget, 
+mpris2_status_icon_stop (GtkStatusIcon *widget,
                          Mpris2Control *mpris2)
 {
 	mpris2_control_stop (mpris2);
 }
 
 static void
-mpris2_status_icon_next (GtkStatusIcon *widget, 
+mpris2_status_icon_next (GtkStatusIcon *widget,
                          Mpris2Control *mpris2)
 {
 	mpris2_control_next (mpris2);
 }
 
+/*
+ * Signals.
+ */
+
+static void
+mpris2_status_icon_coneccion (Mpris2Control *mpris2, GtkStatusIcon *icon)
+{
+	if (mpris2_control_is_connected(mpris2)) {
+		gtk_status_icon_set_tooltip (status_icon,
+			                         mpris2_control_get_player_identity(mpris2));
+	}
+	else {
+		gtk_status_icon_set_tooltip (status_icon, _("Soundmenu"));
+	}
+}
 
 static void
 mpris2_status_icon_activate (GtkStatusIcon *icon,
@@ -61,9 +80,6 @@ mpris2_status_icon_activate (GtkStatusIcon *icon,
 		mpris2_control_auto_set_player (mpris2);
 	else
 		mpris2_control_raise_player (mpris2);
-
-	gtk_status_icon_set_tooltip (status_icon,
-	                             mpris2_control_get_player_identity(mpris2));
 }
 
 static void
@@ -138,6 +154,9 @@ main (gint argc,
 
 	g_signal_connect (G_OBJECT (status_icon), "activate",
 	                  G_CALLBACK (mpris2_status_icon_activate), mpris2);
+
+	g_signal_connect (G_OBJECT (mpris2), "connection",
+	                  G_CALLBACK(mpris2_status_icon_coneccion), status_icon);
 
 	gtk_main ();
 

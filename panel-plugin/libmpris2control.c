@@ -26,6 +26,7 @@ struct _Mpris2Control
 
 	/* Priv */
 	GDBusConnection *gconnection;
+	GDBusProxy      *proxy;
 	gchar			*dbus_name;
 	guint            watch_id;
 
@@ -42,11 +43,15 @@ struct _Mpris2Control
 	gchar           *identity;
 	gchar          **supported_uri_schemes;
 	gchar          **supported_mime_types;
+
+	/* Interface MediaPlayer2.Player */
+	PlaybackStatus   playback_status;
 };
 
 enum
 {
 	CONNECTION,
+	PLAYBACK_STATUS,
 	LAST_SIGNAL
 };
 static int signals[LAST_SIGNAL] = { 0 };
@@ -121,6 +126,16 @@ mpris2_control_raise_player (Mpris2Control *mpris2)
 }
 
 /*
+ * Interface MediaPlayer2.Player properties.
+ */
+
+PlaybackStatus
+mpris2_control_get_playback_status (Mpris2Control *mpris2)
+{
+	return mpris2->playback_status;
+}
+
+/*
  * Interface MediaPlayer2 Properties.
  */
 
@@ -171,6 +186,7 @@ mpris2_control_set_player (Mpris2Control *mpris2, const gchar *player)
 
 	/* Disconnect dbus */
 	g_bus_unwatch_name (mpris2->watch_id);
+	g_object_unref (mpris2->proxy);
 
 	/* Connect again */
 	mpris2_control_connect_dbus (mpris2);
@@ -302,6 +318,59 @@ mpris2_control_get_player_properties (Mpris2Control *mpris2, const gchar *prop)
 	return iter;
 }
 
+/* These function intercepts the messages from the player. */
+
+static void
+mpris2_control_parse_properties (Mpris2Control *mpris2, GVariant *properties)
+{
+	GVariantIter iter;
+	GVariant *value;
+	const gchar *key;
+	const gchar *playback_status = NULL;
+
+	g_variant_iter_init (&iter, properties);
+
+	while (g_variant_iter_loop (&iter, "{sv}", &key, &value)) {
+		if (0 == g_ascii_strcasecmp (key, "PlaybackStatus")) {
+			playback_status = g_variant_get_string(value, NULL);
+		}
+	}
+
+	if (playback_status != NULL) {
+		if (0 == g_ascii_strcasecmp(playback_status, "Playing")) {
+			mpris2->playback_status = PLAYING;
+		}
+		else if (0 == g_ascii_strcasecmp(playback_status, "Paused")) {
+			mpris2->playback_status = PAUSED;
+		}
+		else {
+			mpris2->playback_status = STOPPED;
+		}
+		g_signal_emit (mpris2, signals[PLAYBACK_STATUS], 0);
+	}
+}
+
+static void
+mpris2_control_on_dbus_signal (GDBusProxy *proxy,
+                               gchar      *sender_name,
+                               gchar      *signal_name,
+                               GVariant   *parameters,
+                               gpointer    user_data)
+{
+	GVariantIter iter;
+	GVariant *child;
+
+	Mpris2Control *mpris2 = user_data;
+
+	g_variant_iter_init (&iter, parameters);
+
+	child = g_variant_iter_next_value (&iter); /* Interface name. */
+	g_variant_unref (child);
+
+	child = g_variant_iter_next_value (&iter); /* Property name. */
+	mpris2_control_parse_properties (mpris2, child);
+	g_variant_unref (child);
+}
 
 /* Functions that detect when the player is connected to mpris2 */
 
@@ -357,6 +426,7 @@ mpris2_control_lose_dbus (GDBusConnection *connection,
 		g_free (mpris2->identity);
 		mpris2->identity = NULL;
 	}
+	mpris2->playback_status = STOPPED;
 
 	g_signal_emit (mpris2, signals[CONNECTION], 0);
 }
@@ -364,7 +434,9 @@ mpris2_control_lose_dbus (GDBusConnection *connection,
 static void
 mpris2_control_connect_dbus (Mpris2Control *mpris2)
 {
-	guint watch_id;
+	GDBusProxy *proxy;
+	GError     *gerror = NULL;
+	guint       watch_id;
 
 	g_free(mpris2->dbus_name);
 	mpris2->dbus_name = g_strdup_printf("org.mpris.MediaPlayer2.%s", mpris2->player);
@@ -376,6 +448,27 @@ mpris2_control_connect_dbus (Mpris2Control *mpris2)
 	                                          mpris2_control_lose_dbus,
 	                                          mpris2,
 	                                          NULL);
+
+	proxy = g_dbus_proxy_new_sync (mpris2->gconnection,
+	                               G_DBUS_PROXY_FLAGS_NONE,
+	                               NULL,
+	                               mpris2->dbus_name,
+	                               "/org/mpris/MediaPlayer2",
+	                               "org.freedesktop.DBus.Properties",
+	                               NULL, /* GCancellable */
+	                               &gerror);
+
+	if (proxy == NULL) {
+		g_printerr ("Error creating proxy: %s\n", gerror->message);
+		g_error_free (gerror);
+		gerror = NULL;
+    }
+    else {
+		g_signal_connect (proxy, "g-signal",
+			              G_CALLBACK (mpris2_control_on_dbus_signal), mpris2);
+		mpris2->proxy = proxy;
+	}
+
 	mpris2->watch_id = watch_id;
 }
 
@@ -406,6 +499,14 @@ mpris2_control_class_init (Mpris2ControlClass *klass)
 	                                    G_TYPE_FROM_CLASS (gobject_class),
 	                                    G_SIGNAL_RUN_LAST,
 	                                    G_STRUCT_OFFSET (Mpris2ControlClass, connection),
+	                                    NULL, NULL,
+	                                    g_cclosure_marshal_VOID__VOID,
+	                                    G_TYPE_NONE, 0);
+
+	signals[PLAYBACK_STATUS] = g_signal_new ("playback-status",
+	                                    G_TYPE_FROM_CLASS (gobject_class),
+	                                    G_SIGNAL_RUN_LAST,
+	                                    G_STRUCT_OFFSET (Mpris2ControlClass, playback_status),
 	                                    NULL, NULL,
 	                                    g_cclosure_marshal_VOID__VOID,
 	                                    G_TYPE_NONE, 0);

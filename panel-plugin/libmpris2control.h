@@ -34,7 +34,14 @@ typedef struct _Mpris2ControlClass Mpris2ControlClass;
 struct _Mpris2ControlClass {
 	GObjectClass parent_class;
 	void (*connection) (Mpris2Control *mpris2);
+	void (*playback_status) (Mpris2Control *mpris2);
 };
+
+typedef enum {
+	PLAYING = 1,
+	PAUSED,
+	STOPPED
+} PlaybackStatus;
 
 /*
  * Methods
@@ -59,6 +66,16 @@ gboolean       mpris2_control_has_tracklist_support     (Mpris2Control *mpris2);
 const gchar   *mpris2_control_get_player_identity       (Mpris2Control *mpris2);
 gchar        **mpris2_control_get_supported_uri_schemes (Mpris2Control *mpris2);
 gchar        **mpris2_control_get_supported_mime_types  (Mpris2Control *mpris2);
+
+/*
+ * Interface MediaPlayer2.Player properties.
+ */
+
+PlaybackStatus mpris2_control_get_playback_status (Mpris2Control *mpris2);
+
+/*
+ * Library.
+ */
 
 gboolean       mpris2_control_is_connected        (Mpris2Control *mpris2);
 void           mpris2_control_set_player          (Mpris2Control *mpris2, const gchar *player);

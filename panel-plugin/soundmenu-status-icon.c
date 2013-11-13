@@ -61,6 +61,20 @@ mpris2_status_icon_next (GtkStatusIcon *widget,
  */
 
 static void
+mpris2_status_icon_playback_status (Mpris2Control *mpris2, GtkStatusIcon *icon)
+{
+	switch (mpris2_control_get_playback_status(mpris2)) {
+		case PLAYING:
+		case PAUSED:
+			gtk_status_icon_set_from_stock (icon, GTK_STOCK_MEDIA_PAUSE);
+		case STOPPED:
+		default:
+			gtk_status_icon_set_from_stock (icon, GTK_STOCK_MEDIA_PLAY);
+			break;
+	}
+}
+
+static void
 mpris2_status_icon_coneccion (Mpris2Control *mpris2, GtkStatusIcon *icon)
 {
 	if (mpris2_control_is_connected(mpris2)) {
@@ -69,6 +83,7 @@ mpris2_status_icon_coneccion (Mpris2Control *mpris2, GtkStatusIcon *icon)
 	}
 	else {
 		gtk_status_icon_set_tooltip (status_icon, _("Soundmenu"));
+		gtk_status_icon_set_from_icon_name (icon, "xfce4-soundmenu-plugin");
 	}
 }
 
@@ -157,6 +172,8 @@ main (gint argc,
 
 	g_signal_connect (G_OBJECT (mpris2), "connection",
 	                  G_CALLBACK(mpris2_status_icon_coneccion), status_icon);
+	g_signal_connect (G_OBJECT (mpris2), "playback-status",
+	                  G_CALLBACK(mpris2_status_icon_playback_status), status_icon);
 
 	gtk_main ();
 

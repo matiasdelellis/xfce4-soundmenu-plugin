@@ -38,7 +38,7 @@ struct _Mpris2Control
 	/* Interface MediaPlayer2 */
 	gboolean         can_quit;
 	gboolean         can_raise;
-	gboolean         hastrackList;
+	gboolean         has_tracklist;
 	gchar           *identity;
 	gchar          **supported_uri_schemes;
 	gchar          **supported_mime_types;
@@ -120,10 +120,44 @@ mpris2_control_raise_player (Mpris2Control *mpris2)
 	mpris2_control_call_method (mpris2, "Raise");
 }
 
+/*
+ * Interface MediaPlayer2 Properties.
+ */
+
+gboolean
+mpris2_control_can_quit (Mpris2Control *mpris2)
+{
+	return mpris2->can_quit;
+}
+
+gboolean
+mpris2_control_can_raise (Mpris2Control *mpris2)
+{
+	return mpris2->can_raise;
+}
+
+gboolean
+mpris2_control_has_tracklist_support (Mpris2Control *mpris2)
+{
+	return mpris2->has_tracklist;
+}
+
 const gchar *
 mpris2_control_get_player_identity (Mpris2Control *mpris2)
 {
 	return mpris2->identity;
+}
+
+gchar **
+mpris2_control_get_supported_uri_schemes (Mpris2Control *mpris2)
+{
+	return mpris2->supported_uri_schemes;
+}
+
+gchar **
+mpris2_control_get_supported_mime_types (Mpris2Control *mpris2)
+{
+	return mpris2->supported_mime_types;
 }
 
 void
@@ -285,13 +319,22 @@ mpris2_control_connected_dbus (GDBusConnection *connection,
 
 	/* Get Properties..*/
 	vprop = mpris2_control_get_player_properties (mpris2, "Identity");
-	mpris2->identity = g_strdup(g_variant_get_string(vprop, NULL));
+	mpris2->identity = g_variant_dup_string (vprop, NULL);
 
 	vprop = mpris2_control_get_player_properties (mpris2, "CanRaise");
 	mpris2->can_raise = g_variant_get_boolean (vprop);
 
 	vprop = mpris2_control_get_player_properties (mpris2, "CanQuit");
 	mpris2->can_raise = g_variant_get_boolean (vprop);
+
+	vprop = mpris2_control_get_player_properties (mpris2, "HasTrackList");
+	mpris2->has_tracklist = g_variant_get_boolean (vprop);
+
+	vprop = mpris2_control_get_player_properties (mpris2, "SupportedUriSchemes");
+	mpris2->supported_uri_schemes = g_variant_dup_strv (vprop, NULL);
+
+	vprop = mpris2_control_get_player_properties (mpris2, "SupportedMimeTypes");
+	mpris2->supported_mime_types = g_variant_dup_strv (vprop, NULL);
 
 	g_signal_emit (mpris2, signals[CONNECTION], 0);
 }

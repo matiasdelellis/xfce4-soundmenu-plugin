@@ -36,15 +36,29 @@ struct _Mpris2ControlClass {
 	void (*connection) (Mpris2Control *mpris2);
 };
 
+/*
+ * Methods
+ */
 void           mpris2_control_play_pause          (Mpris2Control *mpris2);
 void           mpris2_control_stop                (Mpris2Control *mpris2);
 void           mpris2_control_prev                (Mpris2Control *mpris2);
 void           mpris2_control_next                (Mpris2Control *mpris2);
 
-void           mpris2_control_quit_player         (Mpris2Control *mpris2);
-void           mpris2_control_raise_player        (Mpris2Control *mpris2);
+/*
+ * Interface MediaPlayer2 Methods.
+ */
+void           mpris2_control_quit_player               (Mpris2Control *mpris2);
+void           mpris2_control_raise_player              (Mpris2Control *mpris2);
 
-const gchar   *mpris2_control_get_player_identity (Mpris2Control *mpris2);
+/*
+ * Interface MediaPlayer2 Properies.
+ */
+gboolean       mpris2_control_can_quit                  (Mpris2Control *mpris2);
+gboolean       mpris2_control_can_raise                 (Mpris2Control *mpris2);
+gboolean       mpris2_control_has_tracklist_support     (Mpris2Control *mpris2);
+const gchar   *mpris2_control_get_player_identity       (Mpris2Control *mpris2);
+gchar        **mpris2_control_get_supported_uri_schemes (Mpris2Control *mpris2);
+gchar        **mpris2_control_get_supported_mime_types  (Mpris2Control *mpris2);
 
 gboolean       mpris2_control_is_connected        (Mpris2Control *mpris2);
 void           mpris2_control_set_player          (Mpris2Control *mpris2, const gchar *player);

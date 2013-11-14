@@ -72,8 +72,9 @@ mpris2_status_icon_playback_status (Mpris2Control *mpris2, GtkStatusIcon *icon)
 {
 	switch (mpris2_control_get_playback_status(mpris2)) {
 		case PLAYING:
-		case PAUSED:
 			gtk_status_icon_set_from_stock (icon, GTK_STOCK_MEDIA_PAUSE);
+			break;
+		case PAUSED:
 		case STOPPED:
 		default:
 			gtk_status_icon_set_from_stock (icon, GTK_STOCK_MEDIA_PLAY);

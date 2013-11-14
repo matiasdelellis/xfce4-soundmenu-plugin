@@ -1,4 +1,4 @@
-INCLUDES = \
+AM_CPPFLAGS = \
 	-I$(top_srcdir) \
 	-DG_LOG_DOMAIN=\"xfce4-soundmenu-plugin\" \
 	-DPACKAGE_LOCALE_DIR=\"$(localedir)\" \
@@ -131,7 +131,7 @@ desktop_in_in_files =							\
 desktop_in_files =							\
 	$(desktop_in_in_files:.desktop.in.in=.desktop.in)
 
-%.desktop.in: %.desktop.in.in
+soundmenu.desktop.in: soundmenu.desktop.in.in
 	sed -e "s,\@libdir\@,$(libdir),g" < $< > $@
 
 desktop_DATA =								\

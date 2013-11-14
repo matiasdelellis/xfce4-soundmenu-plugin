@@ -38,6 +38,8 @@ struct _Mpris2ClientClass {
 	void (*playback_status) (Mpris2Client *mpris2);
 	void (*metadata)        (Mpris2Client *mpris2, Mpris2Metadata *metadata);
 	void (*volume)          (Mpris2Client *mpris2);
+	void (*loop_status)     (Mpris2Client *mpris2);
+	void (*shuffle)         (Mpris2Client *mpris2);
 };
 
 typedef enum {
@@ -45,6 +47,12 @@ typedef enum {
 	PAUSED,
 	STOPPED
 } PlaybackStatus;
+
+typedef enum {
+	NONE = 1,
+	TRACK,
+	PLAYLIST
+} LoopStatus;
 
 /*
  * Methods
@@ -79,6 +87,14 @@ Mpris2Metadata *mpris2_client_get_metadata              (Mpris2Client *mpris2);
 
 gdouble         mpris2_client_get_volume                (Mpris2Client *mpris2);
 void            mpris2_client_set_volume                (Mpris2Client *mpris2, gdouble volume);
+
+gboolean        mpris2_client_player_has_loop_status    (Mpris2Client *mpris2);
+LoopStatus      mpris2_client_get_loop_status           (Mpris2Client *mpris2);
+void            mpris2_client_set_loop_status           (Mpris2Client *mpris2, LoopStatus loop_status);
+
+gboolean        mpris2_client_player_has_shuffle        (Mpris2Client *mpris2);
+gboolean        mpris2_client_get_shuffle               (Mpris2Client *mpris2);
+void            mpris2_client_set_shuffle               (Mpris2Client *mpris2, gboolean shuffle);
 
 /*
  * Library.

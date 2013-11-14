@@ -50,6 +50,13 @@ struct _Mpris2Client
 	PlaybackStatus   playback_status;
 	Mpris2Metadata  *metadata;
 	gdouble          volume;
+
+	/* Optionals */
+	gboolean         has_loop_status;
+	LoopStatus       loop_status;
+
+	gboolean         has_shuffle;
+	gboolean         shuffle;
 };
 
 enum
@@ -58,6 +65,8 @@ enum
 	PLAYBACK_STATUS,
 	METADATA,
 	VOLUME,
+	LOOP_STATUS,
+	SHUFFLE,
 	LAST_SIGNAL
 };
 static int signals[LAST_SIGNAL] = { 0 };
@@ -161,6 +170,57 @@ void
 mpris2_client_set_volume (Mpris2Client *mpris2, gdouble volume)
 {
 	mpris2_client_set_player_properties (mpris2, "Volume", g_variant_new_double(volume));
+}
+
+gboolean
+mpris2_client_player_has_loop_status (Mpris2Client *mpris2)
+{
+	return mpris2->has_loop_status;
+}
+
+LoopStatus
+mpris2_client_get_loop_status (Mpris2Client *mpris2)
+{
+	return mpris2->loop_status;
+}
+
+void
+mpris2_client_set_loop_status (Mpris2Client *mpris2, LoopStatus loop_status)
+{
+
+	switch (loop_status) {
+		case TRACK:
+			mpris2_client_set_player_properties (mpris2, "LoopStatus", g_variant_new_string("Playlist"));
+			break;
+		case PLAYLIST:
+			mpris2_client_set_player_properties (mpris2, "LoopStatus", g_variant_new_string("Track"));
+			break;
+		case NONE:
+		default:
+			mpris2_client_set_player_properties (mpris2, "LoopStatus", g_variant_new_string("None"));
+			break;
+	}
+}
+
+gboolean
+mpris2_client_player_has_shuffle (Mpris2Client *mpris2)
+{
+	return mpris2->has_shuffle;
+}
+
+gboolean
+mpris2_client_get_shuffle (Mpris2Client *mpris2)
+{
+	return mpris2->shuffle;
+}
+
+void
+mpris2_client_set_shuffle (Mpris2Client *mpris2, gboolean shuffle)
+{
+	if (mpris2->has_shuffle)
+		return;
+
+	mpris2_client_set_player_properties (mpris2, "Shuffle", g_variant_new_boolean(shuffle));
 }
 
 /*
@@ -532,8 +592,10 @@ mpris2_client_parse_properties (Mpris2Client *mpris2, GVariant *properties)
 	GVariant *value;
 	const gchar *key;
 	const gchar *playback_status = NULL;
+	const gchar *loop_status = NULL;
 	Mpris2Metadata *metadata = NULL;
-	gdouble volume = 0;
+	gdouble volume = -1;
+	gboolean shuffle = FALSE;
 
 	g_variant_iter_init (&iter, properties);
 
@@ -547,6 +609,14 @@ mpris2_client_parse_properties (Mpris2Client *mpris2, GVariant *properties)
 		else if (0 == g_ascii_strcasecmp (key, "Volume")) {
 			volume = g_variant_get_double(value);
 		}
+		else if (0 == g_ascii_strcasecmp (key, "LoopStatus")) {
+			mpris2->has_loop_status = TRUE;
+			loop_status = g_variant_get_string(value, NULL);
+		}
+		else if (0 == g_ascii_strcasecmp (key, "Shuffle")) {
+			mpris2->has_shuffle = TRUE;
+			shuffle = g_variant_get_boolean(value);
+		}
 	}
 
 	if (playback_status != NULL) {
@@ -559,9 +629,26 @@ mpris2_client_parse_properties (Mpris2Client *mpris2, GVariant *properties)
 		mpris2->metadata = metadata;
 		g_signal_emit (mpris2, signals[METADATA], 0, metadata);
 	}
-	if (volume != 0) {
+	if (volume != -1) {
 		mpris2->volume = volume;
 		g_signal_emit (mpris2, signals[VOLUME], 0);
+	}
+
+	if (mpris2->has_loop_status) {
+		if (0 == g_ascii_strcasecmp(loop_status, "Track")) {
+			mpris2->loop_status = TRACK;
+		}
+		if (0 == g_ascii_strcasecmp(loop_status, "Playlist")) {
+			mpris2->loop_status = PLAYLIST;
+		}
+		else {
+			mpris2->loop_status = NONE;
+		}
+		g_signal_emit (mpris2, signals[LOOP_STATUS], 0);
+	}
+	if (mpris2->has_shuffle) {
+		mpris2->shuffle = shuffle;
+		g_signal_emit (mpris2, signals[SHUFFLE], 0);
 	}
 }
 
@@ -717,37 +804,59 @@ mpris2_client_class_init (Mpris2ClientClass *klass)
 	/*
 	 * Signals:
 	 */
-	signals[CONNECTION] = g_signal_new ("connection",
-	                                    G_TYPE_FROM_CLASS (gobject_class),
-	                                    G_SIGNAL_RUN_LAST,
-	                                    G_STRUCT_OFFSET (Mpris2ClientClass, connection),
-	                                    NULL, NULL,
-	                                    g_cclosure_marshal_VOID__VOID,
-	                                    G_TYPE_NONE, 0);
+	signals[CONNECTION] =
+		g_signal_new ("connection",
+	                  G_TYPE_FROM_CLASS (gobject_class),
+	                  G_SIGNAL_RUN_LAST,
+	                  G_STRUCT_OFFSET (Mpris2ClientClass, connection),
+	                  NULL, NULL,
+	                  g_cclosure_marshal_VOID__VOID,
+	                  G_TYPE_NONE, 0);
 
-	signals[PLAYBACK_STATUS] = g_signal_new ("playback-status",
-	                                         G_TYPE_FROM_CLASS (gobject_class),
-	                                         G_SIGNAL_RUN_LAST,
-	                                         G_STRUCT_OFFSET (Mpris2ClientClass, playback_status),
-	                                         NULL, NULL,
-	                                         g_cclosure_marshal_VOID__VOID,
-	                                         G_TYPE_NONE, 0);
+	signals[PLAYBACK_STATUS] =
+		g_signal_new ("playback-status",
+		              G_TYPE_FROM_CLASS (gobject_class),
+		              G_SIGNAL_RUN_LAST,
+		              G_STRUCT_OFFSET (Mpris2ClientClass, playback_status),
+		              NULL, NULL,
+		              g_cclosure_marshal_VOID__VOID,
+		              G_TYPE_NONE, 0);
 
-	signals[METADATA] = g_signal_new ("metadata",
-	                                  G_TYPE_FROM_CLASS (gobject_class),
-	                                  G_SIGNAL_RUN_LAST,
-	                                  G_STRUCT_OFFSET (Mpris2ClientClass, metadata),
-	                                  NULL, NULL,
-	                                  g_cclosure_marshal_VOID__POINTER,
-	                                  G_TYPE_NONE, 1, G_TYPE_POINTER);
+	signals[METADATA] =
+		g_signal_new ("metadata",
+		              G_TYPE_FROM_CLASS (gobject_class),
+		              G_SIGNAL_RUN_LAST,
+		              G_STRUCT_OFFSET (Mpris2ClientClass, metadata),
+		              NULL, NULL,
+		              g_cclosure_marshal_VOID__POINTER,
+		              G_TYPE_NONE, 1, G_TYPE_POINTER);
 
-	signals[VOLUME] = g_signal_new ("volume",
-	                                G_TYPE_FROM_CLASS (gobject_class),
-	                                G_SIGNAL_RUN_LAST,
-	                                G_STRUCT_OFFSET (Mpris2ClientClass, volume),
-	                                NULL, NULL,
-	                                g_cclosure_marshal_VOID__VOID,
-	                                G_TYPE_NONE, 0);
+	signals[VOLUME] =
+		g_signal_new ("volume",
+		              G_TYPE_FROM_CLASS (gobject_class),
+		              G_SIGNAL_RUN_LAST,
+		              G_STRUCT_OFFSET (Mpris2ClientClass, volume),
+		              NULL, NULL,
+		              g_cclosure_marshal_VOID__VOID,
+		              G_TYPE_NONE, 0);
+
+	signals[LOOP_STATUS] =
+		g_signal_new ("loop-status",
+		              G_TYPE_FROM_CLASS (gobject_class),
+		              G_SIGNAL_RUN_LAST,
+		              G_STRUCT_OFFSET (Mpris2ClientClass, loop_status),
+		              NULL, NULL,
+		              g_cclosure_marshal_VOID__VOID,
+		              G_TYPE_NONE, 0);
+
+	signals[SHUFFLE] =
+		g_signal_new ("shuffle",
+		              G_TYPE_FROM_CLASS (gobject_class),
+		              G_SIGNAL_RUN_LAST,
+		              G_STRUCT_OFFSET (Mpris2ClientClass, shuffle),
+		              NULL, NULL,
+		              g_cclosure_marshal_VOID__VOID,
+		              G_TYPE_NONE, 0);
 }
 
 static void

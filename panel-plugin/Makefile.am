@@ -104,8 +104,8 @@ endif
 #
 xfce4_soundmenu_icon_SOURCES = \
 	soundmenu-status-icon.c    \
-	libmpris2control.c         \
-	libmpris2control.h         \
+	libmpris2client.c          \
+	libmpris2client.h          \
 	mpris2-metadata.c          \
 	mpris2-metadata.h          \
 	mpris2-utils.c             \

@@ -18,11 +18,11 @@
 
 #include <gio/gio.h>
 
-#include "libmpris2control.h"
+#include "libmpris2client.h"
 #include "mpris2-metadata.h"
 #include "mpris2-utils.h"
 
-struct _Mpris2Control
+struct _Mpris2Client
 {
 	GObject parent_instance;
 
@@ -62,76 +62,76 @@ enum
 };
 static int signals[LAST_SIGNAL] = { 0 };
 
-G_DEFINE_TYPE (Mpris2Control, mpris2_control, G_TYPE_OBJECT)
+G_DEFINE_TYPE (Mpris2Client, mpris2_client, G_TYPE_OBJECT)
 
 /*
  * Prototypes
  */
-static void   mpris2_control_call_player_method  (Mpris2Control *mpris2, const char *method);
-static void   mpris2_control_call_method         (Mpris2Control *mpris2, const char *method);
+static void   mpris2_client_call_player_method  (Mpris2Client *mpris2, const char *method);
+static void   mpris2_client_call_method         (Mpris2Client *mpris2, const char *method);
 
-static gchar *mpris2_control_get_player   (Mpris2Control *mpris2);
-static void   mpris2_control_connect_dbus (Mpris2Control *mpris2);
+static gchar *mpris2_client_get_player   (Mpris2Client *mpris2);
+static void   mpris2_client_connect_dbus (Mpris2Client *mpris2);
 
-GVariant     *mpris2_control_get_player_properties (Mpris2Control *mpris2, const gchar *prop);
-static void   mpris2_control_set_player_properties (Mpris2Control *mpris2, const gchar *prop, GVariant *vprop);
+GVariant     *mpris2_client_get_player_properties (Mpris2Client *mpris2, const gchar *prop);
+static void   mpris2_client_set_player_properties (Mpris2Client *mpris2, const gchar *prop, GVariant *vprop);
 
 /*
  *  Basic control of gdbus functions
  */
 
 void
-mpris2_control_play_pause (Mpris2Control *mpris2)
+mpris2_client_play_pause (Mpris2Client *mpris2)
 {
 	if (!mpris2->connected)
 		return;
 
-	mpris2_control_call_player_method (mpris2, "PlayPause");
+	mpris2_client_call_player_method (mpris2, "PlayPause");
 }
 
 void
-mpris2_control_stop (Mpris2Control *mpris2)
+mpris2_client_stop (Mpris2Client *mpris2)
 {
 	if (!mpris2->connected)
 		return;
 
-	mpris2_control_call_player_method (mpris2, "Stop");
+	mpris2_client_call_player_method (mpris2, "Stop");
 }
 
 void
-mpris2_control_prev (Mpris2Control *mpris2)
+mpris2_client_prev (Mpris2Client *mpris2)
 {
 	if (!mpris2->connected)
 		return;
 
-	mpris2_control_call_player_method (mpris2, "Previous");
+	mpris2_client_call_player_method (mpris2, "Previous");
 }
 
 void
-mpris2_control_next (Mpris2Control *mpris2)
+mpris2_client_next (Mpris2Client *mpris2)
 {
 	if (!mpris2->connected)
 		return;
 
-	mpris2_control_call_player_method (mpris2, "Next");
+	mpris2_client_call_player_method (mpris2, "Next");
 }
 
 void
-mpris2_control_quit_player (Mpris2Control *mpris2)
+mpris2_client_quit_player (Mpris2Client *mpris2)
 {
 	if (!mpris2->can_quit)
 		return;
 
-	mpris2_control_call_method (mpris2, "Quit");
+	mpris2_client_call_method (mpris2, "Quit");
 }
 
 void
-mpris2_control_raise_player (Mpris2Control *mpris2)
+mpris2_client_raise_player (Mpris2Client *mpris2)
 {
 	if (!mpris2->can_raise)
 		return;
 
-	mpris2_control_call_method (mpris2, "Raise");
+	mpris2_client_call_method (mpris2, "Raise");
 }
 
 /*
@@ -139,27 +139,27 @@ mpris2_control_raise_player (Mpris2Control *mpris2)
  */
 
 PlaybackStatus
-mpris2_control_get_playback_status (Mpris2Control *mpris2)
+mpris2_client_get_playback_status (Mpris2Client *mpris2)
 {
 	return mpris2->playback_status;
 }
 
 Mpris2Metadata *
-mpris2_control_get_metadata (Mpris2Control *mpris2)
+mpris2_client_get_metadata (Mpris2Client *mpris2)
 {
 	return mpris2->metadata;
 }
 
 gdouble
-mpris2_control_get_volume (Mpris2Control *mpris2)
+mpris2_client_get_volume (Mpris2Client *mpris2)
 {
 	return mpris2->volume;
 }
 
 void
-mpris2_control_set_volume (Mpris2Control *mpris2, gdouble volume)
+mpris2_client_set_volume (Mpris2Client *mpris2, gdouble volume)
 {
-	mpris2_control_set_player_properties (mpris2, "Volume", g_variant_new_double(volume));
+	mpris2_client_set_player_properties (mpris2, "Volume", g_variant_new_double(volume));
 }
 
 /*
@@ -167,43 +167,43 @@ mpris2_control_set_volume (Mpris2Control *mpris2, gdouble volume)
  */
 
 gboolean
-mpris2_control_can_quit (Mpris2Control *mpris2)
+mpris2_client_can_quit (Mpris2Client *mpris2)
 {
 	return mpris2->can_quit;
 }
 
 gboolean
-mpris2_control_can_raise (Mpris2Control *mpris2)
+mpris2_client_can_raise (Mpris2Client *mpris2)
 {
 	return mpris2->can_raise;
 }
 
 gboolean
-mpris2_control_has_tracklist_support (Mpris2Control *mpris2)
+mpris2_client_has_tracklist_support (Mpris2Client *mpris2)
 {
 	return mpris2->has_tracklist;
 }
 
 const gchar *
-mpris2_control_get_player_identity (Mpris2Control *mpris2)
+mpris2_client_get_player_identity (Mpris2Client *mpris2)
 {
 	return mpris2->identity;
 }
 
 gchar **
-mpris2_control_get_supported_uri_schemes (Mpris2Control *mpris2)
+mpris2_client_get_supported_uri_schemes (Mpris2Client *mpris2)
 {
 	return mpris2->supported_uri_schemes;
 }
 
 gchar **
-mpris2_control_get_supported_mime_types (Mpris2Control *mpris2)
+mpris2_client_get_supported_mime_types (Mpris2Client *mpris2)
 {
 	return mpris2->supported_mime_types;
 }
 
 void
-mpris2_control_set_player (Mpris2Control *mpris2, const gchar *player)
+mpris2_client_set_player (Mpris2Client *mpris2, const gchar *player)
 {
 	g_free(mpris2->player);
 	if (player)
@@ -216,21 +216,21 @@ mpris2_control_set_player (Mpris2Control *mpris2, const gchar *player)
 	g_object_unref (mpris2->proxy);
 
 	/* Connect again */
-	mpris2_control_connect_dbus (mpris2);
+	mpris2_client_connect_dbus (mpris2);
 }
 
 gchar *
-mpris2_control_auto_set_player (Mpris2Control *mpris2)
+mpris2_client_auto_set_player (Mpris2Client *mpris2)
 {
-	gchar *player = mpris2_control_get_player (mpris2);
+	gchar *player = mpris2_client_get_player (mpris2);
 
-	mpris2_control_set_player (mpris2, player);
+	mpris2_client_set_player (mpris2, player);
 
 	return player;
 }
 
 gboolean
-mpris2_control_is_connected (Mpris2Control *mpris2)
+mpris2_client_is_connected (Mpris2Client *mpris2)
 {
 	return mpris2->connected;
 }
@@ -242,7 +242,7 @@ mpris2_control_is_connected (Mpris2Control *mpris2)
 /* Send mesages to use methods of org.mpris.MediaPlayer2.Player interfase. */
 
 static void
-mpris2_control_call_player_method (Mpris2Control *mpris2, const char *method)
+mpris2_client_call_player_method (Mpris2Client *mpris2, const char *method)
 {
 	GDBusMessage *message;
 	GError       *error = NULL;
@@ -275,7 +275,7 @@ mpris2_control_call_player_method (Mpris2Control *mpris2, const char *method)
 /* Send mesages to use methods of org.mpris.MediaPlayer2 interfase. */
 
 static void
-mpris2_control_call_method (Mpris2Control *mpris2, const char *method)
+mpris2_client_call_method (Mpris2Client *mpris2, const char *method)
 {
 	GDBusMessage *message;
 	GError       *error = NULL;
@@ -308,7 +308,7 @@ mpris2_control_call_method (Mpris2Control *mpris2, const char *method)
 /* Returns the first player name that compliant to mpris2 on dbus.  */
 
 static gchar *
-mpris2_control_get_player (Mpris2Control *mpris2)
+mpris2_client_get_player (Mpris2Client *mpris2)
 {
 	GError *error = NULL;
 	GVariant *v;
@@ -350,7 +350,7 @@ mpris2_control_get_player (Mpris2Control *mpris2)
 /* Get any player propertie using org.freedesktop.DBus.Properties interfase. */
 
 GVariant *
-mpris2_control_get_player_properties (Mpris2Control *mpris2, const gchar *prop)
+mpris2_client_get_player_properties (Mpris2Client *mpris2, const gchar *prop)
 {
 	GVariant *v, *iter;
 	GError *error = NULL;
@@ -383,7 +383,7 @@ mpris2_control_get_player_properties (Mpris2Control *mpris2, const gchar *prop)
 /* Change any player propertie using org.freedesktop.DBus.Properties interfase. */
 
 static void
-mpris2_control_set_player_properties (Mpris2Control *mpris2, const gchar *prop, GVariant *vprop)
+mpris2_client_set_player_properties (Mpris2Client *mpris2, const gchar *prop, GVariant *vprop)
 {
 	GVariant *reply;
 	GError   *error = NULL;
@@ -482,7 +482,7 @@ mpris2_metadata_new_from_variant (GVariant *dictionary)
 }
 
 static void
-mpris2_control_parse_playback_status (Mpris2Control *mpris2, const gchar *playback_status)
+mpris2_client_parse_playback_status (Mpris2Client *mpris2, const gchar *playback_status)
 {
 	if (0 == g_ascii_strcasecmp(playback_status, "Playing")) {
 		mpris2->playback_status = PLAYING;
@@ -496,7 +496,7 @@ mpris2_control_parse_playback_status (Mpris2Control *mpris2, const gchar *playba
 }
 
 static void
-mpris2_control_parse_properties (Mpris2Control *mpris2, GVariant *properties)
+mpris2_client_parse_properties (Mpris2Client *mpris2, GVariant *properties)
 {
 	GVariantIter iter;
 	GVariant *value;
@@ -520,7 +520,7 @@ mpris2_control_parse_properties (Mpris2Control *mpris2, GVariant *properties)
 	}
 
 	if (playback_status != NULL) {
-		mpris2_control_parse_playback_status (mpris2, playback_status);
+		mpris2_client_parse_playback_status (mpris2, playback_status);
 		g_signal_emit (mpris2, signals[PLAYBACK_STATUS], 0);
 	}
 
@@ -536,16 +536,16 @@ mpris2_control_parse_properties (Mpris2Control *mpris2, GVariant *properties)
 }
 
 static void
-mpris2_control_on_dbus_signal (GDBusProxy *proxy,
-                               gchar      *sender_name,
-                               gchar      *signal_name,
-                               GVariant   *parameters,
-                               gpointer    user_data)
+mpris2_client_on_dbus_signal (GDBusProxy *proxy,
+                              gchar      *sender_name,
+                              gchar      *signal_name,
+                              GVariant   *parameters,
+                              gpointer    user_data)
 {
 	GVariantIter iter;
 	GVariant *child;
 
-	Mpris2Control *mpris2 = user_data;
+	Mpris2Client *mpris2 = user_data;
 
 	g_variant_iter_init (&iter, parameters);
 
@@ -553,46 +553,46 @@ mpris2_control_on_dbus_signal (GDBusProxy *proxy,
 	g_variant_unref (child);
 
 	child = g_variant_iter_next_value (&iter); /* Property name. */
-	mpris2_control_parse_properties (mpris2, child);
+	mpris2_client_parse_properties (mpris2, child);
 	g_variant_unref (child);
 }
 
 /* Functions that detect when the player is connected to mpris2 */
 
 static void
-mpris2_control_connected_dbus (GDBusConnection *connection,
-                               const gchar *name,
-                               const gchar *name_owner,
-                               gpointer user_data)
+mpris2_client_connected_dbus (GDBusConnection *connection,
+                              const gchar *name,
+                              const gchar *name_owner,
+                              gpointer user_data)
 {
 	GVariant *vprop;
 
-	Mpris2Control *mpris2 = user_data;
+	Mpris2Client *mpris2 = user_data;
 
 	mpris2->connected = TRUE;
 
 	/* Get Properties..*/
-	vprop = mpris2_control_get_player_properties (mpris2, "Identity");
+	vprop = mpris2_client_get_player_properties (mpris2, "Identity");
 	mpris2->identity = g_variant_dup_string (vprop, NULL);
 	g_variant_unref(vprop);
 
-	vprop = mpris2_control_get_player_properties (mpris2, "CanRaise");
+	vprop = mpris2_client_get_player_properties (mpris2, "CanRaise");
 	mpris2->can_raise = g_variant_get_boolean (vprop);
 	g_variant_unref(vprop);
 
-	vprop = mpris2_control_get_player_properties (mpris2, "CanQuit");
+	vprop = mpris2_client_get_player_properties (mpris2, "CanQuit");
 	mpris2->can_quit = g_variant_get_boolean (vprop);
 	g_variant_unref(vprop);
 
-	vprop = mpris2_control_get_player_properties (mpris2, "HasTrackList");
+	vprop = mpris2_client_get_player_properties (mpris2, "HasTrackList");
 	mpris2->has_tracklist = g_variant_get_boolean (vprop);
 	g_variant_unref(vprop);
 
-	vprop = mpris2_control_get_player_properties (mpris2, "SupportedUriSchemes");
+	vprop = mpris2_client_get_player_properties (mpris2, "SupportedUriSchemes");
 	mpris2->supported_uri_schemes = g_variant_dup_strv (vprop, NULL);
 	g_variant_unref(vprop);
 
-	vprop = mpris2_control_get_player_properties (mpris2, "SupportedMimeTypes");
+	vprop = mpris2_client_get_player_properties (mpris2, "SupportedMimeTypes");
 	mpris2->supported_mime_types = g_variant_dup_strv (vprop, NULL);
 	g_variant_unref(vprop);
 
@@ -600,11 +600,11 @@ mpris2_control_connected_dbus (GDBusConnection *connection,
 }
 
 static void
-mpris2_control_lose_dbus (GDBusConnection *connection,
-                          const gchar *name,
-                          gpointer user_data)
+mpris2_client_lose_dbus (GDBusConnection *connection,
+                         const gchar *name,
+                         gpointer user_data)
 {
-	Mpris2Control *mpris2 = user_data;
+	Mpris2Client *mpris2 = user_data;
 
 	mpris2->connected = FALSE;
 	if (mpris2->identity) {
@@ -617,7 +617,7 @@ mpris2_control_lose_dbus (GDBusConnection *connection,
 }
 
 static void
-mpris2_control_connect_dbus (Mpris2Control *mpris2)
+mpris2_client_connect_dbus (Mpris2Client *mpris2)
 {
 	GDBusProxy *proxy;
 	GError     *gerror = NULL;
@@ -629,8 +629,8 @@ mpris2_control_connect_dbus (Mpris2Control *mpris2)
 	watch_id = g_bus_watch_name_on_connection(mpris2->gconnection,
 	                                          mpris2->dbus_name,
 	                                          G_BUS_NAME_OWNER_FLAGS_REPLACE,
-	                                          mpris2_control_connected_dbus,
-	                                          mpris2_control_lose_dbus,
+	                                          mpris2_client_connected_dbus,
+	                                          mpris2_client_lose_dbus,
 	                                          mpris2,
 	                                          NULL);
 
@@ -650,7 +650,7 @@ mpris2_control_connect_dbus (Mpris2Control *mpris2)
     }
     else {
 		g_signal_connect (proxy, "g-signal",
-			              G_CALLBACK (mpris2_control_on_dbus_signal), mpris2);
+			              G_CALLBACK (mpris2_client_on_dbus_signal), mpris2);
 		mpris2->proxy = proxy;
 	}
 
@@ -658,24 +658,24 @@ mpris2_control_connect_dbus (Mpris2Control *mpris2)
 }
 
 static void
-mpris2_control_finalize (GObject *object)
+mpris2_client_finalize (GObject *object)
 {
-	Mpris2Control *mpris2 = MPRIS2_CONTROL (object);
+	Mpris2Client *mpris2 = MPRIS2_CLIENT (object);
 
 	g_free (mpris2->player);
 	g_free (mpris2->dbus_name);
 
-	(*G_OBJECT_CLASS (mpris2_control_parent_class)->finalize) (object);
+	(*G_OBJECT_CLASS (mpris2_client_parent_class)->finalize) (object);
 }
 
 
 static void
-mpris2_control_class_init (Mpris2ControlClass *klass)
+mpris2_client_class_init (Mpris2ClientClass *klass)
 {
 	GObjectClass  *gobject_class;
 
 	gobject_class = G_OBJECT_CLASS (klass);
-	gobject_class->finalize = mpris2_control_finalize;
+	gobject_class->finalize = mpris2_client_finalize;
 
 	/*
 	 * Signals:
@@ -683,7 +683,7 @@ mpris2_control_class_init (Mpris2ControlClass *klass)
 	signals[CONNECTION] = g_signal_new ("connection",
 	                                    G_TYPE_FROM_CLASS (gobject_class),
 	                                    G_SIGNAL_RUN_LAST,
-	                                    G_STRUCT_OFFSET (Mpris2ControlClass, connection),
+	                                    G_STRUCT_OFFSET (Mpris2ClientClass, connection),
 	                                    NULL, NULL,
 	                                    g_cclosure_marshal_VOID__VOID,
 	                                    G_TYPE_NONE, 0);
@@ -691,7 +691,7 @@ mpris2_control_class_init (Mpris2ControlClass *klass)
 	signals[PLAYBACK_STATUS] = g_signal_new ("playback-status",
 	                                         G_TYPE_FROM_CLASS (gobject_class),
 	                                         G_SIGNAL_RUN_LAST,
-	                                         G_STRUCT_OFFSET (Mpris2ControlClass, playback_status),
+	                                         G_STRUCT_OFFSET (Mpris2ClientClass, playback_status),
 	                                         NULL, NULL,
 	                                         g_cclosure_marshal_VOID__VOID,
 	                                         G_TYPE_NONE, 0);
@@ -699,7 +699,7 @@ mpris2_control_class_init (Mpris2ControlClass *klass)
 	signals[METADATA] = g_signal_new ("metadata",
 	                                  G_TYPE_FROM_CLASS (gobject_class),
 	                                  G_SIGNAL_RUN_LAST,
-	                                  G_STRUCT_OFFSET (Mpris2ControlClass, metadata),
+	                                  G_STRUCT_OFFSET (Mpris2ClientClass, metadata),
 	                                  NULL, NULL,
 	                                  g_cclosure_marshal_VOID__POINTER,
 	                                  G_TYPE_NONE, 1, G_TYPE_POINTER);
@@ -707,14 +707,14 @@ mpris2_control_class_init (Mpris2ControlClass *klass)
 	signals[VOLUME] = g_signal_new ("volume",
 	                                G_TYPE_FROM_CLASS (gobject_class),
 	                                G_SIGNAL_RUN_LAST,
-	                                G_STRUCT_OFFSET (Mpris2ControlClass, volume),
+	                                G_STRUCT_OFFSET (Mpris2ClientClass, volume),
 	                                NULL, NULL,
 	                                g_cclosure_marshal_VOID__VOID,
 	                                G_TYPE_NONE, 0);
 }
 
 static void
-mpris2_control_init (Mpris2Control *mpris2)
+mpris2_client_init (Mpris2Client *mpris2)
 {
 	GDBusConnection *gconnection;
 	GError          *gerror = NULL;
@@ -730,11 +730,11 @@ mpris2_control_init (Mpris2Control *mpris2)
 	}
 	mpris2->gconnection = gconnection;
 
-	mpris2_control_connect_dbus (mpris2);
+	mpris2_client_connect_dbus (mpris2);
 }
 
-Mpris2Control *
-mpris2_control_new (void)
+Mpris2Client *
+mpris2_client_new (void)
 {
-	return g_object_new(MPRIS2_TYPE_CONTROL, NULL);
+	return g_object_new(MPRIS2_TYPE_CLIENT, NULL);
 }

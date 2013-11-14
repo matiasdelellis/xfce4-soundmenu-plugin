@@ -16,9 +16,9 @@
  *  Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA.
  */
 
-#include "soundmenu-metadata.h"
+#include "mpris2-metadata.h"
 
-struct _SoundmenuMetadata {
+struct _Mpris2Metadata {
 	gchar *trackid;
 	gchar *url;
 	gchar *title;
@@ -33,7 +33,7 @@ struct _SoundmenuMetadata {
  * Set and get metadata.
  */
 void
-soundmenu_metatada_set_trackid(SoundmenuMetadata *metadata, const gchar *trackid)
+mpris2_metadata_set_trackid(Mpris2Metadata *metadata, const gchar *trackid)
 {
 	if(!metadata)
 		return;
@@ -45,7 +45,7 @@ soundmenu_metatada_set_trackid(SoundmenuMetadata *metadata, const gchar *trackid
 }
 
 const gchar *
-soundmenu_metatada_get_trackid(SoundmenuMetadata *metadata)
+mpris2_metadata_get_trackid(Mpris2Metadata *metadata)
 {
 	if(!metadata)
 		return NULL;
@@ -54,7 +54,7 @@ soundmenu_metatada_get_trackid(SoundmenuMetadata *metadata)
 }
 
 void
-soundmenu_metatada_set_url(SoundmenuMetadata *metadata, const gchar *url)
+mpris2_metadata_set_url(Mpris2Metadata *metadata, const gchar *url)
 {
 	if(!metadata)
 		return;
@@ -66,7 +66,7 @@ soundmenu_metatada_set_url(SoundmenuMetadata *metadata, const gchar *url)
 }
 
 const gchar *
-soundmenu_metatada_get_url(SoundmenuMetadata *metadata)
+mpris2_metadata_get_url(Mpris2Metadata *metadata)
 {
 	if(!metadata)
 		return NULL;
@@ -75,7 +75,7 @@ soundmenu_metatada_get_url(SoundmenuMetadata *metadata)
 }
 
 void
-soundmenu_metatada_set_title(SoundmenuMetadata *metadata, const gchar *title)
+mpris2_metadata_set_title(Mpris2Metadata *metadata, const gchar *title)
 {
 	if(!metadata)
 		return;
@@ -87,7 +87,7 @@ soundmenu_metatada_set_title(SoundmenuMetadata *metadata, const gchar *title)
 }
 
 const gchar *
-soundmenu_metatada_get_title(SoundmenuMetadata *metadata)
+mpris2_metadata_get_title(Mpris2Metadata *metadata)
 {
 	if(!metadata)
 		return NULL;
@@ -96,7 +96,7 @@ soundmenu_metatada_get_title(SoundmenuMetadata *metadata)
 }
 
 void
-soundmenu_metatada_set_artist(SoundmenuMetadata *metadata, const gchar *artist)
+mpris2_metadata_set_artist(Mpris2Metadata *metadata, const gchar *artist)
 {
 	if(!metadata)
 		return;
@@ -108,7 +108,7 @@ soundmenu_metatada_set_artist(SoundmenuMetadata *metadata, const gchar *artist)
 }
 
 const gchar *
-soundmenu_metatada_get_artist(SoundmenuMetadata *metadata)
+mpris2_metadata_get_artist(Mpris2Metadata *metadata)
 {
 	if(!metadata)
 		return NULL;
@@ -117,7 +117,7 @@ soundmenu_metatada_get_artist(SoundmenuMetadata *metadata)
 }
 
 void
-soundmenu_metatada_set_album(SoundmenuMetadata *metadata, const gchar *album)
+mpris2_metadata_set_album(Mpris2Metadata *metadata, const gchar *album)
 {
 	if(!metadata)
 		return;
@@ -129,7 +129,7 @@ soundmenu_metatada_set_album(SoundmenuMetadata *metadata, const gchar *album)
 }
 
 const gchar *
-soundmenu_metatada_get_album(SoundmenuMetadata *metadata)
+mpris2_metadata_get_album(Mpris2Metadata *metadata)
 {
 	if(!metadata)
 		return NULL;
@@ -138,7 +138,7 @@ soundmenu_metatada_get_album(SoundmenuMetadata *metadata)
 }
 
 void
-soundmenu_metatada_set_length(SoundmenuMetadata *metadata, guint length)
+mpris2_metadata_set_length(Mpris2Metadata *metadata, guint length)
 {
 	if(!metadata)
 		return;
@@ -147,7 +147,7 @@ soundmenu_metatada_set_length(SoundmenuMetadata *metadata, guint length)
 }
 
 guint
-soundmenu_metatada_get_length(SoundmenuMetadata *metadata)
+mpris2_metadata_get_length(Mpris2Metadata *metadata)
 {
 	if(!metadata)
 		return 0;
@@ -156,7 +156,7 @@ soundmenu_metatada_get_length(SoundmenuMetadata *metadata)
 }
 
 void
-soundmenu_metatada_set_track_no(SoundmenuMetadata *metadata, guint track_no)
+mpris2_metadata_set_track_no(Mpris2Metadata *metadata, guint track_no)
 {
 	if(!metadata)
 		return;
@@ -165,7 +165,7 @@ soundmenu_metatada_set_track_no(SoundmenuMetadata *metadata, guint track_no)
 }
 
 guint
-soundmenu_metatada_get_track_no(SoundmenuMetadata *metadata)
+mpris2_metadata_get_track_no(Mpris2Metadata *metadata)
 {
 	if(!metadata)
 		return 0;
@@ -174,7 +174,7 @@ soundmenu_metatada_get_track_no(SoundmenuMetadata *metadata)
 }
 
 void
-soundmenu_metatada_set_arturl(SoundmenuMetadata *metadata, const gchar *arturl)
+mpris2_metadata_set_arturl(Mpris2Metadata *metadata, const gchar *arturl)
 {
 	if(!metadata)
 		return;
@@ -186,7 +186,7 @@ soundmenu_metatada_set_arturl(SoundmenuMetadata *metadata, const gchar *arturl)
 }
 
 const gchar *
-soundmenu_metatada_get_arturl(SoundmenuMetadata *metadata)
+mpris2_metadata_get_arturl(Mpris2Metadata *metadata)
 {
 	if(!metadata)
 		return NULL;
@@ -197,11 +197,11 @@ soundmenu_metatada_get_arturl(SoundmenuMetadata *metadata)
 /*
  * Construction and destruction of metadata.
  */
-SoundmenuMetadata *
-soundmenu_metadata_new (void)
+Mpris2Metadata *
+mpris2_metadata_new (void)
 {
-	SoundmenuMetadata *metadata;
-	metadata = g_slice_new0(SoundmenuMetadata);
+	Mpris2Metadata *metadata;
+	metadata = g_slice_new0(Mpris2Metadata);
 
 	metadata->trackid = NULL;
 	metadata->url = NULL;
@@ -216,7 +216,7 @@ soundmenu_metadata_new (void)
 }
 
 void
-soundmenu_metadata_free(SoundmenuMetadata *metadata)
+mpris2_metadata_free(Mpris2Metadata *metadata)
 {
 	if(metadata == NULL)
 		return;
@@ -234,5 +234,5 @@ soundmenu_metadata_free(SoundmenuMetadata *metadata)
 	if(metadata->arturl)
 		g_free(metadata->arturl);
 
-	g_slice_free(SoundmenuMetadata, metadata);
+	g_slice_free(Mpris2Metadata, metadata);
 }

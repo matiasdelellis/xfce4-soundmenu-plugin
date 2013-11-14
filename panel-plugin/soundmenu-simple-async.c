@@ -21,7 +21,7 @@
 #endif
 
 #include "soundmenu-simple-async.h"
-#include "soundmenu-utils.h"
+#include "mpris2-utils.h"
 
 #ifdef HAVE_LIBNOTIFY
 #include "soundmenu-notify.h"

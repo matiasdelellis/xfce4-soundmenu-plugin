@@ -23,7 +23,7 @@
 #include "soundmenu-dialogs.h"
 #include "soundmenu-dialog-hig.h"
 #include "soundmenu-dbus.h"
-#include "soundmenu-utils.h"
+#include "mpris2-utils.h"
 
 #ifdef HAVE_LIBKEYBINDER
 #include "soundmenu-keybinder.h"

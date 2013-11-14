@@ -20,6 +20,7 @@
 #define LIB_MPRIS2_CONTROL_H
 
 #include <glib-object.h>
+#include "mpris2-metadata.h"
 
 #define MPRIS2_TYPE_CONTROL              (mpris2_control_get_type ())
 #define MPRIS2_CONTROL(obj)              (G_TYPE_CHECK_INSTANCE_CAST ((obj), MPRIS2_TYPE_CONTROL, Mpris2Control))
@@ -35,6 +36,7 @@ struct _Mpris2ControlClass {
 	GObjectClass parent_class;
 	void (*connection) (Mpris2Control *mpris2);
 	void (*playback_status) (Mpris2Control *mpris2);
+	void (*metadata) (Mpris2Control *mpris2, Mpris2Metadata *metadata);
 };
 
 typedef enum {

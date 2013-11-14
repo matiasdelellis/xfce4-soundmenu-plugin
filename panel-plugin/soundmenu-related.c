@@ -22,7 +22,7 @@
 
 #include <glyr/glyr.h>
 #include "soundmenu-related.h"
-#include "soundmenu-utils.h"
+#include "mpris2-utils.h"
 #include "soundmenu-simple-async.h"
 
 #ifdef HAVE_LIBNOTIFY
@@ -240,12 +240,12 @@ void soundmenu_search_lyric_dialog (GtkWidget *widget, SoundmenuPlugin *soundmen
     if(soundmenu->state == ST_STOPPED)
         return;
 
-    if (g_str_empty0(soundmenu_metatada_get_artist(soundmenu->metadata)) ||
-        g_str_empty0(soundmenu_metatada_get_title(soundmenu->metadata)))
+    if (g_str_empty0(mpris2_metadata_get_artist(soundmenu->metadata)) ||
+        g_str_empty0(mpris2_metadata_get_title(soundmenu->metadata)))
         return;
 
-    artist = soundmenu_metatada_get_artist(soundmenu->metadata);
-    title = soundmenu_metatada_get_title(soundmenu->metadata);
+    artist = mpris2_metadata_get_artist(soundmenu->metadata);
+    title = mpris2_metadata_get_title(soundmenu->metadata);
 
     configure_and_launch_get_text_info_dialog(GLYR_GET_LYRICS, artist, title, soundmenu);
 }
@@ -257,10 +257,10 @@ void soundmenu_search_artistinfo_dialog (GtkWidget *widget, SoundmenuPlugin *sou
     if(soundmenu->state == ST_STOPPED)
         return;
 
-    if (g_str_empty0(soundmenu_metatada_get_artist(soundmenu->metadata)))
+    if (g_str_empty0(mpris2_metadata_get_artist(soundmenu->metadata)))
         return;
 
-    artist = soundmenu_metatada_get_artist(soundmenu->metadata);
+    artist = mpris2_metadata_get_artist(soundmenu->metadata);
 
     configure_and_launch_get_text_info_dialog(GLYR_GET_ARTISTBIO, artist, NULL, soundmenu);
 }

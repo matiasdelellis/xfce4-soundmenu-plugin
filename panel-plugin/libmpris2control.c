@@ -19,6 +19,8 @@
 #include <gio/gio.h>
 
 #include "libmpris2control.h"
+#include "mpris2-metadata.h"
+#include "mpris2-utils.h"
 
 struct _Mpris2Control
 {
@@ -46,12 +48,14 @@ struct _Mpris2Control
 
 	/* Interface MediaPlayer2.Player */
 	PlaybackStatus   playback_status;
+	Mpris2Metadata  *metadata;
 };
 
 enum
 {
 	CONNECTION,
 	PLAYBACK_STATUS,
+	METADATA,
 	LAST_SIGNAL
 };
 static int signals[LAST_SIGNAL] = { 0 };
@@ -320,6 +324,89 @@ mpris2_control_get_player_properties (Mpris2Control *mpris2, const gchar *prop)
 
 /* These function intercepts the messages from the player. */
 
+static Mpris2Metadata *
+mpris2_metadata_new_from_variant (GVariant *dictionary)
+{
+	GVariantIter iter;
+	GVariant *value;
+	gchar *key;
+
+	gint64 length = 0;
+
+	Mpris2Metadata *metadata;
+
+	metadata = mpris2_metadata_new ();
+
+	g_variant_iter_init (&iter, dictionary);
+	while (g_variant_iter_loop (&iter, "{sv}", &key, &value)) {
+		if (0 == g_ascii_strcasecmp (key, "mpris:trackid"))
+			mpris2_metadata_set_trackid (metadata, g_variant_get_string(value, NULL));
+		else if (0 == g_ascii_strcasecmp (key, "xesam:url"))
+			mpris2_metadata_set_url (metadata, g_variant_get_string(value, NULL));
+		else if (0 == g_ascii_strcasecmp (key, "xesam:title"))
+			mpris2_metadata_set_title (metadata, g_variant_get_string(value, NULL));
+		else if (0 == g_ascii_strcasecmp (key, "xesam:artist"))
+			mpris2_metadata_set_artist(metadata, g_avariant_get_string(value));
+		else if (0 == g_ascii_strcasecmp (key, "xesam:album"))
+			mpris2_metadata_set_album (metadata, g_variant_get_string(value, NULL));
+		else if (0 == g_ascii_strcasecmp (key, "xesam:genre"));
+			/* (List of Strings.) Not use genre */
+		else if (0 == g_ascii_strcasecmp (key, "xesam:albumArtist"));
+			// List of Strings.
+		else if (0 == g_ascii_strcasecmp (key, "xesam:comment"));
+			/* (List of Strings) Not use comment */
+		else if (0 == g_ascii_strcasecmp (key, "xesam:audioBitrate"));
+			/* (uint32) Not use audioBitrate */
+		else if (0 == g_ascii_strcasecmp (key, "mpris:length"))
+			length = g_variant_get_int64 (value);
+		else if (0 == g_ascii_strcasecmp (key, "xesam:trackNumber"))
+			mpris2_metadata_set_track_no(metadata, g_variant_get_int32 (value));
+		else if (0 == g_ascii_strcasecmp (key, "xesam:useCount"));
+			/* (Integer) Not use useCount */
+		else if (0 == g_ascii_strcasecmp (key, "xesam:userRating"));
+			/* (Float) Not use userRating */
+		else if (0 == g_ascii_strcasecmp (key, "mpris:artUrl"))
+			mpris2_metadata_set_arturl (metadata, g_variant_get_string(value, NULL));
+		else if (0 == g_ascii_strcasecmp (key, "xesam:contentCreated"));
+			/* has type 's' */
+		else if (0 == g_ascii_strcasecmp (key, "audio-bitrate"));
+			/* has type 'i' */
+		else if (0 == g_ascii_strcasecmp (key, "audio-channels"));
+			/* has type 'i' */
+		else if (0 == g_ascii_strcasecmp (key, "audio-samplerate"));
+			/* has type 'i' */
+		else if (0 == g_ascii_strcasecmp (key, "xesam:contentCreated"));
+			/* has type 's' */
+		else if (0 == g_ascii_strcasecmp (key, "audio-bitrate"));
+			/* has type 'i' */
+		else if (0 == g_ascii_strcasecmp (key, "audio-channels"));
+			/* has type 'i' */
+		else if (0 == g_ascii_strcasecmp (key, "audio-samplerate"));
+			/* has type 'i'*/
+		else
+			g_print ("Variant '%s' has type '%s'\n", key,
+				     g_variant_get_type_string (value));
+	}
+
+	mpris2_metadata_set_length (metadata, length / 1000000l);
+
+	return metadata;
+}
+
+static void
+mpris2_control_parse_playback_status (Mpris2Control *mpris2, const gchar *playback_status)
+{
+	if (0 == g_ascii_strcasecmp(playback_status, "Playing")) {
+		mpris2->playback_status = PLAYING;
+	}
+	else if (0 == g_ascii_strcasecmp(playback_status, "Paused")) {
+		mpris2->playback_status = PAUSED;
+	}
+	else {
+		mpris2->playback_status = STOPPED;
+	}
+}
+
 static void
 mpris2_control_parse_properties (Mpris2Control *mpris2, GVariant *properties)
 {
@@ -327,6 +414,7 @@ mpris2_control_parse_properties (Mpris2Control *mpris2, GVariant *properties)
 	GVariant *value;
 	const gchar *key;
 	const gchar *playback_status = NULL;
+	Mpris2Metadata *metadata = NULL;
 
 	g_variant_iter_init (&iter, properties);
 
@@ -334,19 +422,20 @@ mpris2_control_parse_properties (Mpris2Control *mpris2, GVariant *properties)
 		if (0 == g_ascii_strcasecmp (key, "PlaybackStatus")) {
 			playback_status = g_variant_get_string(value, NULL);
 		}
+		else if (0 == g_ascii_strcasecmp (key, "Metadata")) {
+			metadata = mpris2_metadata_new_from_variant (value);
+		}
 	}
 
 	if (playback_status != NULL) {
-		if (0 == g_ascii_strcasecmp(playback_status, "Playing")) {
-			mpris2->playback_status = PLAYING;
-		}
-		else if (0 == g_ascii_strcasecmp(playback_status, "Paused")) {
-			mpris2->playback_status = PAUSED;
-		}
-		else {
-			mpris2->playback_status = STOPPED;
-		}
+		mpris2_control_parse_playback_status (mpris2, playback_status);
 		g_signal_emit (mpris2, signals[PLAYBACK_STATUS], 0);
+	}
+
+	if (metadata != NULL) {
+		mpris2_metadata_free (mpris2->metadata);
+		mpris2->metadata = metadata;
+		g_signal_emit (mpris2, signals[METADATA], 0, metadata);
 	}
 }
 
@@ -504,12 +593,21 @@ mpris2_control_class_init (Mpris2ControlClass *klass)
 	                                    G_TYPE_NONE, 0);
 
 	signals[PLAYBACK_STATUS] = g_signal_new ("playback-status",
-	                                    G_TYPE_FROM_CLASS (gobject_class),
-	                                    G_SIGNAL_RUN_LAST,
-	                                    G_STRUCT_OFFSET (Mpris2ControlClass, playback_status),
-	                                    NULL, NULL,
-	                                    g_cclosure_marshal_VOID__VOID,
-	                                    G_TYPE_NONE, 0);
+	                                         G_TYPE_FROM_CLASS (gobject_class),
+	                                         G_SIGNAL_RUN_LAST,
+	                                         G_STRUCT_OFFSET (Mpris2ControlClass, playback_status),
+	                                         NULL, NULL,
+	                                         g_cclosure_marshal_VOID__VOID,
+	                                         G_TYPE_NONE, 0);
+
+	signals[METADATA] = g_signal_new ("metadata",
+	                                  G_TYPE_FROM_CLASS (gobject_class),
+	                                  G_SIGNAL_RUN_LAST,
+	                                  G_STRUCT_OFFSET (Mpris2ControlClass, metadata),
+	                                  NULL, NULL,
+	                                  g_cclosure_marshal_VOID__POINTER,
+	                                  G_TYPE_NONE, 1, G_TYPE_POINTER);
+
 }
 
 static void

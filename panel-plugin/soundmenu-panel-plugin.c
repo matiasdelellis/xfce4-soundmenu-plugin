@@ -23,7 +23,7 @@
 #include "soundmenu-dbus.h"
 #include "soundmenu-dialogs.h"
 #include "soundmenu-mpris2.h"
-#include "soundmenu-utils.h"
+#include "mpris2-utils.h"
 #include "soundmenu-related.h"
 #include "soundmenu-simple-async.h"
 #include "soundmenu-panel-plugin.h"
@@ -123,10 +123,10 @@ soundmenu_set_query_tooltip_cb (GtkWidget       *widget,
 		if (soundmenu->state == ST_STOPPED)
 			markup_text = g_strdup_printf("%s", _("Stopped"));
 		else {
-			title = soundmenu_metatada_get_title(soundmenu->metadata);
-			artist = soundmenu_metatada_get_artist(soundmenu->metadata);
-			album = soundmenu_metatada_get_album(soundmenu->metadata);
-			url = soundmenu_metatada_get_url(soundmenu->metadata);
+			title = mpris2_metadata_get_title(soundmenu->metadata);
+			artist = mpris2_metadata_get_artist(soundmenu->metadata);
+			album = mpris2_metadata_get_album(soundmenu->metadata);
+			url = mpris2_metadata_get_url(soundmenu->metadata);
 
 			if (g_str_empty0(url))
 			    return TRUE;
@@ -143,7 +143,7 @@ soundmenu_set_query_tooltip_cb (GtkWidget       *widget,
 					name = g_strdup(url);
 				}
 			}
-			length = convert_length_str(soundmenu_metatada_get_length(soundmenu->metadata));
+			length = convert_length_str(mpris2_metadata_get_length(soundmenu->metadata));
 
 			markup_text = g_markup_printf_escaped(_("<b>%s</b> (%s)\nby %s in %s"),
 				                                  name, length,
@@ -222,7 +222,7 @@ soundmenu_update_playback_status (SoundmenuPlugin *soundmenu, const gchar *playb
 {
 	if (0 == g_ascii_strcasecmp(playback_status, "Playing")) {
 		soundmenu_album_art_set_path(soundmenu->album_art,
-			soundmenu_metatada_get_arturl(soundmenu->metadata));
+			mpris2_metadata_get_arturl(soundmenu->metadata));
 		soundmenu->state = ST_PLAYING;
 	}
 	else if (0 == g_ascii_strcasecmp(playback_status, "Paused"))
@@ -430,7 +430,7 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	GtkWidget *ev_album_art, *play_button, *stop_button, *prev_button, *next_button;
 	GtkWidget *separator, *loop_menu_item, *shuffle_menu_item, *tools_menu_item, *tools_submenu;
 	SoundmenuAlbumArt *album_art;
-	SoundmenuMetadata *metadata;
+	Mpris2Metadata *metadata;
 
 	/* allocate memory for the plugin structure */
 	soundmenu = panel_slice_new0 (SoundmenuPlugin);
@@ -440,7 +440,7 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	soundmenu->clastfm = soundmenu_lastfm_new ();
 	#endif
 
-	metadata = soundmenu_metadata_new();
+	metadata = mpris2_metadata_new();
 	soundmenu->metadata = metadata;
 	soundmenu_mutex_create(soundmenu->metadata_mtx);
 
@@ -682,7 +682,7 @@ soundmenu_free (XfcePanelPlugin *plugin,
 
 	soundmenu_mutex_lock(soundmenu->metadata_mtx);
 	if (G_LIKELY (soundmenu->metadata != NULL))
-		soundmenu_metadata_free(soundmenu->metadata);
+		mpris2_metadata_free(soundmenu->metadata);
 	soundmenu_mutex_unlock(soundmenu->metadata_mtx);
 	soundmenu_mutex_free(soundmenu->metadata_mtx);
 

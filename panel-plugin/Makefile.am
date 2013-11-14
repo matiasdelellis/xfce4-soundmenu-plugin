@@ -27,14 +27,14 @@ libsoundmenu_la_SOURCES = \
 	soundmenu-dialog-hig.h \
 	soundmenu-dialogs.c \
 	soundmenu-dialogs.h \
-	soundmenu-metadata.c \
-	soundmenu-metadata.h \
 	soundmenu-mpris2.c \
 	soundmenu-mpris2.h \
 	soundmenu-simple-async.c \
 	soundmenu-simple-async.h \
-	soundmenu-utils.c \
-	soundmenu-utils.h
+	mpris2-utils.c \
+	mpris2-utils.h \
+	mpris2-metadata.c \
+	mpris2-metadata.h
 
 if HAVE_LIBKEYBINDER
 libsoundmenu_la_SOURCES += \
@@ -105,7 +105,11 @@ endif
 xfce4_soundmenu_icon_SOURCES = \
 	soundmenu-status-icon.c    \
 	libmpris2control.c         \
-	libmpris2control.h
+	libmpris2control.h         \
+	mpris2-metadata.c          \
+	mpris2-metadata.h          \
+	mpris2-utils.c             \
+	mpris2-utils.h
 
 xfce4_soundmenu_icon_CFLAGS =  \
 	$(DBUS_GLIB_CFLAGS)        \

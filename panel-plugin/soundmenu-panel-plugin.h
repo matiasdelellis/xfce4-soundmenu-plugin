@@ -36,7 +36,7 @@
 #include <libxfce4panel/xfce-hvbox.h>
 
 #include "soundmenu-album-art.h"
-#include "soundmenu-metadata.h"
+#include "mpris2-metadata.h"
 #include "soundmenu-simple-async.h"
 
 #ifdef HAVE_LIBCLASTFM
@@ -94,7 +94,7 @@ struct _SoundmenuPlugin {
 
 	/* Player states */
 	PlaybackStatus       state;
-	SoundmenuMetadata   *metadata;
+	Mpris2Metadata      *metadata;
 	#if GLIB_CHECK_VERSION (2, 32, 0)
 	GMutex metadata_mtx;
 	#else

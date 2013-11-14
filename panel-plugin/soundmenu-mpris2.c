@@ -24,7 +24,7 @@
 #include "soundmenu-album-art.h"
 #include "soundmenu-dbus.h"
 #include "soundmenu-lastfm.h"
-#include "soundmenu-utils.h"
+#include "mpris2-utils.h"
 
 #ifdef HAVE_LIBCLASTFM
 #include "soundmenu-lastfm.h"
@@ -32,7 +32,7 @@
 
 #include "soundmenu-panel-plugin.h"
 
-SoundmenuMetadata *
+Mpris2Metadata *
 soundmenu_mpris2_get_metadata (GVariant *dictionary)
 {
 	GVariantIter iter;
@@ -41,22 +41,22 @@ soundmenu_mpris2_get_metadata (GVariant *dictionary)
 
 	gint64 length = 0;
 
-	SoundmenuMetadata *metadata;
+	Mpris2Metadata *metadata;
 
-	metadata = soundmenu_metadata_new();
+	metadata = mpris2_metadata_new();
 
 	g_variant_iter_init (&iter, dictionary);
 	while (g_variant_iter_loop (&iter, "{sv}", &key, &value)) {
 		if (0 == g_ascii_strcasecmp (key, "mpris:trackid"))
-			soundmenu_metatada_set_trackid(metadata, g_variant_get_string(value, NULL));
+			mpris2_metadata_set_trackid(metadata, g_variant_get_string(value, NULL));
 		else if (0 == g_ascii_strcasecmp (key, "xesam:url"))
-			soundmenu_metatada_set_url(metadata, g_variant_get_string(value, NULL));
+			mpris2_metadata_set_url(metadata, g_variant_get_string(value, NULL));
 		else if (0 == g_ascii_strcasecmp (key, "xesam:title"))
-			soundmenu_metatada_set_title(metadata, g_variant_get_string(value, NULL));
+			mpris2_metadata_set_title(metadata, g_variant_get_string(value, NULL));
 		else if (0 == g_ascii_strcasecmp (key, "xesam:artist"))
-			soundmenu_metatada_set_artist(metadata, g_avariant_get_string(value));
+			mpris2_metadata_set_artist(metadata, g_avariant_get_string(value));
 		else if (0 == g_ascii_strcasecmp (key, "xesam:album"))
-			soundmenu_metatada_set_album(metadata, g_variant_get_string(value, NULL));
+			mpris2_metadata_set_album(metadata, g_variant_get_string(value, NULL));
 		else if (0 == g_ascii_strcasecmp (key, "xesam:genre"));
 			/* (List of Strings.) Not use genre */
 		else if (0 == g_ascii_strcasecmp (key, "xesam:albumArtist"));
@@ -68,13 +68,13 @@ soundmenu_mpris2_get_metadata (GVariant *dictionary)
 		else if (0 == g_ascii_strcasecmp (key, "mpris:length"))
 			length = g_variant_get_int64 (value);
 		else if (0 == g_ascii_strcasecmp (key, "xesam:trackNumber"))
-			soundmenu_metatada_set_track_no(metadata, g_variant_get_int32 (value));
+			mpris2_metadata_set_track_no(metadata, g_variant_get_int32 (value));
 		else if (0 == g_ascii_strcasecmp (key, "xesam:useCount"));
 			/* (Integer) Not use useCount */
 		else if (0 == g_ascii_strcasecmp (key, "xesam:userRating"));
 			/* (Float) Not use userRating */
 		else if (0 == g_ascii_strcasecmp (key, "mpris:artUrl"))
-			soundmenu_metatada_set_arturl(metadata, g_variant_get_string(value, NULL));
+			mpris2_metadata_set_arturl(metadata, g_variant_get_string(value, NULL));
 		else if (0 == g_ascii_strcasecmp (key, "xesam:contentCreated"));
 			/* has type 's' */
 		else if (0 == g_ascii_strcasecmp (key, "audio-bitrate"));
@@ -96,7 +96,7 @@ soundmenu_mpris2_get_metadata (GVariant *dictionary)
 				     g_variant_get_type_string (value));
 	}
 
-	soundmenu_metatada_set_length(metadata, length / 1000000l);
+	mpris2_metadata_set_length(metadata, length / 1000000l);
 
 	return metadata;
 }
@@ -110,7 +110,7 @@ soundmenu_mpris2_parse_properties(SoundmenuPlugin *soundmenu, GVariant *properti
 	const gchar *state = NULL, *loop_status = NULL;
 	gboolean shuffle;
 	gdouble volume = 0;
-	SoundmenuMetadata *metadata;
+	Mpris2Metadata *metadata;
 
 	shuffle = soundmenu->shuffle;
 
@@ -138,12 +138,12 @@ soundmenu_mpris2_parse_properties(SoundmenuPlugin *soundmenu, GVariant *properti
 			metadata = soundmenu_mpris2_get_metadata (value);
 
 			soundmenu_mutex_lock(soundmenu->metadata_mtx);
-			soundmenu_metadata_free(soundmenu->metadata);
+			mpris2_metadata_free(soundmenu->metadata);
 			soundmenu->metadata = metadata;
 			soundmenu_mutex_unlock(soundmenu->metadata_mtx);
 
 			soundmenu_album_art_set_path(soundmenu->album_art,
-				soundmenu_metatada_get_arturl(soundmenu->metadata));
+				mpris2_metadata_get_arturl(soundmenu->metadata));
 
 			#ifdef HAVE_LIBCLASTFM
 			if (soundmenu_lastfm_is_supported (soundmenu->clastfm))

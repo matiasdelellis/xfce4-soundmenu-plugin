@@ -23,12 +23,12 @@
 #include <config.h>
 #endif
 
-#include "soundmenu-metadata.h"
+#include "mpris2-metadata.h"
 #include "soundmenu-panel-plugin.h"
 
 G_BEGIN_DECLS
 
-SoundmenuMetadata *
+Mpris2Metadata *
 soundmenu_mpris2_get_metadata (GVariant *dictionary);
 void
 soundmenu_mpris2_parse_properties(SoundmenuPlugin *soundmenu, GVariant *properties);

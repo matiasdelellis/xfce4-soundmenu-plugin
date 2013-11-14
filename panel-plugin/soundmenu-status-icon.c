@@ -20,6 +20,7 @@
 #include <glib/gi18n.h>
 
 #include "libmpris2control.h"
+#include "mpris2-metadata.h"
 
 static GtkWidget     *popup_menu = NULL;
 static GtkStatusIcon *status_icon = NULL;
@@ -61,6 +62,12 @@ mpris2_status_icon_next (GtkStatusIcon *widget,
  */
 
 static void
+mpris2_status_icon_metadada (Mpris2Control *mpris2, Mpris2Metadata *metadata, GtkStatusIcon *icon)
+{
+	gtk_status_icon_set_tooltip (icon,  mpris2_metadata_get_url(metadata));
+}
+
+static void
 mpris2_status_icon_playback_status (Mpris2Control *mpris2, GtkStatusIcon *icon)
 {
 	switch (mpris2_control_get_playback_status(mpris2)) {
@@ -79,7 +86,7 @@ mpris2_status_icon_coneccion (Mpris2Control *mpris2, GtkStatusIcon *icon)
 {
 	if (mpris2_control_is_connected(mpris2)) {
 		gtk_status_icon_set_tooltip (status_icon,
-			                         mpris2_control_get_player_identity(mpris2));
+		                             mpris2_control_get_player_identity(mpris2));
 	}
 	else {
 		gtk_status_icon_set_tooltip (status_icon, _("Soundmenu"));
@@ -174,6 +181,8 @@ main (gint argc,
 	                  G_CALLBACK(mpris2_status_icon_coneccion), status_icon);
 	g_signal_connect (G_OBJECT (mpris2), "playback-status",
 	                  G_CALLBACK(mpris2_status_icon_playback_status), status_icon);
+	g_signal_connect (G_OBJECT (mpris2), "metadata",
+	                  G_CALLBACK(mpris2_status_icon_metadada), status_icon);
 
 	gtk_main ();
 

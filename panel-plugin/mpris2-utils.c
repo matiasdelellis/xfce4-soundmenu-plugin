@@ -27,7 +27,7 @@
 #include <glib/gprintf.h>
 #include <glib/gi18n.h>
 
-#include "soundmenu-utils.h"
+#include "mpris2-utils.h"
 
 const gchar *
 g_avariant_get_string(GVariant * variant)

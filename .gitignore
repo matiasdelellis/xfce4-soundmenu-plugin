@@ -3,6 +3,7 @@
 *.lo
 *.swp
 *.tar.*
+*.o
 .deps
 .libs
 ChangeLog
@@ -22,6 +23,7 @@ missing
 mkinstalldirs
 panel-plugin/*.desktop
 panel-plugin/*.desktop.in
+panel-plugin/xfce4-soundmenu-icon
 po/.intltool-merge-cache
 po/Makefile.in.in
 po/POTFILES

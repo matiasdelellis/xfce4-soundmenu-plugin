@@ -95,6 +95,36 @@ mpris2_status_icon_coneccion (Mpris2Control *mpris2, GtkStatusIcon *icon)
 }
 
 static void
+mpris2_status_icon_scroll (GtkStatusIcon *icon,
+                           GdkEventScroll *event,
+                           Mpris2Control *mpris2)
+{
+	gdouble volume = 0.0;
+	
+	if (event->type != GDK_SCROLL)
+		return;
+
+	if(!mpris2_control_is_connected(mpris2))
+		return;
+
+	volume = mpris2_control_get_volume (mpris2);
+
+	switch (event->direction) {
+		case GDK_SCROLL_UP:
+		case GDK_SCROLL_RIGHT:
+			volume += 0.02;
+			break;
+		case GDK_SCROLL_DOWN:
+		case GDK_SCROLL_LEFT:
+			volume -= 0.02;
+			break;
+	}
+
+	volume = CLAMP (volume, 0.0, 1.0);
+	mpris2_control_set_volume (mpris2, volume);
+}
+
+static void
 mpris2_status_icon_activate (GtkStatusIcon *icon,
                              Mpris2Control *mpris2)
 {
@@ -173,9 +203,10 @@ main (gint argc,
 	/* Connect signals */
 	g_signal_connect (G_OBJECT (status_icon), "popup-menu",
 	                  G_CALLBACK (mpris2_status_icon_show_popup), mpris2);
-
 	g_signal_connect (G_OBJECT (status_icon), "activate",
 	                  G_CALLBACK (mpris2_status_icon_activate), mpris2);
+	g_signal_connect (G_OBJECT (status_icon), "scroll_event",
+	                  G_CALLBACK (mpris2_status_icon_scroll), mpris2);
 
 	g_signal_connect (G_OBJECT (mpris2), "connection",
 	                  G_CALLBACK(mpris2_status_icon_coneccion), status_icon);

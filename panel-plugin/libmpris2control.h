@@ -34,9 +34,10 @@ typedef struct _Mpris2ControlClass Mpris2ControlClass;
 
 struct _Mpris2ControlClass {
 	GObjectClass parent_class;
-	void (*connection) (Mpris2Control *mpris2);
+	void (*connection)      (Mpris2Control *mpris2);
 	void (*playback_status) (Mpris2Control *mpris2);
-	void (*metadata) (Mpris2Control *mpris2, Mpris2Metadata *metadata);
+	void (*metadata)        (Mpris2Control *mpris2, Mpris2Metadata *metadata);
+	void (*volume)          (Mpris2Control *mpris2);
 };
 
 typedef enum {
@@ -72,8 +73,12 @@ gchar        **mpris2_control_get_supported_mime_types  (Mpris2Control *mpris2);
 /*
  * Interface MediaPlayer2.Player properties.
  */
+PlaybackStatus  mpris2_control_get_playback_status (Mpris2Control *mpris2);
 
-PlaybackStatus mpris2_control_get_playback_status (Mpris2Control *mpris2);
+Mpris2Metadata *mpris2_control_get_metadata        (Mpris2Control *mpris2);
+
+gdouble         mpris2_control_get_volume          (Mpris2Control *mpris2);
+void            mpris2_control_set_volume          (Mpris2Control *mpris2, gdouble volume);
 
 /*
  * Library.

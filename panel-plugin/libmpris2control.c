@@ -49,6 +49,7 @@ struct _Mpris2Control
 	/* Interface MediaPlayer2.Player */
 	PlaybackStatus   playback_status;
 	Mpris2Metadata  *metadata;
+	gdouble          volume;
 };
 
 enum
@@ -56,6 +57,7 @@ enum
 	CONNECTION,
 	PLAYBACK_STATUS,
 	METADATA,
+	VOLUME,
 	LAST_SIGNAL
 };
 static int signals[LAST_SIGNAL] = { 0 };
@@ -70,6 +72,7 @@ static gchar *mpris2_control_get_player   (Mpris2Control *mpris2);
 static void   mpris2_control_connect_dbus (Mpris2Control *mpris2);
 
 GVariant     *mpris2_control_get_player_properties (Mpris2Control *mpris2, const gchar *prop);
+static void   mpris2_control_set_player_properties (Mpris2Control *mpris2, const gchar *prop, GVariant *vprop);
 
 /*
  *  Basic control of gdbus functions
@@ -137,6 +140,24 @@ PlaybackStatus
 mpris2_control_get_playback_status (Mpris2Control *mpris2)
 {
 	return mpris2->playback_status;
+}
+
+Mpris2Metadata *
+mpris2_control_get_metadata (Mpris2Control *mpris2)
+{
+	return mpris2->metadata;
+}
+
+gdouble
+mpris2_control_get_volume (Mpris2Control *mpris2)
+{
+	return mpris2->volume;
+}
+
+void
+mpris2_control_set_volume (Mpris2Control *mpris2, gdouble volume)
+{
+	mpris2_control_set_player_properties (mpris2, "Volume", g_variant_new_double(volume));
 }
 
 /*
@@ -291,6 +312,8 @@ mpris2_control_get_player (Mpris2Control *mpris2)
 	return player;
 }
 
+/* Get any player propertie using org.freedesktop.DBus.Properties interfase. */
+
 GVariant *
 mpris2_control_get_player_properties (Mpris2Control *mpris2, const gchar *prop)
 {
@@ -320,6 +343,36 @@ mpris2_control_get_player_properties (Mpris2Control *mpris2, const gchar *prop)
 	g_variant_get (v, "(v)", &iter);
 
 	return iter;
+}
+
+/* Change any player propertie using org.freedesktop.DBus.Properties interfase. */
+
+static void
+mpris2_control_set_player_properties (Mpris2Control *mpris2, const gchar *prop, GVariant *vprop)
+{
+	GVariant *reply;
+	GError   *error = NULL;
+
+	reply = g_dbus_connection_call_sync (mpris2->gconnection,
+	                                     mpris2->dbus_name,
+	                                     "/org/mpris/MediaPlayer2",
+	                                     "org.freedesktop.DBus.Properties",
+	                                     "Set",
+	                                     g_variant_new ("(ssv)",
+	                                                    "org.mpris.MediaPlayer2.Player",
+	                                                    prop,
+	                                                    vprop),
+	                                     NULL,
+	                                     G_DBUS_CALL_FLAGS_NONE,
+	                                     -1,
+	                                     NULL,
+	                                     NULL);
+	if (reply == NULL) {
+		g_warning ("Unable to set session: %s", error->message);
+		g_error_free (error);
+		return;
+	}
+	g_variant_unref(reply);
 }
 
 /* These function intercepts the messages from the player. */
@@ -415,6 +468,7 @@ mpris2_control_parse_properties (Mpris2Control *mpris2, GVariant *properties)
 	const gchar *key;
 	const gchar *playback_status = NULL;
 	Mpris2Metadata *metadata = NULL;
+	gdouble volume = 0;
 
 	g_variant_iter_init (&iter, properties);
 
@@ -424,6 +478,9 @@ mpris2_control_parse_properties (Mpris2Control *mpris2, GVariant *properties)
 		}
 		else if (0 == g_ascii_strcasecmp (key, "Metadata")) {
 			metadata = mpris2_metadata_new_from_variant (value);
+		}
+		else if (0 == g_ascii_strcasecmp (key, "Volume")) {
+			volume = g_variant_get_double(value);
 		}
 	}
 
@@ -436,6 +493,10 @@ mpris2_control_parse_properties (Mpris2Control *mpris2, GVariant *properties)
 		mpris2_metadata_free (mpris2->metadata);
 		mpris2->metadata = metadata;
 		g_signal_emit (mpris2, signals[METADATA], 0, metadata);
+	}
+	if (volume != 0) {
+		mpris2->volume = volume;
+		g_signal_emit (mpris2, signals[VOLUME], 0);
 	}
 }
 
@@ -608,6 +669,13 @@ mpris2_control_class_init (Mpris2ControlClass *klass)
 	                                  g_cclosure_marshal_VOID__POINTER,
 	                                  G_TYPE_NONE, 1, G_TYPE_POINTER);
 
+	signals[VOLUME] = g_signal_new ("volume",
+	                                G_TYPE_FROM_CLASS (gobject_class),
+	                                G_SIGNAL_RUN_LAST,
+	                                G_STRUCT_OFFSET (Mpris2ControlClass, volume),
+	                                NULL, NULL,
+	                                g_cclosure_marshal_VOID__VOID,
+	                                G_TYPE_NONE, 0);
 }
 
 static void

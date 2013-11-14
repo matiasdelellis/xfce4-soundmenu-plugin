@@ -67,7 +67,9 @@ G_DEFINE_TYPE (Mpris2Control, mpris2_control, G_TYPE_OBJECT)
 /*
  * Prototypes
  */
-static void   mpris2_control_call_method  (Mpris2Control *mpris2, const char *method);
+static void   mpris2_control_call_player_method  (Mpris2Control *mpris2, const char *method);
+static void   mpris2_control_call_method         (Mpris2Control *mpris2, const char *method);
+
 static gchar *mpris2_control_get_player   (Mpris2Control *mpris2);
 static void   mpris2_control_connect_dbus (Mpris2Control *mpris2);
 
@@ -84,7 +86,7 @@ mpris2_control_play_pause (Mpris2Control *mpris2)
 	if (!mpris2->connected)
 		return;
 
-	mpris2_control_call_method (mpris2, "PlayPause");
+	mpris2_control_call_player_method (mpris2, "PlayPause");
 }
 
 void
@@ -93,7 +95,7 @@ mpris2_control_stop (Mpris2Control *mpris2)
 	if (!mpris2->connected)
 		return;
 
-	mpris2_control_call_method (mpris2, "Stop");
+	mpris2_control_call_player_method (mpris2, "Stop");
 }
 
 void
@@ -102,7 +104,7 @@ mpris2_control_prev (Mpris2Control *mpris2)
 	if (!mpris2->connected)
 		return;
 
-	mpris2_control_call_method (mpris2, "Previous");
+	mpris2_control_call_player_method (mpris2, "Previous");
 }
 
 void
@@ -111,7 +113,7 @@ mpris2_control_next (Mpris2Control *mpris2)
 	if (!mpris2->connected)
 		return;
 
-	mpris2_control_call_method (mpris2, "Next");
+	mpris2_control_call_player_method (mpris2, "Next");
 }
 
 void
@@ -240,7 +242,7 @@ mpris2_control_is_connected (Mpris2Control *mpris2)
 /* Send mesages to use methods of org.mpris.MediaPlayer2.Player interfase. */
 
 static void
-mpris2_control_call_method (Mpris2Control *mpris2, const char *method)
+mpris2_control_call_player_method (Mpris2Control *mpris2, const char *method)
 {
 	GDBusMessage *message;
 	GError       *error = NULL;
@@ -248,6 +250,39 @@ mpris2_control_call_method (Mpris2Control *mpris2, const char *method)
 	message = g_dbus_message_new_method_call (mpris2->dbus_name,
 	                                          "/org/mpris/MediaPlayer2",
 	                                          "org.mpris.MediaPlayer2.Player",
+	                                          method);
+
+	g_dbus_connection_send_message (mpris2->gconnection,
+	                                message,
+	                                G_DBUS_SEND_MESSAGE_FLAGS_NONE,
+	                                NULL,
+	                                &error);
+	if (error != NULL) {
+		g_warning ("unable to send message: %s", error->message);
+		g_clear_error (&error);
+		error = NULL;
+	}
+
+	g_dbus_connection_flush_sync (mpris2->gconnection, NULL, &error);
+	if (error != NULL) {
+		g_warning ("unable to flush message queue: %s", error->message);
+		g_clear_error (&error);
+	}
+
+	g_object_unref (message);
+}
+
+/* Send mesages to use methods of org.mpris.MediaPlayer2 interfase. */
+
+static void
+mpris2_control_call_method (Mpris2Control *mpris2, const char *method)
+{
+	GDBusMessage *message;
+	GError       *error = NULL;
+
+	message = g_dbus_message_new_method_call (mpris2->dbus_name,
+	                                          "/org/mpris/MediaPlayer2",
+	                                          "org.mpris.MediaPlayer2",
 	                                          method);
 
 	g_dbus_connection_send_message (mpris2->gconnection,
@@ -546,7 +581,7 @@ mpris2_control_connected_dbus (GDBusConnection *connection,
 	g_variant_unref(vprop);
 
 	vprop = mpris2_control_get_player_properties (mpris2, "CanQuit");
-	mpris2->can_raise = g_variant_get_boolean (vprop);
+	mpris2->can_quit = g_variant_get_boolean (vprop);
 	g_variant_unref(vprop);
 
 	vprop = mpris2_control_get_player_properties (mpris2, "HasTrackList");

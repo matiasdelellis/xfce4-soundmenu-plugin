@@ -52,7 +52,7 @@ soundmenu_configure_response (GtkWidget       *dialog,
 	}
 	else {
 		player = gtk_entry_get_text (GTK_ENTRY(soundmenu->w_player));
-		if (g_str_nempty0 (player))
+		if (g_ascii_strcasecmp (player, mpris2_client_get_player (soundmenu->mpris2)))
 			mpris2_client_set_player (soundmenu->mpris2, player);
 
 		#ifdef HAVE_LIBCLASTFM

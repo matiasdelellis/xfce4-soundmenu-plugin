@@ -101,6 +101,8 @@ void            mpris2_client_set_shuffle               (Mpris2Client *mpris2, g
  */
 
 gboolean        mpris2_client_is_connected              (Mpris2Client *mpris2);
+
+const gchar    *mpris2_client_get_player                (Mpris2Client *mpris2);
 void            mpris2_client_set_player                (Mpris2Client *mpris2, const gchar *player);
 gchar          *mpris2_client_auto_set_player           (Mpris2Client *mpris2);
 

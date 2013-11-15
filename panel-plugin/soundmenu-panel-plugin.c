@@ -38,7 +38,6 @@
 
 /* default settings */
 
-#define DEFAULT_PLAYER "unknown"
 #define DEFAULT_SHOW_STOP TRUE
 #define DEFAULT_GLOBAL_KEYS TRUE
 #define DEFAULT_LASTFM FALSE
@@ -670,13 +669,7 @@ soundmenu_new (XfcePanelPlugin *plugin)
 
 static void init_soundmenu_plugin(SoundmenuPlugin *soundmenu)
 {
-	/* If no has a player selected, search it with dbus. */
-
-	if (soundmenu->player == NULL)
-		soundmenu->player = g_strdup (DEFAULT_PLAYER);
-
 	soundmenu->mpris2 = mpris2_client_new ();
-	mpris2_client_set_player (soundmenu->mpris2, soundmenu->player);
 
 	g_signal_connect (G_OBJECT (soundmenu->mpris2), "connection",
 	                  G_CALLBACK(mpris2_panel_plugin_coneccion), soundmenu);
@@ -688,6 +681,10 @@ static void init_soundmenu_plugin(SoundmenuPlugin *soundmenu)
 	                  G_CALLBACK(mpris2_panel_plugin_loop_status), soundmenu);
 	g_signal_connect (G_OBJECT (soundmenu->mpris2), "shuffle",
 	                  G_CALLBACK(mpris2_panel_plugin_shuffle), soundmenu);
+
+	soundmenu->player = mpris2_client_auto_set_player (soundmenu->mpris2);
+	if (soundmenu->player == NULL)
+		soundmenu->player = g_strdup ("unknown");
 
 	/* Init the goodies services .*/
 

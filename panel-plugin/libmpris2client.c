@@ -79,7 +79,7 @@ G_DEFINE_TYPE (Mpris2Client, mpris2_client, G_TYPE_OBJECT)
 static void      mpris2_client_call_player_method    (Mpris2Client *mpris2, const char *method);
 static void      mpris2_client_call_method           (Mpris2Client *mpris2, const char *method);
 
-static gchar    *mpris2_client_get_player            (Mpris2Client *mpris2);
+static gchar    *mpris2_client_check_player          (Mpris2Client *mpris2);
 static void      mpris2_client_connect_dbus          (Mpris2Client *mpris2);
 
 static GVariant *mpris2_client_get_all_properties    (Mpris2Client *mpris2);
@@ -262,6 +262,12 @@ mpris2_client_get_supported_mime_types (Mpris2Client *mpris2)
 	return mpris2->supported_mime_types;
 }
 
+const gchar *
+mpris2_client_get_player (Mpris2Client *mpris2)
+{
+	return mpris2->player;
+}
+
 void
 mpris2_client_set_player (Mpris2Client *mpris2, const gchar *player)
 {
@@ -291,7 +297,7 @@ mpris2_client_set_player (Mpris2Client *mpris2, const gchar *player)
 gchar *
 mpris2_client_auto_set_player (Mpris2Client *mpris2)
 {
-	gchar *player = mpris2_client_get_player (mpris2);
+	gchar *player = mpris2_client_check_player (mpris2);
 
 	mpris2_client_set_player (mpris2, player);
 
@@ -377,7 +383,7 @@ mpris2_client_call_method (Mpris2Client *mpris2, const char *method)
 /* Returns the first player name that compliant to mpris2 on dbus.  */
 
 static gchar *
-mpris2_client_get_player (Mpris2Client *mpris2)
+mpris2_client_check_player (Mpris2Client *mpris2)
 {
 	GError *error = NULL;
 	GVariant *v;

@@ -22,7 +22,6 @@
 
 #include "soundmenu-dialogs.h"
 #include "soundmenu-dialog-hig.h"
-#include "soundmenu-dbus.h"
 #include "mpris2-utils.h"
 #include "libmpris2client.h"
 
@@ -53,14 +52,8 @@ soundmenu_configure_response (GtkWidget       *dialog,
 	}
 	else {
 		player = gtk_entry_get_text (GTK_ENTRY(soundmenu->w_player));
-		if (g_str_nempty0 (player)) {
-			if (g_str_nempty0(soundmenu->player))
-				g_free (soundmenu->player);
-			soundmenu->player = g_strdup(player);
-
+		if (g_str_nempty0 (player))
 			mpris2_client_set_player (soundmenu->mpris2, player);
-			soundmenu_mpris2_reinit_dbus (soundmenu);
-		}
 
 		#ifdef HAVE_LIBCLASTFM
 		soundmenu_lastfm_set_supported (soundmenu->clastfm,
@@ -98,7 +91,7 @@ refresh_player (GtkEntry        *player_entry,
 	gchar *player = NULL;
 
 	if (position == GTK_ENTRY_ICON_SECONDARY) {
-		player = soundmenu_get_mpris2_player_running(soundmenu);
+		player = mpris2_client_auto_set_player (soundmenu->mpris2);
 		gtk_entry_set_text(GTK_ENTRY(soundmenu->w_player), player);
 	}
 }

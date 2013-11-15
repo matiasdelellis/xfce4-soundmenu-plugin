@@ -83,25 +83,6 @@ struct _SoundmenuPlugin {
 	struct lastfm_pref lw;
 	#endif
 
-	/* Player states */
-	PlaybackStatus       state;
-	Mpris2Metadata      *metadata;
-	#if GLIB_CHECK_VERSION (2, 32, 0)
-	GMutex metadata_mtx;
-	#else
-	GMutex *metadata_mtx;
-	#endif
-	LoopStatus           loops_status;
-	gboolean             shuffle;
-	gdouble              volume;
-
-	/* Dbus conecction */
-	GDBusConnection *gconnection;
-	GDBusProxy      *proxy;
-	gchar			*dbus_name;
-	guint            watch_id;
-	gboolean         connected;
-
 	/* soundmenu settings */
 	gchar			*player;
 	gboolean		show_album_art;

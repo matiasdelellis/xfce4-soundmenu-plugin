@@ -20,9 +20,7 @@
 #include <config.h>
 #endif
 
-#include "soundmenu-dbus.h"
 #include "soundmenu-dialogs.h"
-#include "soundmenu-mpris2.h"
 #include "mpris2-utils.h"
 #include "soundmenu-related.h"
 #include "soundmenu-simple-async.h"
@@ -107,6 +105,46 @@ soundmenu_get_huge_album_art (SoundmenuPlugin *soundmenu)
  * Some Private api.
  */
 
+static void
+mpris2_panel_plugin_metadada (Mpris2Client *mpris2, Mpris2Metadata *metadata, SoundmenuPlugin *soundmenu)
+{
+	soundmenu_album_art_set_path (soundmenu->album_art,
+		mpris2_metadata_get_arturl(metadata));
+}
+
+static void
+mpris2_panel_plugin_playback_status (Mpris2Client *mpris2, SoundmenuPlugin *soundmenu)
+{
+	gtk_container_remove (GTK_CONTAINER(soundmenu->play_button),
+	                      gtk_bin_get_child(GTK_BIN(soundmenu->play_button)));
+
+	switch (mpris2_client_get_playback_status(mpris2)) {
+		case PLAYING:
+			gtk_container_add (GTK_CONTAINER(soundmenu->play_button), soundmenu->image_pause);
+			break;
+		case PAUSED:
+			gtk_container_add (GTK_CONTAINER(soundmenu->play_button), soundmenu->image_play);
+			break;
+		case STOPPED:
+		default:
+			gtk_container_add (GTK_CONTAINER(soundmenu->play_button), soundmenu->image_play);
+			soundmenu_album_art_set_path (soundmenu->album_art, NULL);
+			break;
+	}
+	gtk_widget_show_all (soundmenu->play_button);
+
+	#ifdef HAVE_LIBCLASTFM
+	if (soundmenu_lastfm_is_supported(soundmenu->clastfm))
+		update_lastfm(soundmenu);
+	#endif
+}
+
+static void
+mpris2_panel_plugin_coneccion (Mpris2Client *mpris2, SoundmenuPlugin *soundmenu)
+{
+	soundmenu_update_layout_changes (soundmenu);
+}
+
 static gboolean
 soundmenu_set_query_tooltip_cb (GtkWidget       *widget,
                                 gint             x,
@@ -118,15 +156,18 @@ soundmenu_set_query_tooltip_cb (GtkWidget       *widget,
 	const gchar *title, *artist, *album, *url;
 	gchar *markup_text = NULL, *length = NULL, *filename = NULL,*name = NULL;
 	GError *error = NULL;
+	Mpris2Metadata *metadata = NULL;
 
-	if(soundmenu->connected) {
-		if (soundmenu->state == STOPPED)
+	if (mpris2_client_is_connected(soundmenu->mpris2)) {
+		if (mpris2_client_get_playback_status (soundmenu->mpris2) == STOPPED)
 			markup_text = g_strdup_printf("%s", _("Stopped"));
 		else {
-			title = mpris2_metadata_get_title(soundmenu->metadata);
-			artist = mpris2_metadata_get_artist(soundmenu->metadata);
-			album = mpris2_metadata_get_album(soundmenu->metadata);
-			url = mpris2_metadata_get_url(soundmenu->metadata);
+			metadata = mpris2_client_get_metadata (soundmenu->mpris2);
+
+			title = mpris2_metadata_get_title (metadata);
+			artist = mpris2_metadata_get_artist (metadata);
+			album = mpris2_metadata_get_album (metadata);
+			url = mpris2_metadata_get_url (metadata);
 
 			if (g_str_empty0(url))
 			    return TRUE;
@@ -143,7 +184,7 @@ soundmenu_set_query_tooltip_cb (GtkWidget       *widget,
 					name = g_strdup(url);
 				}
 			}
-			length = convert_length_str(mpris2_metadata_get_length(soundmenu->metadata));
+			length = convert_length_str(mpris2_metadata_get_length (metadata));
 
 			markup_text = g_markup_printf_escaped(_("<b>%s</b> (%s)\nby %s in %s"),
 				                                  name, length,
@@ -187,7 +228,7 @@ soundmenu_album_art_frame_press_callback (GtkWidget       *event_box,
 	    event->type != GDK_3BUTTON_PRESS)
 		return TRUE;
 
-	if (!soundmenu->connected) {
+	if (!mpris2_client_is_connected(soundmenu->mpris2)) {
 		soundmenu_launch_player (soundmenu->player);
 		return TRUE;
 	}
@@ -205,84 +246,104 @@ soundmenu_album_art_frame_press_callback (GtkWidget       *event_box,
 	return TRUE;
 }
 
+/*
+ *  Callbacks of button controls
+ */
+
 static void
-soundmenu_toggle_play_button_state (SoundmenuPlugin *soundmenu)
+prev_button_handler(GtkButton *button, SoundmenuPlugin *soundmenu)
 {
-	gtk_container_remove(GTK_CONTAINER(soundmenu->play_button),
-                       gtk_bin_get_child(GTK_BIN(soundmenu->play_button)));
-	if ((soundmenu->state == PAUSED) || (soundmenu->state == STOPPED))
-		gtk_container_add(GTK_CONTAINER(soundmenu->play_button), soundmenu->image_play);
-	else
-		gtk_container_add(GTK_CONTAINER(soundmenu->play_button), soundmenu->image_pause);
-	gtk_widget_show_all(soundmenu->play_button);
+	mpris2_client_prev (soundmenu->mpris2);
 }
 
-void
-soundmenu_update_playback_status (SoundmenuPlugin *soundmenu, const gchar *playback_status)
+static void
+play_button_handler(GtkButton *button, SoundmenuPlugin *soundmenu)
 {
-	if (0 == g_ascii_strcasecmp(playback_status, "Playing")) {
-		soundmenu_album_art_set_path(soundmenu->album_art,
-			mpris2_metadata_get_arturl(soundmenu->metadata));
-		soundmenu->state = PLAYING;
-	}
-	else if (0 == g_ascii_strcasecmp(playback_status, "Paused"))
-		soundmenu->state = PAUSED;
-	else {
-		soundmenu->state = STOPPED;
-		soundmenu_album_art_set_path(soundmenu->album_art, NULL);
-	}
-	soundmenu_toggle_play_button_state(soundmenu);
-	#ifdef HAVE_LIBCLASTFM
-	if (soundmenu_lastfm_is_supported(soundmenu->clastfm))
-		update_lastfm(soundmenu);
-	#endif
+	mpris2_client_play_pause (soundmenu->mpris2);
 }
 
-void
-soundmenu_update_loop_status (SoundmenuPlugin *soundmenu, const gchar *loop_status)
+static void
+stop_button_handler(GtkButton *button, SoundmenuPlugin    *soundmenu)
 {
-	if (0 == g_ascii_strcasecmp(loop_status, "Playlist")) {
-		soundmenu->loops_status = PLAYLIST;
+	mpris2_client_stop (soundmenu->mpris2);
+}
+
+static void
+next_button_handler(GtkButton *button, SoundmenuPlugin    *soundmenu)
+{
+	mpris2_client_next (soundmenu->mpris2);
+}
+
+static gboolean
+soundmenu_panel_button_scrolled (GtkWidget        *widget,
+                                 GdkEventScroll   *event,
+                                 SoundmenuPlugin *soundmenu)
+{
+	gdouble volume = 0.0;
+
+	if(!mpris2_client_is_connected(soundmenu->mpris2))
+		return FALSE;
+
+	switch (event->direction) {
+		case GDK_SCROLL_UP:
+		case GDK_SCROLL_RIGHT:
+			volume += 0.02;
+			break;
+		case GDK_SCROLL_DOWN:
+		case GDK_SCROLL_LEFT:
+			volume -= 0.02;
+			break;
+	}
+	volume = CLAMP (volume, 0.0, 1.0);
+
+	mpris2_client_set_volume (soundmenu->mpris2, volume);
+
+	return FALSE;
+}
+
+/*
+ *
+ */
+
+static void
+mpris2_panel_plugin_loop_status (Mpris2Client *mpris2, SoundmenuPlugin *soundmenu)
+{
+	LoopStatus loop_status = mpris2_client_get_loop_status (mpris2);
+
+	if (loop_status == PLAYLIST)
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(soundmenu->loop_menu_item), TRUE);
-	}
-	else {
-		soundmenu->loops_status = NONE;
+	else
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(soundmenu->loop_menu_item), FALSE);
-	}
 }
 
 static void
 soundmenu_toggled_loop_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 {
-	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
-		soundmenu->loops_status = PLAYLIST;
-		soundmenu_mpris2_properties_set_by_name (soundmenu, "LoopStatus", "Playlist");
-	}
-	else {
-		soundmenu->loops_status = NONE;
-		soundmenu_mpris2_properties_set_by_name (soundmenu, "LoopStatus", "None");
-	}
+	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget)))
+		mpris2_client_set_loop_status (soundmenu->mpris2, PLAYLIST);
+	else
+		mpris2_client_set_loop_status (soundmenu->mpris2, NONE);
 }
 
-void
-soundmenu_update_shuffle (SoundmenuPlugin *soundmenu, gboolean shuffle)
+static void
+mpris2_panel_plugin_shuffle (Mpris2Client *mpris2, SoundmenuPlugin *soundmenu)
 {
-	soundmenu->shuffle = shuffle;
-	gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(soundmenu->shuffle_menu_item), shuffle);
+	gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(soundmenu->shuffle_menu_item),
+		mpris2_client_get_shuffle (soundmenu->mpris2));
 }
 
 static void
 soundmenu_toggled_shuffle_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 {
-	soundmenu->shuffle = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget));
-	soundmenu_mpris2_properties_set_bool_by_name (soundmenu, "Shuffle", soundmenu->shuffle);
+	mpris2_client_set_shuffle (soundmenu->mpris2,
+		gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget)));
 }
 
 /* Sound menu plugin construct */
 
 void
 soundmenu_save (XfcePanelPlugin *plugin,
-             SoundmenuPlugin    *soundmenu)
+                SoundmenuPlugin    *soundmenu)
 {
 	XfceRc *rc;
 	gchar  *file;
@@ -362,7 +423,6 @@ soundmenu_read (SoundmenuPlugin *soundmenu)
 			soundmenu_lastfm_set_user (soundmenu->clastfm, xfce_rc_read_entry (rc, "lastfm_user", NULL));
 			soundmenu_lastfm_set_password (soundmenu->clastfm, xfce_rc_read_entry (rc, "lastfm_pass", NULL));
 			#endif
-			soundmenu->state = STOPPED;
 
 			/* cleanup */
 			xfce_rc_close (rc);
@@ -383,7 +443,6 @@ soundmenu_read (SoundmenuPlugin *soundmenu)
 	#ifdef HAVE_LIBKEYBINDER
 	soundmenu->use_global_keys = DEFAULT_GLOBAL_KEYS;
 	#endif
-	soundmenu->state = STOPPED;
 }
 
 #ifdef HAVE_LIBCLASTFM
@@ -430,7 +489,6 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	GtkWidget *ev_album_art, *play_button, *stop_button, *prev_button, *next_button;
 	GtkWidget *separator, *loop_menu_item, *shuffle_menu_item, *tools_menu_item, *tools_submenu;
 	SoundmenuAlbumArt *album_art;
-	Mpris2Metadata *metadata;
 
 	/* allocate memory for the plugin structure */
 	soundmenu = panel_slice_new0 (SoundmenuPlugin);
@@ -439,10 +497,6 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	#ifdef HAVE_LIBCLASTFM
 	soundmenu->clastfm = soundmenu_lastfm_new ();
 	#endif
-
-	metadata = mpris2_metadata_new();
-	soundmenu->metadata = metadata;
-	soundmenu_mutex_create(soundmenu->metadata_mtx);
 
 	/* read the user settings */
 	soundmenu_read (soundmenu);
@@ -616,19 +670,24 @@ soundmenu_new (XfcePanelPlugin *plugin)
 
 static void init_soundmenu_plugin(SoundmenuPlugin *soundmenu)
 {
-	/* Init dbus and configure filters. */
-
-	init_dbus_session (soundmenu);
-
 	/* If no has a player selected, search it with dbus. */
 
-	if (soundmenu->player == NULL)
-		soundmenu->player = soundmenu_get_mpris2_player_running(soundmenu);
 	if (soundmenu->player == NULL)
 		soundmenu->player = g_strdup (DEFAULT_PLAYER);
 
 	soundmenu->mpris2 = mpris2_client_new ();
 	mpris2_client_set_player (soundmenu->mpris2, soundmenu->player);
+
+	g_signal_connect (G_OBJECT (soundmenu->mpris2), "connection",
+	                  G_CALLBACK(mpris2_panel_plugin_coneccion), soundmenu);
+	g_signal_connect (G_OBJECT (soundmenu->mpris2), "playback-status",
+	                  G_CALLBACK(mpris2_panel_plugin_playback_status), soundmenu);
+	g_signal_connect (G_OBJECT (soundmenu->mpris2), "metadata",
+	                  G_CALLBACK(mpris2_panel_plugin_metadada), soundmenu);
+	g_signal_connect (G_OBJECT (soundmenu->mpris2), "loop-status",
+	                  G_CALLBACK(mpris2_panel_plugin_loop_status), soundmenu);
+	g_signal_connect (G_OBJECT (soundmenu->mpris2), "shuffle",
+	                  G_CALLBACK(mpris2_panel_plugin_shuffle), soundmenu);
 
 	/* Init the goodies services .*/
 
@@ -651,7 +710,7 @@ static void init_soundmenu_plugin(SoundmenuPlugin *soundmenu)
 
 static void
 soundmenu_free (XfcePanelPlugin *plugin,
-             SoundmenuPlugin    *soundmenu)
+                SoundmenuPlugin    *soundmenu)
 {
 	GtkWidget *dialog;
 
@@ -672,7 +731,7 @@ soundmenu_free (XfcePanelPlugin *plugin,
 	/* check if the dialog is still open. if so, destroy it */
 	dialog = g_object_get_data (G_OBJECT (plugin), "dialog");
 	if (G_UNLIKELY (dialog != NULL))
-	gtk_widget_destroy (dialog);
+		gtk_widget_destroy (dialog);
 
 	/* destroy the panel widgets */
 	gtk_widget_destroy (soundmenu->hvbox);
@@ -680,20 +739,10 @@ soundmenu_free (XfcePanelPlugin *plugin,
 	/* cleanup the metadata and settings */
 	if (G_LIKELY (soundmenu->player != NULL))
 		g_free (soundmenu->player);
-	if (G_LIKELY (soundmenu->dbus_name != NULL))
-		g_free (soundmenu->dbus_name);
-
-	soundmenu_mutex_lock(soundmenu->metadata_mtx);
-	if (G_LIKELY (soundmenu->metadata != NULL))
-		mpris2_metadata_free(soundmenu->metadata);
-	soundmenu_mutex_unlock(soundmenu->metadata_mtx);
-	soundmenu_mutex_free(soundmenu->metadata_mtx);
 
 	/* free the plugin structure */
 	panel_slice_free (SoundmenuPlugin, soundmenu);
 }
-
-
 
 static gboolean
 soundmenu_size_changed (XfcePanelPlugin *plugin,
@@ -746,9 +795,9 @@ soundmenu_size_changed (XfcePanelPlugin *plugin,
 
 #if LIBXFCE4PANEL_CHECK_VERSION (4,9,0)
 static void
-soundmenu_mode_changed (XfcePanelPlugin *plugin,
-                            XfcePanelPluginMode   mode,
-                            SoundmenuPlugin    *soundmenu)
+soundmenu_mode_changed (XfcePanelPlugin     *plugin,
+                        XfcePanelPluginMode  mode,
+                        SoundmenuPlugin     *soundmenu)
 {
 	GtkOrientation panel_orientation, orientation;
 
@@ -791,7 +840,7 @@ soundmenu_orientation_changed (XfcePanelPlugin *plugin,
 
 void soundmenu_update_layout_changes (SoundmenuPlugin *soundmenu)
 {
-	if(soundmenu->connected) {
+	if (mpris2_client_is_connected(soundmenu->mpris2)) {
 		/* Sensitive all controls */
 
 		gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->prev_button), TRUE);

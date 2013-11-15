@@ -109,7 +109,7 @@ mpris2_status_icon_scroll (GtkStatusIcon *icon,
                            Mpris2Client *mpris2)
 {
 	gdouble volume = 0.0;
-	
+
 	if (event->type != GDK_SCROLL)
 		return;
 

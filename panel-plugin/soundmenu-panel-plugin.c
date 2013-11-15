@@ -141,6 +141,35 @@ mpris2_panel_plugin_playback_status (Mpris2Client *mpris2, SoundmenuPlugin *soun
 static void
 mpris2_panel_plugin_coneccion (Mpris2Client *mpris2, SoundmenuPlugin *soundmenu)
 {
+	gboolean connection = FALSE;
+
+	connection = mpris2_client_is_connected (soundmenu->mpris2);
+
+	if (connection) {
+		/* Sensitive all controls */
+		gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->prev_button), TRUE);
+		gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->play_button), TRUE);
+		gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->stop_button), TRUE);
+		gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->next_button), TRUE);
+
+		/* Set visible acording player props */
+		gtk_widget_set_visible (soundmenu->loop_menu_item,
+			mpris2_client_player_has_loop_status (soundmenu->mpris2));
+		gtk_widget_set_visible (soundmenu->shuffle_menu_item,
+			mpris2_client_player_has_shuffle (soundmenu->mpris2));
+	}
+	else {
+		/* Insensitive controls */
+		gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->prev_button), FALSE);
+		gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->play_button), TRUE);
+		gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->stop_button), FALSE);
+		gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->next_button), FALSE);
+
+		/* Hide loop_status and shuffle options */
+		gtk_widget_set_visible (soundmenu->loop_menu_item, FALSE);
+		gtk_widget_set_visible (soundmenu->shuffle_menu_item, FALSE);
+	}
+
 	soundmenu_update_layout_changes (soundmenu);
 }
 
@@ -313,6 +342,8 @@ mpris2_panel_plugin_loop_status (Mpris2Client *mpris2, SoundmenuPlugin *soundmen
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(soundmenu->loop_menu_item), TRUE);
 	else
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(soundmenu->loop_menu_item), FALSE);
+
+	gtk_widget_show (soundmenu->loop_menu_item);
 }
 
 static void
@@ -329,6 +360,8 @@ mpris2_panel_plugin_shuffle (Mpris2Client *mpris2, SoundmenuPlugin *soundmenu)
 {
 	gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(soundmenu->shuffle_menu_item),
 		mpris2_client_get_shuffle (soundmenu->mpris2));
+
+	gtk_widget_show (soundmenu->shuffle_menu_item);
 }
 
 static void
@@ -627,13 +660,11 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	xfce_panel_plugin_menu_insert_item (soundmenu->plugin, GTK_MENU_ITEM(loop_menu_item));
 	g_signal_connect (G_OBJECT (loop_menu_item), "toggled",
 	                  G_CALLBACK (soundmenu_toggled_loop_action), soundmenu);
-	gtk_widget_show (loop_menu_item);
 
 	shuffle_menu_item = gtk_check_menu_item_new_with_mnemonic (_("Shuffle"));
 	xfce_panel_plugin_menu_insert_item (soundmenu->plugin, GTK_MENU_ITEM(shuffle_menu_item));
 	g_signal_connect (G_OBJECT (shuffle_menu_item), "toggled",
 	                  G_CALLBACK (soundmenu_toggled_shuffle_action), soundmenu);
-	gtk_widget_show (shuffle_menu_item);
 
 	separator = gtk_separator_menu_item_new();
 	xfce_panel_plugin_menu_insert_item (soundmenu->plugin, GTK_MENU_ITEM(separator));
@@ -643,7 +674,6 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	tools_menu_item = gtk_menu_item_new_with_mnemonic (_("Tools"));
 	gtk_menu_item_set_submenu (GTK_MENU_ITEM (tools_menu_item), tools_submenu);
 	xfce_panel_plugin_menu_insert_item (soundmenu->plugin, GTK_MENU_ITEM(tools_menu_item));
-	gtk_widget_show (tools_menu_item);
 
 	soundmenu->album_art = album_art;
 	soundmenu->ev_album_art = ev_album_art;
@@ -837,16 +867,12 @@ soundmenu_orientation_changed (XfcePanelPlugin *plugin,
 
 void soundmenu_update_layout_changes (SoundmenuPlugin *soundmenu)
 {
-	if (mpris2_client_is_connected(soundmenu->mpris2)) {
-		/* Sensitive all controls */
+	gboolean connection = FALSE;
+	connection = mpris2_client_is_connected (soundmenu->mpris2);
 
-		gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->prev_button), TRUE);
-		gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->play_button), TRUE);
-		gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->stop_button), TRUE);
-		gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->next_button), TRUE);
+	/* Set visible widgets acording preferences */
 
-		/* Set visible acording preferences */
-
+	if (connection) {
 		gtk_widget_show(GTK_WIDGET(soundmenu->hvbox_buttons));
 
 		if(soundmenu->show_album_art)
@@ -860,21 +886,13 @@ void soundmenu_update_layout_changes (SoundmenuPlugin *soundmenu)
 			gtk_widget_hide(soundmenu->stop_button);
 	}
 	else {
-		/* Insensitive controls */
-
-		gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->prev_button), FALSE);
-		gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->play_button), TRUE);
-		gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->stop_button), FALSE);
-		gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->next_button), FALSE);
-
-		/* Set visible acording preferences */
-
 		if(soundmenu->hide_controls_if_loose) {
 			gtk_widget_hide(GTK_WIDGET(soundmenu->hvbox_buttons));
 			gtk_widget_show(soundmenu->ev_album_art);
 		}
 		else {
 			gtk_widget_show(GTK_WIDGET(soundmenu->hvbox_buttons));
+
 			if(soundmenu->show_album_art)
 				gtk_widget_show(soundmenu->ev_album_art);
 			else
@@ -889,7 +907,9 @@ void soundmenu_update_layout_changes (SoundmenuPlugin *soundmenu)
 
 	/* Update orientations and size. */
 #if LIBXFCE4PANEL_CHECK_VERSION (4,9,0)
-	soundmenu_mode_changed(soundmenu->plugin, xfce_panel_plugin_get_mode (soundmenu->plugin), soundmenu);
+	soundmenu_mode_changed (soundmenu->plugin,
+	                        xfce_panel_plugin_get_mode (soundmenu->plugin),
+	                        soundmenu);
 #endif
 }
 

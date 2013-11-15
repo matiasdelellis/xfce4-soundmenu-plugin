@@ -187,6 +187,9 @@ mpris2_client_get_loop_status (Mpris2Client *mpris2)
 void
 mpris2_client_set_loop_status (Mpris2Client *mpris2, LoopStatus loop_status)
 {
+	if (!mpris2->has_loop_status)
+		return;
+
 	switch (loop_status) {
 		case TRACK:
 			mpris2_client_set_player_properties (mpris2, "LoopStatus", g_variant_new_string("Playlist"));
@@ -216,7 +219,7 @@ mpris2_client_get_shuffle (Mpris2Client *mpris2)
 void
 mpris2_client_set_shuffle (Mpris2Client *mpris2, gboolean shuffle)
 {
-	if (mpris2->has_shuffle)
+	if (!mpris2->has_shuffle)
 		return;
 
 	mpris2_client_set_player_properties (mpris2, "Shuffle", g_variant_new_boolean(shuffle));

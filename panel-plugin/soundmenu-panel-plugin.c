@@ -120,7 +120,7 @@ soundmenu_set_query_tooltip_cb (GtkWidget       *widget,
 	GError *error = NULL;
 
 	if(soundmenu->connected) {
-		if (soundmenu->state == ST_STOPPED)
+		if (soundmenu->state == STOPPED)
 			markup_text = g_strdup_printf("%s", _("Stopped"));
 		else {
 			title = mpris2_metadata_get_title(soundmenu->metadata);
@@ -210,7 +210,7 @@ soundmenu_toggle_play_button_state (SoundmenuPlugin *soundmenu)
 {
 	gtk_container_remove(GTK_CONTAINER(soundmenu->play_button),
                        gtk_bin_get_child(GTK_BIN(soundmenu->play_button)));
-	if ((soundmenu->state == ST_PAUSED) || (soundmenu->state == ST_STOPPED))
+	if ((soundmenu->state == PAUSED) || (soundmenu->state == STOPPED))
 		gtk_container_add(GTK_CONTAINER(soundmenu->play_button), soundmenu->image_play);
 	else
 		gtk_container_add(GTK_CONTAINER(soundmenu->play_button), soundmenu->image_pause);
@@ -223,12 +223,12 @@ soundmenu_update_playback_status (SoundmenuPlugin *soundmenu, const gchar *playb
 	if (0 == g_ascii_strcasecmp(playback_status, "Playing")) {
 		soundmenu_album_art_set_path(soundmenu->album_art,
 			mpris2_metadata_get_arturl(soundmenu->metadata));
-		soundmenu->state = ST_PLAYING;
+		soundmenu->state = PLAYING;
 	}
 	else if (0 == g_ascii_strcasecmp(playback_status, "Paused"))
-		soundmenu->state = ST_PAUSED;
+		soundmenu->state = PAUSED;
 	else {
-		soundmenu->state = ST_STOPPED;
+		soundmenu->state = STOPPED;
 		soundmenu_album_art_set_path(soundmenu->album_art, NULL);
 	}
 	soundmenu_toggle_play_button_state(soundmenu);
@@ -242,11 +242,11 @@ void
 soundmenu_update_loop_status (SoundmenuPlugin *soundmenu, const gchar *loop_status)
 {
 	if (0 == g_ascii_strcasecmp(loop_status, "Playlist")) {
-		soundmenu->loops_status = LOOP_PLAYLIST;
+		soundmenu->loops_status = PLAYLIST;
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(soundmenu->loop_menu_item), TRUE);
 	}
 	else {
-		soundmenu->loops_status = LOOP_NONE;
+		soundmenu->loops_status = NONE;
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(soundmenu->loop_menu_item), FALSE);
 	}
 }
@@ -255,11 +255,11 @@ static void
 soundmenu_toggled_loop_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 {
 	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
-		soundmenu->loops_status = LOOP_PLAYLIST;
+		soundmenu->loops_status = PLAYLIST;
 		soundmenu_mpris2_properties_set_by_name (soundmenu, "LoopStatus", "Playlist");
 	}
 	else {
-		soundmenu->loops_status = LOOP_NONE;
+		soundmenu->loops_status = NONE;
 		soundmenu_mpris2_properties_set_by_name (soundmenu, "LoopStatus", "None");
 	}
 }
@@ -362,7 +362,7 @@ soundmenu_read (SoundmenuPlugin *soundmenu)
 			soundmenu_lastfm_set_user (soundmenu->clastfm, xfce_rc_read_entry (rc, "lastfm_user", NULL));
 			soundmenu_lastfm_set_password (soundmenu->clastfm, xfce_rc_read_entry (rc, "lastfm_pass", NULL));
 			#endif
-			soundmenu->state = ST_STOPPED;
+			soundmenu->state = STOPPED;
 
 			/* cleanup */
 			xfce_rc_close (rc);
@@ -383,7 +383,7 @@ soundmenu_read (SoundmenuPlugin *soundmenu)
 	#ifdef HAVE_LIBKEYBINDER
 	soundmenu->use_global_keys = DEFAULT_GLOBAL_KEYS;
 	#endif
-	soundmenu->state = ST_STOPPED;
+	soundmenu->state = STOPPED;
 }
 
 #ifdef HAVE_LIBCLASTFM
@@ -626,6 +626,9 @@ static void init_soundmenu_plugin(SoundmenuPlugin *soundmenu)
 		soundmenu->player = soundmenu_get_mpris2_player_running(soundmenu);
 	if (soundmenu->player == NULL)
 		soundmenu->player = g_strdup (DEFAULT_PLAYER);
+
+	soundmenu->mpris2 = mpris2_client_new ();
+	mpris2_client_set_player (soundmenu->mpris2, soundmenu->player);
 
 	/* Init the goodies services .*/
 

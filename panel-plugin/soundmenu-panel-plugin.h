@@ -35,6 +35,7 @@
 #include <libxfce4util/libxfce4util.h>
 #include <libxfce4panel/xfce-hvbox.h>
 
+#include "libmpris2client.h"
 #include "soundmenu-album-art.h"
 #include "mpris2-metadata.h"
 #include "soundmenu-simple-async.h"
@@ -51,17 +52,6 @@ struct lastfm_pref {
 	GtkWidget *lastfm_pass_w;
 };
 
-typedef enum {
-	ST_PLAYING = 1,
-	ST_STOPPED,
-	ST_PAUSED
-} PlaybackStatus;
-
-typedef enum {
-	LOOP_PLAYLIST = 1,
-	LOOP_NONE
-} PlaybackLoop;
-
 /*
  * Soundmenu plugin structure
  */
@@ -69,6 +59,7 @@ typedef struct _SoundmenuPlugin SoundmenuPlugin;
 
 struct _SoundmenuPlugin {
 	XfcePanelPlugin	*plugin;
+	Mpris2Client    *mpris2;
 
 	/* panel widgets */
 	GtkWidget		*hvbox;
@@ -100,7 +91,7 @@ struct _SoundmenuPlugin {
 	#else
 	GMutex *metadata_mtx;
 	#endif
-	PlaybackLoop         loops_status;
+	LoopStatus           loops_status;
 	gboolean             shuffle;
 	gdouble              volume;
 

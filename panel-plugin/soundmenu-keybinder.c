@@ -17,44 +17,32 @@
  */
 
 #include <keybinder.h>
+#include "libmpris2client.h"
 #include "soundmenu-keybinder.h"
-#include "soundmenu-dbus.h"
 
 #include "soundmenu-panel-plugin.h"
 
 static void
 keybind_play_handler (const char *keystring, SoundmenuPlugin *soundmenu)
 {
-	if(!soundmenu->connected)
-		return;
-
-	soundmenu_mpris2_send_player_message (soundmenu, "PlayPause");
+	mpris2_client_play_pause (soundmenu->mpris2);
 }
 static void
 keybind_stop_handler (const char *keystring, SoundmenuPlugin *soundmenu)
 {
-	if(!soundmenu->connected)
-		return;
-
-	soundmenu_mpris2_send_player_message (soundmenu, "Stop");
+	mpris2_client_stop (soundmenu->mpris2);
 }
 
 static void
 keybind_prev_handler (const char *keystring, SoundmenuPlugin *soundmenu)
 {
-	if(!soundmenu->connected)
-		return;
-
-	soundmenu_mpris2_send_player_message (soundmenu, "Previous");
+	mpris2_client_prev (soundmenu->mpris2);
 }
 
 static void
 keybind_next_handler (const char *keystring, SoundmenuPlugin *soundmenu)
 {
-	if(!soundmenu->connected)
-		return;
-
-	soundmenu_mpris2_send_player_message (soundmenu, "Next");
+	mpris2_client_next (soundmenu->mpris2);
 }
 
 void

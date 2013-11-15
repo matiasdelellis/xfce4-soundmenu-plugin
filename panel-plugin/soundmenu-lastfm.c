@@ -79,7 +79,7 @@ void lastfm_track_love_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 {
 	SoundmenuLastfm *lastfm = NULL;
 
-	if(soundmenu->state == ST_STOPPED)
+	if(soundmenu->state == STOPPED)
 		return;
 
 	lastfm = soundmenu->clastfm;
@@ -130,7 +130,7 @@ void lastfm_track_unlove_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 {
 	SoundmenuLastfm *lastfm = NULL;
 
-	if(soundmenu->state == ST_STOPPED)
+	if(soundmenu->state == STOPPED)
 		return;
 
 	lastfm = soundmenu->clastfm;
@@ -194,7 +194,7 @@ lastfm_scrob_handler(gpointer data)
 	SoundmenuLastfm *lastfm = NULL;
 	SoundmenuPlugin *soundmenu = data;
 
-	if(soundmenu->state == ST_STOPPED)
+	if(soundmenu->state == STOPPED)
 		return FALSE;
 
 	lastfm = soundmenu->clastfm;
@@ -258,7 +258,7 @@ lastfm_now_playing_handler (gpointer data)
 	SoundmenuPlugin *soundmenu = data;
 	SoundmenuLastfm *lastfm = soundmenu->clastfm;
 
-	if(soundmenu->state == ST_STOPPED)
+	if(soundmenu->state == STOPPED)
 		return FALSE;
 
 	if (lastfm->session_id == NULL) {
@@ -309,7 +309,7 @@ void update_lastfm (SoundmenuPlugin *soundmenu)
 	if (lastfm->lastfm_handler_id)
 		g_source_remove (lastfm->lastfm_handler_id);
 
-	if (soundmenu->state != ST_PLAYING)
+	if (soundmenu->state != PLAYING)
 		return;
 
 	soundmenu_mutex_lock(soundmenu->metadata_mtx);

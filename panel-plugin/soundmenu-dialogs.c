@@ -24,6 +24,7 @@
 #include "soundmenu-dialog-hig.h"
 #include "soundmenu-dbus.h"
 #include "mpris2-utils.h"
+#include "libmpris2client.h"
 
 #ifdef HAVE_LIBKEYBINDER
 #include "soundmenu-keybinder.h"
@@ -57,6 +58,7 @@ soundmenu_configure_response (GtkWidget       *dialog,
 				g_free (soundmenu->player);
 			soundmenu->player = g_strdup(player);
 
+			mpris2_client_set_player (soundmenu->mpris2, player);
 			soundmenu_mpris2_reinit_dbus (soundmenu);
 		}
 

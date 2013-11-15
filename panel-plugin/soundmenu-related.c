@@ -237,7 +237,7 @@ void soundmenu_search_lyric_dialog (GtkWidget *widget, SoundmenuPlugin *soundmen
 {
     const gchar *artist = NULL, *title = NULL;
 
-    if(soundmenu->state == ST_STOPPED)
+    if(soundmenu->state == STOPPED)
         return;
 
     if (g_str_empty0(mpris2_metadata_get_artist(soundmenu->metadata)) ||
@@ -254,7 +254,7 @@ void soundmenu_search_artistinfo_dialog (GtkWidget *widget, SoundmenuPlugin *sou
 {
     const gchar *artist = NULL;
 
-    if(soundmenu->state == ST_STOPPED)
+    if(soundmenu->state == STOPPED)
         return;
 
     if (g_str_empty0(mpris2_metadata_get_artist(soundmenu->metadata)))

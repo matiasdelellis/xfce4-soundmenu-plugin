@@ -187,7 +187,6 @@ mpris2_client_get_loop_status (Mpris2Client *mpris2)
 void
 mpris2_client_set_loop_status (Mpris2Client *mpris2, LoopStatus loop_status)
 {
-
 	switch (loop_status) {
 		case TRACK:
 			mpris2_client_set_player_properties (mpris2, "LoopStatus", g_variant_new_string("Playlist"));
@@ -266,15 +265,24 @@ mpris2_client_get_supported_mime_types (Mpris2Client *mpris2)
 void
 mpris2_client_set_player (Mpris2Client *mpris2, const gchar *player)
 {
-	g_free(mpris2->player);
-	if (player)
+	/* Disconnect dbus */
+	if (mpris2->watch_id) {
+		g_bus_unwatch_name (mpris2->watch_id);
+		mpris2->watch_id = 0;
+	}
+	if (mpris2->proxy != NULL) {
+		g_object_unref (mpris2->proxy);
+		mpris2->proxy = NULL;
+	}
+
+	/* Set new player */
+	if (mpris2->player != NULL)
+		g_free (mpris2->player);
+
+	if (player != NULL)
 		mpris2->player = g_strdup(player);
 	else
 		mpris2->player = g_strdup("unknown");
-
-	/* Disconnect dbus */
-	g_bus_unwatch_name (mpris2->watch_id);
-	g_object_unref (mpris2->proxy);
 
 	/* Connect again */
 	mpris2_client_connect_dbus (mpris2);
@@ -730,13 +738,32 @@ mpris2_client_lose_dbus (GDBusConnection *connection,
 {
 	Mpris2Client *mpris2 = user_data;
 
-	mpris2->connected = FALSE;
+	mpris2->can_quit        = FALSE;
+	mpris2->can_raise       = FALSE;
+	mpris2->has_tracklist   = FALSE;
 	if (mpris2->identity) {
 		g_free (mpris2->identity);
 		mpris2->identity = NULL;
 	}
-	mpris2->playback_status = STOPPED;
+	if (mpris2->supported_uri_schemes) {
+		g_strfreev(mpris2->supported_uri_schemes);
+		mpris2->supported_uri_schemes = NULL;
+	}
+	if (mpris2->supported_mime_types) {
+		g_strfreev(mpris2->supported_mime_types);
+		mpris2->supported_mime_types = NULL;
+	}
 
+	/* Interface MediaPlayer2.Player */
+	mpris2->playback_status = STOPPED;
+	mpris2->metadata        = NULL;
+	mpris2->volume          = -1;
+
+	/* Optionals */
+	mpris2->has_loop_status = FALSE;
+	mpris2->has_shuffle     = FALSE;
+
+	mpris2->connected = FALSE;
 	g_signal_emit (mpris2, signals[CONNECTION], 0);
 }
 
@@ -786,8 +813,27 @@ mpris2_client_finalize (GObject *object)
 {
 	Mpris2Client *mpris2 = MPRIS2_CLIENT (object);
 
-	g_free (mpris2->player);
-	g_free (mpris2->dbus_name);
+	if (mpris2->player != NULL) {
+		g_free (mpris2->player);
+		mpris2->player = NULL;
+	}
+	if (mpris2->dbus_name) {
+		g_free (mpris2->dbus_name);
+		mpris2->dbus_name = NULL;
+	}
+
+	if (mpris2->identity) {
+		g_free (mpris2->identity);
+		mpris2->identity    = NULL;
+	}
+	if (mpris2->supported_uri_schemes) {
+		g_strfreev(mpris2->supported_uri_schemes);
+		mpris2->supported_uri_schemes = NULL;
+	}
+	if (mpris2->supported_mime_types) {
+		g_strfreev(mpris2->supported_mime_types);
+		mpris2->supported_mime_types = NULL;
+	}
 
 	(*G_OBJECT_CLASS (mpris2_client_parent_class)->finalize) (object);
 }
@@ -865,16 +911,37 @@ mpris2_client_init (Mpris2Client *mpris2)
 	GDBusConnection *gconnection;
 	GError          *gerror = NULL;
 
-	mpris2->player    = g_strdup("unknown");
-	mpris2->connected = FALSE;
-
 	gconnection = g_bus_get_sync (G_BUS_TYPE_SESSION, NULL, &gerror);
 	if (gconnection == NULL) {
 		g_message ("Failed to get session bus: %s", gerror->message);
 		g_error_free (gerror);
 		gerror = NULL;
 	}
-	mpris2->gconnection = gconnection;
+
+	mpris2->gconnection           = gconnection;
+	mpris2->proxy                 = NULL;
+	mpris2->dbus_name             = NULL;
+	mpris2->watch_id              = 0;
+
+	mpris2->player                = g_strdup("unknown");
+
+	mpris2->can_quit              = FALSE;
+	mpris2->can_raise             = FALSE;
+	mpris2->has_tracklist         = FALSE;
+	mpris2->identity              = NULL;
+	mpris2->supported_uri_schemes = NULL;
+	mpris2->supported_mime_types  = NULL;
+
+	mpris2->playback_status       = STOPPED;
+	mpris2->metadata              = NULL;
+	mpris2->volume                = -1;
+
+	mpris2->has_loop_status       = FALSE;
+	mpris2->loop_status           = FALSE;
+	mpris2->has_shuffle           = FALSE;
+	mpris2->shuffle               = FALSE;
+
+	mpris2->connected             = FALSE;
 
 	mpris2_client_connect_dbus (mpris2);
 }

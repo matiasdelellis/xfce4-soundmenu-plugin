@@ -635,8 +635,10 @@ mpris2_client_parse_properties (Mpris2Client *mpris2, GVariant *properties)
 	}
 
 	if (metadata != NULL) {
-		mpris2_metadata_free (mpris2->metadata);
+		if (mpris2->metadata != NULL)
+			mpris2_metadata_free (mpris2->metadata);
 		mpris2->metadata = metadata;
+
 		g_signal_emit (mpris2, signals[METADATA], 0, metadata);
 	}
 	if (volume != -1) {
@@ -762,7 +764,10 @@ mpris2_client_lose_dbus (GDBusConnection *connection,
 
 	/* Interface MediaPlayer2.Player */
 	mpris2->playback_status = STOPPED;
-	mpris2->metadata        = NULL;
+	if (mpris2->metadata != NULL) {
+		mpris2_metadata_free (mpris2->metadata);
+		mpris2->metadata = NULL;
+	}
 	mpris2->volume          = -1;
 
 	/* Optionals */
@@ -839,6 +844,11 @@ mpris2_client_finalize (GObject *object)
 	if (mpris2->supported_mime_types) {
 		g_strfreev(mpris2->supported_mime_types);
 		mpris2->supported_mime_types = NULL;
+	}
+
+	if (mpris2->metadata != NULL) {
+		mpris2_metadata_free (mpris2->metadata);
+		mpris2->metadata = NULL;
 	}
 
 	(*G_OBJECT_CLASS (mpris2_client_parent_class)->finalize) (object);

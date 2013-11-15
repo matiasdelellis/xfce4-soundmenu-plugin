@@ -192,10 +192,10 @@ mpris2_client_set_loop_status (Mpris2Client *mpris2, LoopStatus loop_status)
 
 	switch (loop_status) {
 		case TRACK:
-			mpris2_client_set_player_properties (mpris2, "LoopStatus", g_variant_new_string("Playlist"));
+			mpris2_client_set_player_properties (mpris2, "LoopStatus", g_variant_new_string("Track"));
 			break;
 		case PLAYLIST:
-			mpris2_client_set_player_properties (mpris2, "LoopStatus", g_variant_new_string("Track"));
+			mpris2_client_set_player_properties (mpris2, "LoopStatus", g_variant_new_string("Playlist"));
 			break;
 		case NONE:
 		default:

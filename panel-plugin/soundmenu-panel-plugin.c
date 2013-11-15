@@ -312,6 +312,8 @@ soundmenu_panel_button_scrolled (GtkWidget        *widget,
 	if(!mpris2_client_is_connected(soundmenu->mpris2))
 		return FALSE;
 
+	volume = mpris2_client_get_volume (soundmenu->mpris2);
+
 	switch (event->direction) {
 		case GDK_SCROLL_UP:
 		case GDK_SCROLL_RIGHT:

@@ -604,6 +604,8 @@ mpris2_client_parse_properties (Mpris2Client *mpris2, GVariant *properties)
 	Mpris2Metadata *metadata = NULL;
 	gdouble volume = -1;
 	gboolean shuffle = FALSE;
+	gboolean loop_status_changed = FALSE;
+	gboolean shuffle_changed = FALSE;
 
 	g_variant_iter_init (&iter, properties);
 
@@ -618,11 +620,11 @@ mpris2_client_parse_properties (Mpris2Client *mpris2, GVariant *properties)
 			volume = g_variant_get_double(value);
 		}
 		else if (0 == g_ascii_strcasecmp (key, "LoopStatus")) {
-			mpris2->has_loop_status = TRUE;
+			loop_status_changed = TRUE;
 			loop_status = g_variant_get_string(value, NULL);
 		}
 		else if (0 == g_ascii_strcasecmp (key, "Shuffle")) {
-			mpris2->has_shuffle = TRUE;
+			shuffle_changed = TRUE;
 			shuffle = g_variant_get_boolean(value);
 		}
 	}
@@ -642,11 +644,13 @@ mpris2_client_parse_properties (Mpris2Client *mpris2, GVariant *properties)
 		g_signal_emit (mpris2, signals[VOLUME], 0);
 	}
 
-	if (mpris2->has_loop_status) {
+	if (loop_status_changed) {
+		mpris2->has_loop_status = TRUE;
+
 		if (0 == g_ascii_strcasecmp(loop_status, "Track")) {
 			mpris2->loop_status = TRACK;
 		}
-		if (0 == g_ascii_strcasecmp(loop_status, "Playlist")) {
+		else if (0 == g_ascii_strcasecmp(loop_status, "Playlist")) {
 			mpris2->loop_status = PLAYLIST;
 		}
 		else {
@@ -654,7 +658,9 @@ mpris2_client_parse_properties (Mpris2Client *mpris2, GVariant *properties)
 		}
 		g_signal_emit (mpris2, signals[LOOP_STATUS], 0);
 	}
-	if (mpris2->has_shuffle) {
+	if (shuffle_changed) {
+		mpris2->has_shuffle = TRUE;
+
 		mpris2->shuffle = shuffle;
 		g_signal_emit (mpris2, signals[SHUFFLE], 0);
 	}

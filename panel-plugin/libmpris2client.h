@@ -66,15 +66,18 @@ void            mpris2_client_next                      (Mpris2Client *mpris2);
  * Interface MediaPlayer2 Methods.
  */
 void            mpris2_client_quit_player               (Mpris2Client *mpris2);
+void            mpris2_client_set_fullscreen_player     (Mpris2Client *mpris2, gboolean fullscreen);
 void            mpris2_client_raise_player              (Mpris2Client *mpris2);
 
 /*
  * Interface MediaPlayer2 Properies.
  */
 gboolean        mpris2_client_can_quit                  (Mpris2Client *mpris2);
+gboolean        mpris2_client_can_set_fullscreen        (Mpris2Client *mpris2);
 gboolean        mpris2_client_can_raise                 (Mpris2Client *mpris2);
 gboolean        mpris2_client_has_tracklist_support     (Mpris2Client *mpris2);
 const gchar    *mpris2_client_get_player_identity       (Mpris2Client *mpris2);
+const gchar    *mpris2_client_get_player_desktop_entry  (Mpris2Client *mpris2);
 gchar         **mpris2_client_get_supported_uri_schemes (Mpris2Client *mpris2);
 gchar         **mpris2_client_get_supported_mime_types  (Mpris2Client *mpris2);
 

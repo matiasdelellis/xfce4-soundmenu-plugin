@@ -46,12 +46,17 @@ struct _Mpris2Client
 	gchar          **supported_uri_schemes;
 	gchar          **supported_mime_types;
 
+	/* Optionals Interface MediaPlayer2 */
+	gboolean         fullscreen;
+	gboolean         can_set_fullscreen;
+	gchar           *desktop_entry;
+
 	/* Interface MediaPlayer2.Player */
 	PlaybackStatus   playback_status;
 	Mpris2Metadata  *metadata;
 	gdouble          volume;
 
-	/* Optionals */
+	/* Optionals Interface MediaPlayer2.Player */
 	gboolean         has_loop_status;
 	LoopStatus       loop_status;
 
@@ -76,16 +81,17 @@ G_DEFINE_TYPE (Mpris2Client, mpris2_client, G_TYPE_OBJECT)
 /*
  * Prototypes
  */
-static void      mpris2_client_call_player_method        (Mpris2Client *mpris2, const char *method);
-static void      mpris2_client_call_media_player_method  (Mpris2Client *mpris2, const char *method);
+static void      mpris2_client_call_player_method              (Mpris2Client *mpris2, const char *method);
+static void      mpris2_client_call_media_player_method        (Mpris2Client *mpris2, const char *method);
 
-static gchar    *mpris2_client_check_player              (Mpris2Client *mpris2);
-static void      mpris2_client_connect_dbus              (Mpris2Client *mpris2);
+static gchar    *mpris2_client_check_player                    (Mpris2Client *mpris2);
+static void      mpris2_client_connect_dbus                    (Mpris2Client *mpris2);
 
-static GVariant *mpris2_client_get_all_player_properties (Mpris2Client *mpris2);
-static GVariant *mpris2_client_get_player_properties     (Mpris2Client *mpris2, const gchar *prop);
-static void      mpris2_client_set_player_properties     (Mpris2Client *mpris2, const gchar *prop, GVariant *vprop);
+static GVariant *mpris2_client_get_all_player_properties       (Mpris2Client *mpris2);
+static void      mpris2_client_set_player_properties           (Mpris2Client *mpris2, const gchar *prop, GVariant *vprop);
 
+static GVariant *mpris2_client_get_all_media_player_properties (Mpris2Client *mpris2);
+static void      mpris2_client_set_media_player_properties     (Mpris2Client *mpris2, const gchar *prop, GVariant *vprop);
 /*
  *  Basic control of gdbus functions
  */
@@ -133,6 +139,15 @@ mpris2_client_quit_player (Mpris2Client *mpris2)
 		return;
 
 	mpris2_client_call_media_player_method (mpris2, "Quit");
+}
+
+void
+mpris2_client_set_fullscreen_player (Mpris2Client *mpris2, gboolean fullscreen)
+{
+	if (!mpris2->can_set_fullscreen)
+		return;
+
+	mpris2_client_set_media_player_properties (mpris2, "Fullscreen", g_variant_new_boolean(fullscreen));
 }
 
 void
@@ -236,6 +251,12 @@ mpris2_client_can_quit (Mpris2Client *mpris2)
 }
 
 gboolean
+mpris2_client_can_set_fullscreen (Mpris2Client *mpris2)
+{
+	return mpris2->can_set_fullscreen;
+}
+
+gboolean
 mpris2_client_can_raise (Mpris2Client *mpris2)
 {
 	return mpris2->can_raise;
@@ -251,6 +272,12 @@ const gchar *
 mpris2_client_get_player_identity (Mpris2Client *mpris2)
 {
 	return mpris2->identity;
+}
+
+const gchar *
+mpris2_client_get_player_desktop_entry (Mpris2Client *mpris2)
+{
+	return mpris2->desktop_entry;
 }
 
 gchar **
@@ -453,6 +480,38 @@ mpris2_client_get_all_player_properties (Mpris2Client *mpris2)
 	return child;
 }
 
+/* Change any player propertie using org.freedesktop.DBus.Properties interfase. */
+
+static void
+mpris2_client_set_media_player_properties (Mpris2Client *mpris2, const gchar *prop, GVariant *vprop)
+{
+	GVariant *reply;
+	GError   *error = NULL;
+
+	reply = g_dbus_connection_call_sync (mpris2->gconnection,
+	                                     mpris2->dbus_name,
+	                                     "/org/mpris/MediaPlayer2",
+	                                     "org.freedesktop.DBus.Properties",
+	                                     "Set",
+	                                     g_variant_new ("(ssv)",
+	                                                    "org.mpris.MediaPlayer2",
+	                                                    prop,
+	                                                    vprop),
+	                                     NULL,
+	                                     G_DBUS_CALL_FLAGS_NONE,
+	                                     -1,
+	                                     NULL,
+	                                     NULL);
+	if (reply == NULL) {
+		g_warning ("Unable to set session: %s", error->message);
+		g_error_free (error);
+		return;
+	}
+	g_variant_unref(reply);
+}
+
+/* Get all properties using org.freedesktop.DBus.Properties interface.  */
+
 static GVariant *
 mpris2_client_get_all_media_player_properties (Mpris2Client *mpris2)
 {
@@ -477,39 +536,6 @@ mpris2_client_get_all_media_player_properties (Mpris2Client *mpris2)
 	}
 
 	return child;
-}
-
-/* Get any player propertie using org.freedesktop.DBus.Properties interfase. */
-
-GVariant *
-mpris2_client_get_player_properties (Mpris2Client *mpris2, const gchar *prop)
-{
-	GVariant *v, *iter;
-	GError *error = NULL;
-
-	v = g_dbus_connection_call_sync (mpris2->gconnection,
-	                                 mpris2->dbus_name,
-	                                 "/org/mpris/MediaPlayer2",
-	                                 "org.freedesktop.DBus.Properties",
-	                                 "Get",
-	                                  g_variant_new ("(ss)",
-                                                     "org.mpris.MediaPlayer2",
-                                                     prop),
-	                                 G_VARIANT_TYPE ("(v)"),
-	                                 G_DBUS_CALL_FLAGS_NONE,
-	                                 -1,
-	                                 NULL, 
-	                                 &error);
-	if (error) {
-		g_critical ("Could not get properties on org.mpris.MediaPlayer2, %s",
-		            error ? error->message : "no error given");
-		g_clear_error (&error);
-		return NULL;
-	}
-
-	g_variant_get (v, "(v)", &iter);
-
-	return iter;
 }
 
 /* Change any player propertie using org.freedesktop.DBus.Properties interfase. */
@@ -675,6 +701,7 @@ mpris2_client_parse_player_properties (Mpris2Client *mpris2, GVariant *propertie
 
 		g_signal_emit (mpris2, signals[METADATA], 0, metadata);
 	}
+
 	if (volume != -1) {
 		mpris2->volume = volume;
 		g_signal_emit (mpris2, signals[VOLUME], 0);
@@ -715,6 +742,12 @@ mpris2_client_parse_media_player_properties (Mpris2Client *mpris2, GVariant *pro
 		if (0 == g_ascii_strcasecmp (key, "CanQuit")) {
 			mpris2->can_quit = g_variant_get_boolean (value);
 		}
+		else if (0 == g_ascii_strcasecmp (key, "Fullscreen")) {
+			mpris2->fullscreen = g_variant_get_boolean (value);
+		}
+		else if (0 == g_ascii_strcasecmp (key, "CanSetFullscreen")) {
+			mpris2->can_set_fullscreen = g_variant_get_boolean (value);
+		}
 		else if (0 == g_ascii_strcasecmp (key, "CanRaise")) {
 			mpris2->can_raise = g_variant_get_boolean (value);
 		}
@@ -725,6 +758,11 @@ mpris2_client_parse_media_player_properties (Mpris2Client *mpris2, GVariant *pro
 			if (mpris2->identity)
 				g_free (mpris2->identity);
 			mpris2->identity = g_variant_dup_string (value, NULL);
+		}
+		else if (0 == g_ascii_strcasecmp (key, "DesktopEntry")) {
+			if (mpris2->desktop_entry)
+				g_free (mpris2->desktop_entry);
+			mpris2->desktop_entry = g_variant_dup_string (value, NULL);
 		}
 		else if (0 == g_ascii_strcasecmp (key, "SupportedUriSchemes")) {
 			if (mpris2->supported_uri_schemes)
@@ -796,6 +834,8 @@ mpris2_client_lose_dbus (GDBusConnection *connection,
 {
 	Mpris2Client *mpris2 = user_data;
 
+	/* Interface MediaPlayer2 */
+
 	mpris2->can_quit        = FALSE;
 	mpris2->can_raise       = FALSE;
 	mpris2->has_tracklist   = FALSE;
@@ -812,6 +852,13 @@ mpris2_client_lose_dbus (GDBusConnection *connection,
 		mpris2->supported_mime_types = NULL;
 	}
 
+	/* Optionals Interface MediaPlayer2 */
+	mpris2->can_set_fullscreen = FALSE;
+	if (mpris2->desktop_entry) {
+		g_free (mpris2->desktop_entry);
+		mpris2->desktop_entry = NULL;
+	}
+
 	/* Interface MediaPlayer2.Player */
 	mpris2->playback_status = STOPPED;
 	if (mpris2->metadata != NULL) {
@@ -820,7 +867,7 @@ mpris2_client_lose_dbus (GDBusConnection *connection,
 	}
 	mpris2->volume          = -1;
 
-	/* Optionals */
+	/* Optionals Interface MediaPlayer2.Player */
 	mpris2->has_loop_status = FALSE;
 	mpris2->has_shuffle     = FALSE;
 
@@ -886,6 +933,10 @@ mpris2_client_finalize (GObject *object)
 	if (mpris2->identity) {
 		g_free (mpris2->identity);
 		mpris2->identity    = NULL;
+	}
+	if (mpris2->desktop_entry) {
+		g_free (mpris2->desktop_entry);
+		mpris2->desktop_entry = NULL;
 	}
 	if (mpris2->supported_uri_schemes) {
 		g_strfreev(mpris2->supported_uri_schemes);
@@ -992,9 +1043,11 @@ mpris2_client_init (Mpris2Client *mpris2)
 	mpris2->player                = g_strdup("unknown");
 
 	mpris2->can_quit              = FALSE;
+	mpris2->can_set_fullscreen    = FALSE;
 	mpris2->can_raise             = FALSE;
 	mpris2->has_tracklist         = FALSE;
 	mpris2->identity              = NULL;
+	mpris2->desktop_entry         = NULL;
 	mpris2->supported_uri_schemes = NULL;
 	mpris2->supported_mime_types  = NULL;
 

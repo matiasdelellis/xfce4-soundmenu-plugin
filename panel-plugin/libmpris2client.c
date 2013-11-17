@@ -76,15 +76,15 @@ G_DEFINE_TYPE (Mpris2Client, mpris2_client, G_TYPE_OBJECT)
 /*
  * Prototypes
  */
-static void      mpris2_client_call_player_method    (Mpris2Client *mpris2, const char *method);
-static void      mpris2_client_call_method           (Mpris2Client *mpris2, const char *method);
+static void      mpris2_client_call_player_method        (Mpris2Client *mpris2, const char *method);
+static void      mpris2_client_call_media_player_method  (Mpris2Client *mpris2, const char *method);
 
-static gchar    *mpris2_client_check_player          (Mpris2Client *mpris2);
-static void      mpris2_client_connect_dbus          (Mpris2Client *mpris2);
+static gchar    *mpris2_client_check_player              (Mpris2Client *mpris2);
+static void      mpris2_client_connect_dbus              (Mpris2Client *mpris2);
 
-static GVariant *mpris2_client_get_all_properties    (Mpris2Client *mpris2);
-static GVariant *mpris2_client_get_player_properties (Mpris2Client *mpris2, const gchar *prop);
-static void      mpris2_client_set_player_properties (Mpris2Client *mpris2, const gchar *prop, GVariant *vprop);
+static GVariant *mpris2_client_get_all_player_properties (Mpris2Client *mpris2);
+static GVariant *mpris2_client_get_player_properties     (Mpris2Client *mpris2, const gchar *prop);
+static void      mpris2_client_set_player_properties     (Mpris2Client *mpris2, const gchar *prop, GVariant *vprop);
 
 /*
  *  Basic control of gdbus functions
@@ -132,7 +132,7 @@ mpris2_client_quit_player (Mpris2Client *mpris2)
 	if (!mpris2->can_quit)
 		return;
 
-	mpris2_client_call_method (mpris2, "Quit");
+	mpris2_client_call_media_player_method (mpris2, "Quit");
 }
 
 void
@@ -141,7 +141,7 @@ mpris2_client_raise_player (Mpris2Client *mpris2)
 	if (!mpris2->can_raise)
 		return;
 
-	mpris2_client_call_method (mpris2, "Raise");
+	mpris2_client_call_media_player_method (mpris2, "Raise");
 }
 
 /*
@@ -353,7 +353,7 @@ mpris2_client_call_player_method (Mpris2Client *mpris2, const char *method)
 /* Send mesages to use methods of org.mpris.MediaPlayer2 interfase. */
 
 static void
-mpris2_client_call_method (Mpris2Client *mpris2, const char *method)
+mpris2_client_call_media_player_method (Mpris2Client *mpris2, const char *method)
 {
 	GDBusMessage *message;
 	GError       *error = NULL;
@@ -428,7 +428,7 @@ mpris2_client_check_player (Mpris2Client *mpris2)
 /* Get all properties using org.freedesktop.DBus.Properties interface.  */
 
 static GVariant *
-mpris2_client_get_all_properties (Mpris2Client *mpris2)
+mpris2_client_get_all_player_properties (Mpris2Client *mpris2)
 {
 	GVariantIter iter;
 	GVariant *result, *child = NULL;
@@ -453,6 +453,31 @@ mpris2_client_get_all_properties (Mpris2Client *mpris2)
 	return child;
 }
 
+static GVariant *
+mpris2_client_get_all_media_player_properties (Mpris2Client *mpris2)
+{
+	GVariantIter iter;
+	GVariant *result, *child = NULL;
+
+	result = g_dbus_connection_call_sync (mpris2->gconnection,
+	                                      mpris2->dbus_name,
+	                                      "/org/mpris/MediaPlayer2",
+	                                      "org.freedesktop.DBus.Properties",
+	                                      "GetAll",
+	                                      g_variant_new ("(s)", "org.mpris.MediaPlayer2"),
+	                                      G_VARIANT_TYPE ("(a{sv})"),
+	                                      G_DBUS_CALL_FLAGS_NONE,
+	                                      -1,
+	                                      NULL,
+	                                      NULL);
+
+	if(result) {
+		g_variant_iter_init (&iter, result);
+		child = g_variant_iter_next_value (&iter);
+	}
+
+	return child;
+}
 
 /* Get any player propertie using org.freedesktop.DBus.Properties interfase. */
 
@@ -473,10 +498,10 @@ mpris2_client_get_player_properties (Mpris2Client *mpris2, const gchar *prop)
 	                                 G_VARIANT_TYPE ("(v)"),
 	                                 G_DBUS_CALL_FLAGS_NONE,
 	                                 -1,
-	                                 NULL,
+	                                 NULL, 
 	                                 &error);
 	if (error) {
-		g_critical ("Could not get a list of names registered on the session bus, %s",
+		g_critical ("Could not get properties on org.mpris.MediaPlayer2, %s",
 		            error ? error->message : "no error given");
 		g_clear_error (&error);
 		return NULL;
@@ -603,7 +628,7 @@ mpris2_client_parse_playback_status (Mpris2Client *mpris2, const gchar *playback
 }
 
 static void
-mpris2_client_parse_properties (Mpris2Client *mpris2, GVariant *properties)
+mpris2_client_parse_player_properties (Mpris2Client *mpris2, GVariant *properties)
 {
 	GVariantIter iter;
 	GVariant *value;
@@ -678,6 +703,43 @@ mpris2_client_parse_properties (Mpris2Client *mpris2, GVariant *properties)
 }
 
 static void
+mpris2_client_parse_media_player_properties (Mpris2Client *mpris2, GVariant *properties)
+{
+	GVariantIter iter;
+	GVariant *value;
+	const gchar *key;
+
+	g_variant_iter_init (&iter, properties);
+
+	while (g_variant_iter_loop (&iter, "{sv}", &key, &value)) {
+		if (0 == g_ascii_strcasecmp (key, "CanQuit")) {
+			mpris2->can_quit = g_variant_get_boolean (value);
+		}
+		else if (0 == g_ascii_strcasecmp (key, "CanRaise")) {
+			mpris2->can_raise = g_variant_get_boolean (value);
+		}
+		else if (0 == g_ascii_strcasecmp (key, "HasTrackList")) {
+			mpris2->has_tracklist = g_variant_get_boolean (value);
+		}
+		else if (0 == g_ascii_strcasecmp (key, "Identity")) {
+			if (mpris2->identity)
+				g_free (mpris2->identity);
+			mpris2->identity = g_variant_dup_string (value, NULL);
+		}
+		else if (0 == g_ascii_strcasecmp (key, "SupportedUriSchemes")) {
+			if (mpris2->supported_uri_schemes)
+				g_strfreev (mpris2->supported_uri_schemes);
+			mpris2->supported_uri_schemes = g_variant_dup_strv (value, NULL);
+		}
+		else if (0 == g_ascii_strcasecmp (key, "SupportedMimeTypes")) {
+			if (mpris2->supported_mime_types)
+				g_strfreev (mpris2->supported_mime_types);
+			mpris2->supported_mime_types = g_variant_dup_strv (value, NULL);
+		}
+	}
+}
+
+static void
 mpris2_client_on_dbus_signal (GDBusProxy *proxy,
                               gchar      *sender_name,
                               gchar      *signal_name,
@@ -695,7 +757,7 @@ mpris2_client_on_dbus_signal (GDBusProxy *proxy,
 	g_variant_unref (child);
 
 	child = g_variant_iter_next_value (&iter); /* Property name. */
-	mpris2_client_parse_properties (mpris2, child);
+	mpris2_client_parse_player_properties (mpris2, child);
 	g_variant_unref (child);
 }
 
@@ -713,38 +775,17 @@ mpris2_client_connected_dbus (GDBusConnection *connection,
 
 	mpris2->connected = TRUE;
 
-	/* Get Properties..*/
-
-	reply = mpris2_client_get_player_properties (mpris2, "Identity");
-	mpris2->identity = g_variant_dup_string (reply, NULL);
-	g_variant_unref(reply);
-
-	reply = mpris2_client_get_player_properties (mpris2, "CanRaise");
-	mpris2->can_raise = g_variant_get_boolean (reply);
-	g_variant_unref(reply);
-
-	reply = mpris2_client_get_player_properties (mpris2, "CanQuit");
-	mpris2->can_quit = g_variant_get_boolean (reply);
-	g_variant_unref(reply);
-
-	reply = mpris2_client_get_player_properties (mpris2, "HasTrackList");
-	mpris2->has_tracklist = g_variant_get_boolean (reply);
-	g_variant_unref(reply);
-
-	reply = mpris2_client_get_player_properties (mpris2, "SupportedUriSchemes");
-	mpris2->supported_uri_schemes = g_variant_dup_strv (reply, NULL);
-	g_variant_unref(reply);
-
-	reply = mpris2_client_get_player_properties (mpris2, "SupportedMimeTypes");
-	mpris2->supported_mime_types = g_variant_dup_strv (reply, NULL);
-	g_variant_unref(reply);
+	/* First check basic props of the player as identify, uris, etc. */
+	reply = mpris2_client_get_all_media_player_properties (mpris2);
+	mpris2_client_parse_media_player_properties (mpris2, reply);
+	g_variant_unref (reply);
 
 	/* Notify that connect to a player.*/
 	g_signal_emit (mpris2, signals[CONNECTION], 0);
 
 	/* And informs the current status of the player */
-	reply = mpris2_client_get_all_properties (mpris2);
-	mpris2_client_parse_properties (mpris2, reply);
+	reply = mpris2_client_get_all_player_properties (mpris2);
+	mpris2_client_parse_player_properties (mpris2, reply);
 	g_variant_unref (reply);
 }
 

@@ -76,9 +76,9 @@ mpris2_status_icon_metadada (Mpris2Client *mpris2, Mpris2Metadata *metadata, Gtk
 }
 
 static void
-mpris2_status_icon_playback_status (Mpris2Client *mpris2, GtkStatusIcon *icon)
+mpris2_status_icon_playback_status (Mpris2Client *mpris2, PlaybackStatus playback_status, GtkStatusIcon *icon)
 {
-	switch (mpris2_client_get_playback_status(mpris2)) {
+	switch (playback_status) {
 		case PLAYING:
 			gtk_status_icon_set_from_stock (icon, GTK_STOCK_MEDIA_PAUSE);
 			break;
@@ -91,9 +91,9 @@ mpris2_status_icon_playback_status (Mpris2Client *mpris2, GtkStatusIcon *icon)
 }
 
 static void
-mpris2_status_icon_coneccion (Mpris2Client *mpris2, GtkStatusIcon *icon)
+mpris2_status_icon_coneccion (Mpris2Client *mpris2, gboolean connected, GtkStatusIcon *icon)
 {
-	if (mpris2_client_is_connected(mpris2)) {
+	if (connected) {
 		gtk_status_icon_set_tooltip (status_icon,
 		                             mpris2_client_get_player_identity(mpris2));
 	}

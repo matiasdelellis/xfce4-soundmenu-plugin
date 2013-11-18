@@ -22,6 +22,18 @@
 #include <glib-object.h>
 #include "mpris2-metadata.h"
 
+typedef enum {
+	PLAYING = 1,
+	PAUSED,
+	STOPPED
+} PlaybackStatus;
+
+typedef enum {
+	NONE = 1,
+	TRACK,
+	PLAYLIST
+} LoopStatus;
+
 #define MPRIS2_TYPE_CLIENT              (mpris2_client_get_type ())
 #define MPRIS2_CLIENT(obj)              (G_TYPE_CHECK_INSTANCE_CAST ((obj), MPRIS2_TYPE_CLIENT, Mpris2Client))
 #define MPRIS2_IS_CLIENT(obj)           (G_TYPE_CHECK_INSTANCE_TYPE ((obj), MPRIS2_TYPE_CLIENT))
@@ -34,25 +46,13 @@ typedef struct _Mpris2ClientClass Mpris2ClientClass;
 
 struct _Mpris2ClientClass {
 	GObjectClass parent_class;
-	void (*connection)      (Mpris2Client *mpris2);
-	void (*playback_status) (Mpris2Client *mpris2);
+	void (*connection)      (Mpris2Client *mpris2, gboolean        connected);
+	void (*playback_status) (Mpris2Client *mpris2, PlaybackStatus  playback_status);
 	void (*metadata)        (Mpris2Client *mpris2, Mpris2Metadata *metadata);
-	void (*volume)          (Mpris2Client *mpris2);
-	void (*loop_status)     (Mpris2Client *mpris2);
-	void (*shuffle)         (Mpris2Client *mpris2);
+	void (*volume)          (Mpris2Client *mpris2, gdouble         volume);
+	void (*loop_status)     (Mpris2Client *mpris2, LoopStatus      loop_status);
+	void (*shuffle)         (Mpris2Client *mpris2, gboolean        shuffle);
 };
-
-typedef enum {
-	PLAYING = 1,
-	PAUSED,
-	STOPPED
-} PlaybackStatus;
-
-typedef enum {
-	NONE = 1,
-	TRACK,
-	PLAYLIST
-} LoopStatus;
 
 /*
  * Methods

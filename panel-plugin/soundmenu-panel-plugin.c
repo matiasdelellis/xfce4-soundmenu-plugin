@@ -112,12 +112,12 @@ mpris2_panel_plugin_metadada (Mpris2Client *mpris2, Mpris2Metadata *metadata, So
 }
 
 static void
-mpris2_panel_plugin_playback_status (Mpris2Client *mpris2, SoundmenuPlugin *soundmenu)
+mpris2_panel_plugin_playback_status (Mpris2Client *mpris2, PlaybackStatus playback_status, SoundmenuPlugin *soundmenu)
 {
 	gtk_container_remove (GTK_CONTAINER(soundmenu->play_button),
 	                      gtk_bin_get_child(GTK_BIN(soundmenu->play_button)));
 
-	switch (mpris2_client_get_playback_status(mpris2)) {
+	switch (playback_status) {
 		case PLAYING:
 			gtk_container_add (GTK_CONTAINER(soundmenu->play_button), soundmenu->image_pause);
 			break;
@@ -139,13 +139,9 @@ mpris2_panel_plugin_playback_status (Mpris2Client *mpris2, SoundmenuPlugin *soun
 }
 
 static void
-mpris2_panel_plugin_coneccion (Mpris2Client *mpris2, SoundmenuPlugin *soundmenu)
+mpris2_panel_plugin_coneccion (Mpris2Client *mpris2, gboolean connected, SoundmenuPlugin *soundmenu)
 {
-	gboolean connection = FALSE;
-
-	connection = mpris2_client_is_connected (soundmenu->mpris2);
-
-	if (connection) {
+	if (connected) {
 		/* Sensitive all controls */
 		gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->prev_button), TRUE);
 		gtk_widget_set_sensitive(GTK_WIDGET(soundmenu->play_button), TRUE);
@@ -336,10 +332,8 @@ soundmenu_panel_button_scrolled (GtkWidget        *widget,
  */
 
 static void
-mpris2_panel_plugin_loop_status (Mpris2Client *mpris2, SoundmenuPlugin *soundmenu)
+mpris2_panel_plugin_loop_status (Mpris2Client *mpris2, LoopStatus loop_status, SoundmenuPlugin *soundmenu)
 {
-	LoopStatus loop_status = mpris2_client_get_loop_status (mpris2);
-
 	if (loop_status == PLAYLIST)
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(soundmenu->loop_menu_item), TRUE);
 	else
@@ -358,10 +352,9 @@ soundmenu_toggled_loop_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 }
 
 static void
-mpris2_panel_plugin_shuffle (Mpris2Client *mpris2, SoundmenuPlugin *soundmenu)
+mpris2_panel_plugin_shuffle (Mpris2Client *mpris2, gboolean shuffle, SoundmenuPlugin *soundmenu)
 {
-	gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(soundmenu->shuffle_menu_item),
-		mpris2_client_get_shuffle (soundmenu->mpris2));
+	gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM(soundmenu->shuffle_menu_item), shuffle);
 
 	gtk_widget_show (soundmenu->shuffle_menu_item);
 }

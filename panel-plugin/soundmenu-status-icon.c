@@ -31,8 +31,62 @@ static GtkStatusIcon *status_icon       = NULL;
  */
 
 static void
+mpris2_status_icon_open_files_response (GtkDialog    *dialog,
+                                        gint          response,
+                                        Mpris2Client *mpris2)
+{
+	GSList *files;
+	guint i, len;
+	gchar *file;
+
+	files = gtk_file_chooser_get_filenames (GTK_FILE_CHOOSER (dialog));
+
+	gtk_widget_destroy (GTK_WIDGET(dialog));
+
+	len = g_slist_length (files);
+	for (i = 0; i < len; i++) {
+		file = g_slist_nth_data (files, i);
+		g_print ("Open file %s\n", file);
+	}
+	g_slist_foreach (files, (GFunc) g_free, NULL);
+	g_slist_free (files);
+}
+
+static void
+mpris2_status_icon_open_files (GtkStatusIcon *widget,
+                               Mpris2Client *mpris2)
+{
+	GtkWidget *dialog;
+	GtkFileFilter *filter;
+	gchar **mime_types = NULL;
+	guint i = 0;
+
+	dialog = gtk_file_chooser_dialog_new ("Open File",
+	                                      NULL,
+	                                      GTK_FILE_CHOOSER_ACTION_OPEN,
+	                                      GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+	                                      GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+	                                      NULL);
+
+	gtk_file_chooser_set_select_multiple (GTK_FILE_CHOOSER(dialog), TRUE);
+
+	filter = gtk_file_filter_new ();
+	gtk_file_filter_set_name (filter, _("Supported files"));
+
+	mime_types = mpris2_client_get_supported_mime_types(mpris2);
+	for (i = 0; i < g_strv_length(mime_types); i++)
+		gtk_file_filter_add_mime_type (GTK_FILE_FILTER (filter), mime_types[i]);
+	gtk_file_chooser_add_filter (GTK_FILE_CHOOSER(dialog), filter);
+
+	g_signal_connect (G_OBJECT(dialog), "response",
+	                  G_CALLBACK(mpris2_status_icon_open_files_response), mpris2);
+
+	gtk_widget_show_all (dialog);
+}
+
+static void
 mpris2_status_icon_prev (GtkStatusIcon *widget,
-                        Mpris2Client *mpris2)
+                         Mpris2Client *mpris2)
 {
 	mpris2_client_prev (mpris2);
 }
@@ -145,6 +199,11 @@ mpris2_status_icon_show_mpris2_popup (GtkStatusIcon *icon,
 
 	if (!mpris2_popup_menu) {
 		mpris2_popup_menu = gtk_menu_new();
+
+		item = gtk_menu_item_new_with_label ("Open files");
+		gtk_menu_append (mpris2_popup_menu, item);
+		g_signal_connect (G_OBJECT(item), "activate",
+		                  G_CALLBACK(mpris2_status_icon_open_files), mpris2);
 
 		item = gtk_menu_item_new_with_label ("Prev");
 		gtk_menu_append (mpris2_popup_menu, item);

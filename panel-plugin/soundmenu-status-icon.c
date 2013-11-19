@@ -243,9 +243,6 @@ mpris2_status_icon_show_icon_popup (GtkStatusIcon *icon,
 {
 	GtkWidget *item;
 
-	if (!mpris2_client_is_connected(mpris2))
-		return;
-
 	if (!icon_popup_menu) {
 		icon_popup_menu = gtk_menu_new();
 

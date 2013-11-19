@@ -851,7 +851,7 @@ mpris2_client_connected_dbus (GDBusConnection *connection,
 	g_variant_unref (reply);
 
 	/* Notify that connect to a player.*/
-	g_signal_emit (mpris2, signals[CONNECTION], 0);
+	g_signal_emit (mpris2, signals[CONNECTION], 0, mpris2->connected);
 
 	/* And informs the current status of the player */
 	reply = mpris2_client_get_all_player_properties (mpris2);
@@ -904,7 +904,7 @@ mpris2_client_lose_dbus (GDBusConnection *connection,
 	mpris2->has_shuffle     = FALSE;
 
 	mpris2->connected = FALSE;
-	g_signal_emit (mpris2, signals[CONNECTION], 0);
+	g_signal_emit (mpris2, signals[CONNECTION], 0, mpris2->connected);
 }
 
 static void

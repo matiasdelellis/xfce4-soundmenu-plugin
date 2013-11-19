@@ -57,6 +57,8 @@ struct _Mpris2ClientClass {
 /*
  * Methods
  */
+
+void            mpris2_client_open_uri                  (Mpris2Client *mpris2, const gchar *uri);
 void            mpris2_client_play_pause                (Mpris2Client *mpris2);
 void            mpris2_client_stop                      (Mpris2Client *mpris2);
 void            mpris2_client_prev                      (Mpris2Client *mpris2);

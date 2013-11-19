@@ -35,21 +35,21 @@ mpris2_status_icon_open_files_response (GtkDialog    *dialog,
                                         gint          response,
                                         Mpris2Client *mpris2)
 {
-	GSList *files;
+	GSList *uris;
 	guint i, len;
-	gchar *file;
+	gchar *uri;
 
-	files = gtk_file_chooser_get_filenames (GTK_FILE_CHOOSER (dialog));
+	uris = gtk_file_chooser_get_uris (GTK_FILE_CHOOSER (dialog));
 
 	gtk_widget_destroy (GTK_WIDGET(dialog));
 
-	len = g_slist_length (files);
+	len = g_slist_length (uris);
 	for (i = 0; i < len; i++) {
-		file = g_slist_nth_data (files, i);
-		g_print ("Open file %s\n", file);
+		uri = g_slist_nth_data (uris, i);
+		mpris2_client_open_uri (mpris2, uri);
 	}
-	g_slist_foreach (files, (GFunc) g_free, NULL);
-	g_slist_free (files);
+	g_slist_foreach (uris, (GFunc) g_free, NULL);
+	g_slist_free (uris);
 }
 
 static void

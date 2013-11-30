@@ -18,13 +18,19 @@
 
 #include <gtk/gtk.h>
 #include <glib/gi18n.h>
+#include <gio-unix-2.0/gio/gdesktopappinfo.h>
 
 #include "libmpris2client.h"
 #include "mpris2-metadata.h"
 
 static GtkWidget     *icon_popup_menu   = NULL;
 static GtkWidget     *mpris2_popup_menu = NULL;
+
 static GtkStatusIcon *status_icon       = NULL;
+static GIcon         *player_icon       = NULL;
+static GEmblem       *playing_emblem    = NULL;
+static GEmblem       *paused_emblem     = NULL;
+static GEmblem       *stopped_emblem    = NULL;
 
 /*
  * Callbacks
@@ -132,24 +138,49 @@ mpris2_status_icon_metadada (Mpris2Client *mpris2, Mpris2Metadata *metadata, Gtk
 static void
 mpris2_status_icon_playback_status (Mpris2Client *mpris2, PlaybackStatus playback_status, GtkStatusIcon *icon)
 {
+	g_emblemed_icon_clear_emblems (G_EMBLEMED_ICON(player_icon));
+
 	switch (playback_status) {
 		case PLAYING:
-			gtk_status_icon_set_from_stock (icon, GTK_STOCK_MEDIA_PAUSE);
+			g_emblemed_icon_add_emblem (G_EMBLEMED_ICON(player_icon), playing_emblem);
 			break;
 		case PAUSED:
+			g_emblemed_icon_add_emblem (G_EMBLEMED_ICON(player_icon), paused_emblem);
+			break;
 		case STOPPED:
 		default:
-			gtk_status_icon_set_from_stock (icon, GTK_STOCK_MEDIA_PLAY);
+			g_emblemed_icon_add_emblem (G_EMBLEMED_ICON(player_icon), stopped_emblem);
 			break;
 	}
+
+	gtk_status_icon_set_from_gicon (status_icon, player_icon);
 }
 
 static void
 mpris2_status_icon_coneccion (Mpris2Client *mpris2, gboolean connected, GtkStatusIcon *icon)
 {
+	GDesktopAppInfo *player_info = NULL;
+	const gchar *desktop_entry   = NULL;
+	const gchar *player_identity = NULL;
+	gchar *desktop_id            = NULL;
+	GIcon *gicon                 = NULL;
+
 	if (connected) {
-		gtk_status_icon_set_tooltip (status_icon,
-		                             mpris2_client_get_player_identity(mpris2));
+		desktop_entry = mpris2_client_get_player_desktop_entry (mpris2);
+		player_identity = mpris2_client_get_player_identity (mpris2);
+
+		desktop_id = g_strdup_printf("%s.desktop", desktop_entry);
+
+		player_info = g_desktop_app_info_new (desktop_id);
+
+		gicon = g_app_info_get_icon (G_APP_INFO(player_info));
+		player_icon = g_emblemed_icon_new (gicon, NULL);
+
+		gtk_status_icon_set_from_gicon (status_icon, player_icon);
+		gtk_status_icon_set_tooltip (status_icon, player_identity);
+
+		g_object_unref (player_info);
+		g_free (desktop_id);
 	}
 	else {
 		gtk_status_icon_set_tooltip (status_icon, _("Soundmenu"));
@@ -281,6 +312,31 @@ mpris2_status_icon_activate (GtkStatusIcon *icon,
 	return TRUE;
 }
 
+/**/
+
+static GtkStatusIcon *
+mpris2_status_icon_new (void)
+{
+	GtkStatusIcon *statusicon = NULL;
+	GIcon *gicon = NULL;
+
+	statusicon = gtk_status_icon_new ();
+
+	gicon = g_themed_icon_new ("xfce4-soundmenu-plugin");
+	gtk_status_icon_set_from_gicon (statusicon, gicon);
+
+	gicon = g_themed_icon_new ("media-playback-start");
+	playing_emblem = g_emblem_new (gicon);
+
+	gicon = g_themed_icon_new ("media-playback-pause");
+	paused_emblem = g_emblem_new (gicon);
+
+	gicon = g_themed_icon_new ("media-playback-stop");
+	stopped_emblem = g_emblem_new (gicon);
+
+	return statusicon;
+}
+
 gint
 main (gint argc,
       gchar *argv[])
@@ -292,9 +348,9 @@ main (gint argc,
 	gtk_init (&argc, &argv);
 	g_set_application_name (_("Soundmenu"));
 
-	status_icon = gtk_status_icon_new_from_icon_name ("xfce4-soundmenu-plugin");
+	status_icon = mpris2_status_icon_new ();
 
-	gtk_status_icon_set_visible (status_icon, TRUE); 
+	gtk_status_icon_set_visible (status_icon, TRUE);
 	gtk_status_icon_set_tooltip (status_icon, _("Soundmenu"));
 
 	/* Connect signals */

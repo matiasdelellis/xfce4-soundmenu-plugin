@@ -20,10 +20,11 @@
 #include <config.h>
 #endif
 
+#include <libmpris2client/libmpris2client.h>
+
 #include "soundmenu-dialogs.h"
 #include "soundmenu-dialog-hig.h"
 #include "mpris2-utils.h"
-#include "libmpris2client.h"
 
 #ifdef HAVE_LIBKEYBINDER
 #include "soundmenu-keybinder.h"

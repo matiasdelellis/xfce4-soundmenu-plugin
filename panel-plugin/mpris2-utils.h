@@ -31,9 +31,6 @@ G_BEGIN_DECLS
 #define g_str_empty0(s) (!(s) || !(s)[0])
 #define g_str_nempty0(s) ((s) && (s)[0])
 
-const gchar *
-g_avariant_get_string(GVariant * variant);
-
 #if !GLIB_CHECK_VERSION(2,32,0)
 #define NM_DBUS_SERVICE		"org.freedesktop.NetworkManager"
 #define NM_DBUS_PATH		"/org/freedesktop/NetworkManager"

@@ -29,25 +29,6 @@
 
 #include "mpris2-utils.h"
 
-const gchar *
-g_avariant_get_string(GVariant * variant)
-{
-	const gchar **strv = NULL;
-	const gchar *string = NULL;
-	gsize len;
-
-	strv = g_variant_get_strv (variant, &len);
-	if (len > 0) {
-		string = strv[0];
-		g_free (strv);
-	}
-	else {
-		string = "";
-	}
-
-	return string;
-}
-
 #if !GLIB_CHECK_VERSION(2,32,0)
 /* Functions to check the network manager status. */
 

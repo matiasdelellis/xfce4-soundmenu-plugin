@@ -20,8 +20,8 @@
 #include <glib/gi18n.h>
 #include <gio-unix-2.0/gio/gdesktopappinfo.h>
 
-#include "libmpris2client.h"
-#include "mpris2-metadata.h"
+#include <libmpris2client/libmpris2client.h>
+#include <libmpris2client/mpris2-metadata.h>
 
 static GtkWidget     *icon_popup_menu   = NULL;
 static GtkWidget     *mpris2_popup_menu = NULL;

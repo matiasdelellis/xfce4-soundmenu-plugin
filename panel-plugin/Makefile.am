@@ -19,8 +19,6 @@ plugindir = \
 libsoundmenu_la_SOURCES = \
 	soundmenu-panel-plugin.c \
 	soundmenu-panel-plugin.h \
-	libmpris2client.c \
-	libmpris2client.h \
 	soundmenu-album-art.c \
 	soundmenu-album-art.h \
 	soundmenu-dialog-hig.c \
@@ -28,11 +26,7 @@ libsoundmenu_la_SOURCES = \
 	soundmenu-dialogs.c \
 	soundmenu-dialogs.h \
 	soundmenu-simple-async.c \
-	soundmenu-simple-async.h \
-	mpris2-utils.c \
-	mpris2-utils.h \
-	mpris2-metadata.c \
-	mpris2-metadata.h
+	soundmenu-simple-async.h
 
 if HAVE_LIBKEYBINDER
 libsoundmenu_la_SOURCES += \
@@ -63,6 +57,7 @@ libsoundmenu_la_CFLAGS = \
 	$(LIBXFCE4UTIL_CFLAGS) \
 	$(LIBXFCE4UI_CFLAGS) \
 	$(LIBXFCE4PANEL_CFLAGS) \
+	$(LIBMPRIS2CLIENT_CFLAG) \
 	$(PLATFORM_CFLAGS)
 
 libsoundmenu_la_LDFLAGS = 					\
@@ -75,7 +70,8 @@ libsoundmenu_la_LIBADD = \
 	$(DBUS_GLIB_LIBS) \
 	$(LIBXFCE4UTIL_LIBS) \
 	$(LIBXFCE4UI_LIBS) \
-	$(LIBXFCE4PANEL_LIBS)
+	$(LIBXFCE4PANEL_LIBS) \
+	$(LIBMPRIS2CLIENT_LIBS)
 
 if HAVE_LIBKEYBINDER
 libsoundmenu_la_CFLAGS += $(LIBKEYBINDER_CFLAGS)
@@ -101,20 +97,14 @@ endif
 # Status Icon
 #
 xfce4_soundmenu_icon_SOURCES = \
-	soundmenu-status-icon.c    \
-	libmpris2client.c          \
-	libmpris2client.h          \
-	mpris2-metadata.c          \
-	mpris2-metadata.h          \
-	mpris2-utils.c             \
-	mpris2-utils.h
+	soundmenu-status-icon.c
 
 xfce4_soundmenu_icon_CFLAGS =  \
-	$(DBUS_GLIB_CFLAGS)        \
+	$(LIBMPRIS2CLIENT_CFLAG)   \
 	$(GTK_CFLAGS)
 
 xfce4_soundmenu_icon_LDADD =   \
-	$(DBUS_GLIB_LIBS)          \
+	$(LIBMPRIS2CLIENT_LIBS)    \
 	$(GTK_LIBS)
 
 #

@@ -246,6 +246,12 @@ mpris2_status_icon_playback_status (Mpris2Client *mpris2, PlaybackStatus playbac
 }
 
 static void
+mpris2_status_icon_playback_tick (Mpris2Client *mpris2, gint position, GtkStatusIcon *icon)
+{
+	g_print ("Time: %i\n", position/1000000);
+}
+
+static void
 mpris2_status_icon_coneccion (Mpris2Client *mpris2, gboolean connected, GtkStatusIcon *icon)
 {
 	GDesktopAppInfo *player_info = NULL;
@@ -452,6 +458,8 @@ main (gint argc,
 	                  G_CALLBACK(mpris2_status_icon_coneccion), status_icon);
 	g_signal_connect (G_OBJECT (mpris2), "playback-status",
 	                  G_CALLBACK(mpris2_status_icon_playback_status), status_icon);
+	g_signal_connect (G_OBJECT (mpris2), "playback-tick",
+	                  G_CALLBACK(mpris2_status_icon_playback_tick), status_icon);
 	g_signal_connect (G_OBJECT (mpris2), "metadata",
 	                  G_CALLBACK(mpris2_status_icon_metadada), status_icon);
 

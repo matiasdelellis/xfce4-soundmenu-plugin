@@ -18,6 +18,7 @@
 
 #include <gtk/gtk.h>
 #include <glib/gi18n.h>
+#include <glib/gprintf.h>
 #include <gio-unix-2.0/gio/gdesktopappinfo.h>
 
 #include <libmpris2client/libmpris2client.h>
@@ -31,6 +32,55 @@ static GIcon         *player_icon       = NULL;
 static GEmblem       *playing_emblem    = NULL;
 static GEmblem       *paused_emblem     = NULL;
 static GEmblem       *stopped_emblem    = NULL;
+
+/*
+ * Some private
+ */
+
+#define g_str_empty0(s) (!(s) || !(s)[0])
+#define g_str_nempty0(s) ((s) && (s)[0])
+
+static gchar *
+get_string_from_time (gint time)
+{
+	static gchar *str, tmp[24];
+	gint days = 0, hours = 0, minutes = 0, seconds = 0;
+
+	str = g_new0(char, 128);
+	memset(tmp, '\0', 24);
+
+	if (time > 86400) {
+		days = time/86400;
+		time = time%86400;
+		g_sprintf(tmp, "%d %s, ", days, (days>1)?_("days"):_("day"));
+		g_strlcat(str, tmp, 24);
+	}
+
+	if (time > 3600) {
+		hours = time/3600;
+		time = time%3600;
+		memset(tmp, '\0', 24);
+		g_sprintf(tmp, "%d:", hours);
+		g_strlcat(str, tmp, 24);
+	}
+
+	if (time > 60) {
+		minutes = time/60;
+		time = time%60;
+		memset(tmp, '\0', 24);
+		g_sprintf(tmp, "%02d:", minutes);
+		g_strlcat(str, tmp, 24);
+	}
+	else
+		g_strlcat(str, "00:", 4);
+
+	seconds = time;
+	memset(tmp, '\0', 24);
+	g_sprintf(tmp, "%02d", seconds);
+	g_strlcat(str, tmp, 24);
+
+	return str;
+}
 
 /*
  * Callbacks
@@ -132,7 +182,45 @@ mpris2_status_icon_quit_player (GtkStatusIcon *widget,
 static void
 mpris2_status_icon_metadada (Mpris2Client *mpris2, Mpris2Metadata *metadata, GtkStatusIcon *icon)
 {
-	gtk_status_icon_set_tooltip (icon,  mpris2_metadata_get_url(metadata));
+	const gchar *title = NULL, *artist = NULL, *album = NULL, *url = NULL;
+	gchar *markup_text = NULL, *s_length = NULL, *filename = NULL, *name = NULL;
+	gint length = 0;
+	GError *error = NULL;
+
+	title = mpris2_metadata_get_title (metadata);
+	artist = mpris2_metadata_get_artist (metadata);
+	album = mpris2_metadata_get_album (metadata);
+	url = mpris2_metadata_get_url (metadata);
+	length  = mpris2_metadata_get_length (metadata);
+
+	s_length = get_string_from_time (length);
+
+	if (g_str_empty0(url))
+	    return;
+
+	if (g_str_nempty0(title)) {
+		name = g_strdup(title);
+	}
+	else {
+		filename = g_filename_from_uri (url, NULL, &error);
+		if (filename) {
+			name = g_filename_display_basename(filename);
+		}
+		else {
+			name = g_strdup(url);
+		}
+	}
+
+	markup_text = g_strdup_printf (_("%s (%s)\nby %s in %s"),
+	                               name, s_length,
+	                               g_str_nempty0(artist) ? artist : _("Unknown Artist"),
+	                               g_str_nempty0(album)  ? album  : _("Unknown Album"));
+
+	gtk_status_icon_set_tooltip (icon, markup_text);
+
+	g_free(filename);
+	g_free(name);
+	g_free(s_length);
 }
 
 static void
@@ -150,6 +238,7 @@ mpris2_status_icon_playback_status (Mpris2Client *mpris2, PlaybackStatus playbac
 		case STOPPED:
 		default:
 			g_emblemed_icon_add_emblem (G_EMBLEMED_ICON(player_icon), stopped_emblem);
+			gtk_status_icon_set_tooltip (status_icon, _("Soundmenu"));
 			break;
 	}
 

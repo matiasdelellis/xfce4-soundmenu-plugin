@@ -17,7 +17,8 @@
  */
 
 #include <keybinder.h>
-#include "libmpris2client.h"
+#include <libmpris2client/libmpris2client.h>
+
 #include "soundmenu-keybinder.h"
 
 #include "soundmenu-panel-plugin.h"

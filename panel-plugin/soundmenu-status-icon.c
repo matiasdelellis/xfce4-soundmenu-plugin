@@ -24,6 +24,8 @@
 #include <libmpris2client/libmpris2client.h>
 #include <libmpris2client/mpris2-metadata.h>
 
+#include "soundmenu-album-art.h"
+
 static GtkWidget     *icon_popup_menu   = NULL;
 static GtkWidget     *mpris2_popup_menu = NULL;
 
@@ -32,6 +34,12 @@ static GIcon         *player_icon       = NULL;
 static GEmblem       *playing_emblem    = NULL;
 static GEmblem       *paused_emblem     = NULL;
 static GEmblem       *stopped_emblem    = NULL;
+
+GtkWidget *popup_dialog, *vbox;
+GtkWidget *track_box, *track_label;
+GtkWidget *time_box, *time_label, *progress_bar, *length_label;
+GtkWidget *buttons_box, *player_button, *button;
+SoundmenuAlbumArt *album_art;
 
 /*
  * Some private
@@ -211,12 +219,17 @@ mpris2_status_icon_metadada (Mpris2Client *mpris2, Mpris2Metadata *metadata, Gtk
 		}
 	}
 
-	markup_text = g_strdup_printf (_("%s (%s)\nby %s in %s"),
-	                               name, s_length,
+	markup_text = g_strdup_printf (_("%s\nby %s\nin %s"),
+	                               name,
 	                               g_str_nempty0(artist) ? artist : _("Unknown Artist"),
 	                               g_str_nempty0(album)  ? album  : _("Unknown Album"));
 
 	gtk_status_icon_set_tooltip (icon, markup_text);
+	gtk_label_set_text (GTK_LABEL(track_label), markup_text);
+	gtk_label_set_text (GTK_LABEL(length_label), s_length);
+
+	soundmenu_album_art_set_path (album_art,
+		mpris2_metadata_get_arturl(metadata));
 
 	g_free(filename);
 	g_free(name);
@@ -239,6 +252,12 @@ mpris2_status_icon_playback_status (Mpris2Client *mpris2, PlaybackStatus playbac
 		default:
 			g_emblemed_icon_add_emblem (G_EMBLEMED_ICON(player_icon), stopped_emblem);
 			gtk_status_icon_set_tooltip (status_icon, _("Soundmenu"));
+
+			gtk_label_set_text (GTK_LABEL(track_label), _("Soundmenu"));
+
+			gtk_label_set_text (GTK_LABEL(time_label), "00:00");
+			gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(progress_bar), 0.0);
+			gtk_label_set_text (GTK_LABEL(length_label), "--:--");
 			break;
 	}
 
@@ -248,11 +267,28 @@ mpris2_status_icon_playback_status (Mpris2Client *mpris2, PlaybackStatus playbac
 static void
 mpris2_status_icon_playback_tick (Mpris2Client *mpris2, gint position, GtkStatusIcon *icon)
 {
-	g_print ("Time: %i\n", position/1000000);
+	Mpris2Metadata *metadata = NULL;
+	gdouble fraction = 0.0;
+	gint length = 0;
+	gchar *s_time = NULL;
+
+	s_time = get_string_from_time (position/1000000);
+	gtk_label_set_text (GTK_LABEL(time_label), s_time);
+
+	metadata = mpris2_client_get_metadata (mpris2);
+
+	length = mpris2_metadata_get_length (metadata);
+	if (length) {
+		fraction = (gdouble) position/1000000/(gdouble)length;
+		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(progress_bar), fraction);
+	}
+
+
+	g_free(s_time);
 }
 
 static void
-mpris2_status_icon_coneccion (Mpris2Client *mpris2, gboolean connected, GtkStatusIcon *icon)
+mpris2_status_icon_connecion (Mpris2Client *mpris2, gboolean connected, GtkStatusIcon *icon)
 {
 	GDesktopAppInfo *player_info = NULL;
 	const gchar *desktop_entry   = NULL;
@@ -274,12 +310,20 @@ mpris2_status_icon_coneccion (Mpris2Client *mpris2, gboolean connected, GtkStatu
 		gtk_status_icon_set_from_gicon (status_icon, player_icon);
 		gtk_status_icon_set_tooltip (status_icon, player_identity);
 
+		gtk_button_set_label (GTK_BUTTON(player_button), player_identity);
+
 		g_object_unref (player_info);
 		g_free (desktop_id);
 	}
 	else {
 		gtk_status_icon_set_tooltip (status_icon, _("Soundmenu"));
 		gtk_status_icon_set_from_icon_name (icon, "xfce4-soundmenu-plugin");
+
+		gtk_label_set_text (GTK_LABEL(track_label), _("Soundmenu"));
+
+		gtk_label_set_text (GTK_LABEL(time_label), "00:00");
+		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(progress_bar), 0.0);
+		gtk_label_set_text (GTK_LABEL(length_label), "--:--");
 	}
 }
 
@@ -314,8 +358,8 @@ mpris2_status_icon_scroll (GtkStatusIcon *icon,
 }
 
 static void
-mpris2_status_icon_show_mpris2_popup (GtkStatusIcon *icon,
-                                      GdkEventButton *event,
+mpris2_status_icon_show_mpris2_popup (GtkWidget    *widget,
+                                      GdkEvent     *event,
                                       Mpris2Client *mpris2)
 {
 	GtkWidget *item;
@@ -325,41 +369,23 @@ mpris2_status_icon_show_mpris2_popup (GtkStatusIcon *icon,
 
 	if (!mpris2_popup_menu) {
 		mpris2_popup_menu = gtk_menu_new();
+		gtk_menu_shell_set_take_focus (GTK_MENU_SHELL(mpris2_popup_menu), FALSE);
 
 		item = gtk_menu_item_new_with_label ("Open files");
 		gtk_menu_append (mpris2_popup_menu, item);
 		g_signal_connect (G_OBJECT(item), "activate",
 		                  G_CALLBACK(mpris2_status_icon_open_files), mpris2);
 
-		item = gtk_menu_item_new_with_label ("Prev");
-		gtk_menu_append (mpris2_popup_menu, item);
-		g_signal_connect (G_OBJECT(item), "activate",
-		                  G_CALLBACK(mpris2_status_icon_prev), mpris2);
-
-		item = gtk_menu_item_new_with_label ("Play / Pause");
-		gtk_menu_append (mpris2_popup_menu, item);
-		g_signal_connect (G_OBJECT(item), "activate",
-		                  G_CALLBACK(mpris2_status_icon_play_pause), mpris2);
-
-		item = gtk_menu_item_new_with_label ("Stop");
-		gtk_menu_append (mpris2_popup_menu, item);
-		g_signal_connect (G_OBJECT(item), "activate",
-		                  G_CALLBACK(mpris2_status_icon_stop), mpris2);
-
-		item = gtk_menu_item_new_with_label ("Next");
-		gtk_menu_append (mpris2_popup_menu, item);
-		g_signal_connect (G_OBJECT(item), "activate",
-		                  G_CALLBACK(mpris2_status_icon_next), mpris2);
-
 		item = gtk_menu_item_new_with_label ("Close");
 		gtk_menu_append (mpris2_popup_menu, item);
 		g_signal_connect (G_OBJECT(item), "activate",
 		                 G_CALLBACK(mpris2_status_icon_quit_player), mpris2);
+
+		gtk_widget_show_all (mpris2_popup_menu);
 	}
-	gtk_widget_show_all (mpris2_popup_menu);
 
 	gtk_menu_popup (GTK_MENU(mpris2_popup_menu), NULL, NULL, NULL, NULL,
-	                event->button, gtk_get_current_event_time ());
+	                1, gtk_get_current_event_time ());
 }
 
 static void
@@ -393,7 +419,8 @@ mpris2_status_icon_activate (GtkStatusIcon *icon,
 		case 1:
 			if (!mpris2_client_is_connected(mpris2))
 				mpris2_client_auto_set_player (mpris2);
-			mpris2_status_icon_show_mpris2_popup (icon, event, mpris2);
+			else
+				gtk_widget_show (popup_dialog);
 			break;
 		case 2:
 			mpris2_client_play_pause (mpris2);
@@ -403,11 +430,133 @@ mpris2_status_icon_activate (GtkStatusIcon *icon,
 		default:
 			break;
 	}
-	
 	return TRUE;
 }
 
 /**/
+
+static void
+progress_bar_event_seek (GtkWidget *widget,
+                         GdkEventButton *event,
+                         Mpris2Client *mpris2)
+{
+	Mpris2Metadata *metadata = NULL;
+	GtkAllocation allocation;
+	gdouble fraction = 0.0;
+
+	if (event->button != 1)
+		return;
+
+	gtk_widget_get_allocation(widget, &allocation);
+	fraction = (gdouble) event->x / allocation.width;
+
+	metadata = mpris2_client_get_metadata (mpris2);
+	mpris2_client_set_position (mpris2,
+	                            mpris2_metadata_get_trackid(metadata),
+	                            fraction*1000000*mpris2_metadata_get_length(metadata));
+}
+
+static gboolean
+mpris_control_widgets_unfocus_popup (GtkWidget *widget, GdkEventFocus * event, gpointer user_data)
+{
+	gtk_widget_hide (popup_dialog);
+
+	return FALSE;
+}
+
+static void
+mpris_control_widgets_popup (Mpris2Client *mpris2)
+{
+	popup_dialog = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+
+	gtk_window_activate_focus(GTK_WINDOW(popup_dialog));
+	gtk_window_set_decorated (GTK_WINDOW(popup_dialog), FALSE);
+	gtk_window_set_position (GTK_WINDOW(popup_dialog), GTK_WIN_POS_MOUSE);
+	gtk_window_set_keep_above (GTK_WINDOW(popup_dialog), TRUE);
+	g_signal_connect (G_OBJECT(popup_dialog), "focus-out-event",
+	                  G_CALLBACK(mpris_control_widgets_unfocus_popup), NULL);
+
+	vbox = gtk_vbox_new(FALSE, 0);
+
+	/* Pack track info */
+
+	player_button = gtk_button_new ();
+	gtk_button_set_relief(GTK_BUTTON(player_button), GTK_RELIEF_NONE);
+
+	album_art = soundmenu_album_art_new ();
+	soundmenu_album_art_set_size(album_art, 200);
+
+	track_label = gtk_label_new (_("Stopped"));
+	gtk_label_set_ellipsize (GTK_LABEL(track_label), PANGO_ELLIPSIZE_END);
+	gtk_misc_set_alignment(GTK_MISC(track_label), 0.5, 0.5);
+
+	/* Pack timer box */
+	time_box = gtk_hbox_new(FALSE, 2);
+
+	time_label = gtk_label_new ("00:00");
+	progress_bar = gtk_progress_bar_new();
+	gtk_widget_set_size_request(GTK_WIDGET(progress_bar), -1, 12);
+	gtk_widget_set_events(progress_bar, GDK_BUTTON_PRESS_MASK);
+	g_signal_connect (G_OBJECT(progress_bar), "button-press-event",
+	                  G_CALLBACK(progress_bar_event_seek), mpris2);
+	length_label = gtk_label_new ("--:--");
+
+	gtk_box_pack_start (GTK_BOX(time_box), GTK_WIDGET(time_label),
+	                    FALSE, FALSE, 2);
+	gtk_box_pack_start (GTK_BOX(time_box), GTK_WIDGET(progress_bar),
+	                    TRUE, TRUE, 0);
+	gtk_box_pack_start (GTK_BOX(time_box), GTK_WIDGET(length_label),
+	                    FALSE, FALSE, 2);
+
+	/* Pack buttons box */
+	buttons_box = gtk_hbox_new(TRUE, 2);
+
+	button = gtk_tool_button_new_from_stock (GTK_STOCK_MEDIA_PREVIOUS);
+	g_signal_connect (G_OBJECT(button), "clicked",
+	                  G_CALLBACK(mpris2_status_icon_prev), mpris2);
+	gtk_box_pack_start (GTK_BOX(buttons_box), GTK_WIDGET(button),
+	                    FALSE, FALSE, 0);
+
+	button = gtk_tool_button_new_from_stock (GTK_STOCK_MEDIA_PLAY);
+	g_signal_connect (G_OBJECT(button), "clicked",
+	                  G_CALLBACK(mpris2_status_icon_play_pause), mpris2);
+	gtk_box_pack_start (GTK_BOX(buttons_box), GTK_WIDGET(button),
+	                    FALSE, FALSE, 0);
+
+	button = gtk_tool_button_new_from_stock (GTK_STOCK_MEDIA_STOP);
+	g_signal_connect (G_OBJECT(button), "clicked",
+	                  G_CALLBACK(mpris2_status_icon_stop), mpris2);
+	gtk_box_pack_start (GTK_BOX(buttons_box), GTK_WIDGET(button),
+	                    FALSE, FALSE, 0);
+
+	button = gtk_tool_button_new_from_stock (GTK_STOCK_MEDIA_NEXT);
+	g_signal_connect (G_OBJECT(button), "clicked",
+	                  G_CALLBACK(mpris2_status_icon_next), mpris2);
+	gtk_box_pack_start (GTK_BOX(buttons_box), GTK_WIDGET(button),
+	                    FALSE, FALSE, 0);
+
+	button = gtk_tool_button_new_from_stock (GTK_STOCK_PROPERTIES);
+	g_signal_connect (G_OBJECT(button), "clicked",
+	                  G_CALLBACK(mpris2_status_icon_show_mpris2_popup), mpris2);
+	gtk_box_pack_start (GTK_BOX(buttons_box), GTK_WIDGET(button),
+	                    FALSE, FALSE, 0);
+
+	/* Pack everting */
+	gtk_box_pack_start (GTK_BOX(vbox), GTK_WIDGET(player_button),
+	                    FALSE, FALSE, 2);
+	gtk_box_pack_start (GTK_BOX(vbox), GTK_WIDGET(album_art),
+	                    FALSE, FALSE, 2);
+	gtk_box_pack_start (GTK_BOX(vbox), GTK_WIDGET(track_label),
+	                    TRUE, TRUE, 2);
+	gtk_box_pack_start (GTK_BOX(vbox), GTK_WIDGET(time_box),
+	                    FALSE, FALSE, 2);
+	gtk_box_pack_start (GTK_BOX(vbox), GTK_WIDGET(buttons_box),
+	                    TRUE, TRUE, 2);
+
+	gtk_widget_show_all (GTK_WIDGET(vbox));
+
+	gtk_container_add (GTK_CONTAINER(popup_dialog), vbox);
+}
 
 static GtkStatusIcon *
 mpris2_status_icon_new (void)
@@ -455,13 +604,15 @@ main (gint argc,
 	                  G_CALLBACK (mpris2_status_icon_scroll), mpris2);
 
 	g_signal_connect (G_OBJECT (mpris2), "connection",
-	                  G_CALLBACK(mpris2_status_icon_coneccion), status_icon);
+	                  G_CALLBACK(mpris2_status_icon_connecion), status_icon);
 	g_signal_connect (G_OBJECT (mpris2), "playback-status",
 	                  G_CALLBACK(mpris2_status_icon_playback_status), status_icon);
 	g_signal_connect (G_OBJECT (mpris2), "playback-tick",
 	                  G_CALLBACK(mpris2_status_icon_playback_tick), status_icon);
 	g_signal_connect (G_OBJECT (mpris2), "metadata",
 	                  G_CALLBACK(mpris2_status_icon_metadada), status_icon);
+
+	mpris_control_widgets_popup(mpris2);
 
 	gtk_main ();
 

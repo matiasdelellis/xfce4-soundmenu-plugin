@@ -97,6 +97,8 @@ endif
 # Status Icon
 #
 xfce4_soundmenu_icon_SOURCES = \
+	soundmenu-album-art.c \
+	soundmenu-album-art.h \
 	soundmenu-status-icon.c
 
 xfce4_soundmenu_icon_CFLAGS =  \

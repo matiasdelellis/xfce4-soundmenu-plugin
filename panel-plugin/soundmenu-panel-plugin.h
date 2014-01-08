@@ -35,9 +35,10 @@
 #include <libxfce4util/libxfce4util.h>
 #include <libxfce4panel/xfce-hvbox.h>
 
-#include "libmpris2client.h"
+#include <libmpris2client/libmpris2client.h>
+#include <libmpris2client/mpris2-metadata.h>
+
 #include "soundmenu-album-art.h"
-#include "mpris2-metadata.h"
 #include "soundmenu-simple-async.h"
 
 #ifdef HAVE_LIBCLASTFM

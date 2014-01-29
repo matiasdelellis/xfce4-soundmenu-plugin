@@ -25,8 +25,8 @@ libsoundmenu_la_SOURCES = \
 	soundmenu-dialog-hig.h \
 	soundmenu-dialogs.c \
 	soundmenu-dialogs.h \
-	soundmenu-simple-async.c \
-	soundmenu-simple-async.h
+	soundmenu-utils.c \
+	soundmenu-utils.h
 
 if HAVE_LIBKEYBINDER
 libsoundmenu_la_SOURCES += \
@@ -37,13 +37,18 @@ endif
 if HAVE_LIBCLASTFM
 libsoundmenu_la_SOURCES += \
 	soundmenu-lastfm.c \
-	soundmenu-lastfm.h
+	soundmenu-lastfm.h \
+	soundmenu-simple-async.c \
+	soundmenu-simple-async.h
+
 endif
 
 if HAVE_LIBGLYR
 libsoundmenu_la_SOURCES += \
 	soundmenu-related.c \
-	soundmenu-related.h
+	soundmenu-related.h \
+	soundmenu-simple-async.c \
+	soundmenu-simple-async.h
 endif
 
 if HAVE_LIBNOTIFY

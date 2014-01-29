@@ -27,7 +27,7 @@
 #include <glib/gprintf.h>
 #include <glib/gi18n.h>
 
-#include "mpris2-utils.h"
+#include "soundmenu-utils.h"
 
 #if !GLIB_CHECK_VERSION(2,32,0)
 /* Functions to check the network manager status. */

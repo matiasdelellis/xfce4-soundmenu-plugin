@@ -21,7 +21,7 @@
 #endif
 
 #include "soundmenu-dialogs.h"
-#include "mpris2-utils.h"
+#include "soundmenu-utils.h"
 #include "soundmenu-related.h"
 #include "soundmenu-simple-async.h"
 #include "soundmenu-panel-plugin.h"

@@ -105,7 +105,6 @@ toggle_show_album_art(GtkToggleButton *button,
 	                                 gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)));
 }
 
-#if LIBXFCE4PANEL_CHECK_VERSION (4,9,0)
 static void
 toggle_huge_on_deskbar_mode(GtkToggleButton *button,
                             SoundmenuPlugin *soundmenu)
@@ -113,7 +112,6 @@ toggle_huge_on_deskbar_mode(GtkToggleButton *button,
 	soundmenu_set_huge_album_art (soundmenu,
 	                              gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)));
 }
-#endif
 
 static void
 toggle_show_stop(GtkToggleButton *button,
@@ -214,13 +212,11 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 	g_signal_connect (G_OBJECT(show_album_art_check), "toggled",
 	                  G_CALLBACK(toggle_show_album_art), soundmenu);
 
-	#if LIBXFCE4PANEL_CHECK_VERSION (4,9,0)
 	huge_on_deskbar_mode_check = gtk_check_button_new_with_label(_("Show huge cover art when deskbar panel mode"));
 	if (soundmenu_get_huge_album_art(soundmenu))
 		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(huge_on_deskbar_mode_check), TRUE);
 	g_signal_connect (G_OBJECT(huge_on_deskbar_mode_check), "toggled",
 	                  G_CALLBACK(toggle_huge_on_deskbar_mode), soundmenu);
-	#endif
 
 	show_stop_check = gtk_check_button_new_with_label(_("Show stop button"));
 	if (soundmenu_get_visible_stop_button (soundmenu))
@@ -273,9 +269,7 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 
 	soundmenu_hig_workarea_table_add_section_title(pref_table, &row, _("Appearance"));
 	soundmenu_hig_workarea_table_add_wide_control(pref_table, &row, show_album_art_check);
-	#if LIBXFCE4PANEL_CHECK_VERSION (4,9,0)
 	soundmenu_hig_workarea_table_add_wide_control(pref_table, &row, huge_on_deskbar_mode_check);
-	#endif
 	soundmenu_hig_workarea_table_add_wide_control(pref_table, &row, show_stop_check);
 	soundmenu_hig_workarea_table_add_wide_control(pref_table, &row, hide_controls_if_loose_check);
 

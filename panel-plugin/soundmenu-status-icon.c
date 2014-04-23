@@ -511,31 +511,31 @@ mpris_control_widgets_popup (Mpris2Client *mpris2)
 	/* Pack buttons box */
 	buttons_box = gtk_hbox_new(TRUE, 2);
 
-	button = gtk_tool_button_new_from_stock (GTK_STOCK_MEDIA_PREVIOUS);
+	button = GTK_WIDGET(gtk_tool_button_new_from_stock (GTK_STOCK_MEDIA_PREVIOUS));
 	g_signal_connect (G_OBJECT(button), "clicked",
 	                  G_CALLBACK(mpris2_status_icon_prev), mpris2);
 	gtk_box_pack_start (GTK_BOX(buttons_box), GTK_WIDGET(button),
 	                    FALSE, FALSE, 0);
 
-	button = gtk_tool_button_new_from_stock (GTK_STOCK_MEDIA_PLAY);
+	button = GTK_WIDGET(gtk_tool_button_new_from_stock (GTK_STOCK_MEDIA_PLAY));
 	g_signal_connect (G_OBJECT(button), "clicked",
 	                  G_CALLBACK(mpris2_status_icon_play_pause), mpris2);
 	gtk_box_pack_start (GTK_BOX(buttons_box), GTK_WIDGET(button),
 	                    FALSE, FALSE, 0);
 
-	button = gtk_tool_button_new_from_stock (GTK_STOCK_MEDIA_STOP);
+	button = GTK_WIDGET(gtk_tool_button_new_from_stock (GTK_STOCK_MEDIA_STOP));
 	g_signal_connect (G_OBJECT(button), "clicked",
 	                  G_CALLBACK(mpris2_status_icon_stop), mpris2);
 	gtk_box_pack_start (GTK_BOX(buttons_box), GTK_WIDGET(button),
 	                    FALSE, FALSE, 0);
 
-	button = gtk_tool_button_new_from_stock (GTK_STOCK_MEDIA_NEXT);
+	button = GTK_WIDGET(gtk_tool_button_new_from_stock (GTK_STOCK_MEDIA_NEXT));
 	g_signal_connect (G_OBJECT(button), "clicked",
 	                  G_CALLBACK(mpris2_status_icon_next), mpris2);
 	gtk_box_pack_start (GTK_BOX(buttons_box), GTK_WIDGET(button),
 	                    FALSE, FALSE, 0);
 
-	button = gtk_tool_button_new_from_stock (GTK_STOCK_PROPERTIES);
+	button = GTK_WIDGET(gtk_tool_button_new_from_stock (GTK_STOCK_PROPERTIES));
 	g_signal_connect (G_OBJECT(button), "clicked",
 	                  G_CALLBACK(mpris2_status_icon_show_mpris2_popup), mpris2);
 	gtk_box_pack_start (GTK_BOX(buttons_box), GTK_WIDGET(button),

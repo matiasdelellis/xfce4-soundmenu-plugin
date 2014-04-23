@@ -529,13 +529,11 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	soundmenu_read (soundmenu);
 
 	/* get the current orientation */
-#if LIBXFCE4PANEL_CHECK_VERSION (4,9,0)
+
 	orientation =
 		(xfce_panel_plugin_get_mode (plugin) == XFCE_PANEL_PLUGIN_MODE_VERTICAL) ?
 		GTK_ORIENTATION_VERTICAL : GTK_ORIENTATION_HORIZONTAL;
-#else
-	orientation = xfce_panel_plugin_get_orientation (plugin);
-#endif
+
 	panel_orientation = xfce_panel_plugin_get_orientation (plugin);
 
 	/* create some panel widgets */
@@ -785,7 +783,6 @@ soundmenu_size_changed (XfcePanelPlugin *plugin,
 
 	size = album_size = panel_size;
 
-#if LIBXFCE4PANEL_CHECK_VERSION (4,9,0)
 	if (xfce_panel_plugin_get_mode (plugin) == XFCE_PANEL_PLUGIN_MODE_DESKBAR)
 	{
 		if (soundmenu->show_stop)
@@ -802,7 +799,6 @@ soundmenu_size_changed (XfcePanelPlugin *plugin,
 		else
 			album_size = size;
 	}
-#endif
 
 	gtk_widget_set_size_request (GTK_WIDGET (soundmenu->next_button), size, size);
 	gtk_widget_set_size_request (GTK_WIDGET (soundmenu->prev_button), size, size);
@@ -815,7 +811,6 @@ soundmenu_size_changed (XfcePanelPlugin *plugin,
 	return TRUE;
 }
 
-#if LIBXFCE4PANEL_CHECK_VERSION (4,9,0)
 static void
 soundmenu_mode_changed (XfcePanelPlugin     *plugin,
                         XfcePanelPluginMode  mode,
@@ -845,20 +840,6 @@ soundmenu_mode_changed (XfcePanelPlugin     *plugin,
 	/* update size after orientation change */
 	soundmenu_size_changed (plugin, xfce_panel_plugin_get_size (plugin), soundmenu);
 }
-#else
-static void
-soundmenu_orientation_changed (XfcePanelPlugin *plugin,
-                               GtkOrientation   orientation,
-                               SoundmenuPlugin *soundmenu)
-{
-	/* change the orienation of the box */
-	xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->hvbox), orientation);
-	xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->hvbox_buttons), orientation);
-
-	/* update size after orientation change */
-	soundmenu_size_changed (plugin, xfce_panel_plugin_get_size (plugin), soundmenu);
-}
-#endif
 
 void soundmenu_update_layout_changes (SoundmenuPlugin *soundmenu)
 {
@@ -901,11 +882,10 @@ void soundmenu_update_layout_changes (SoundmenuPlugin *soundmenu)
 	}
 
 	/* Update orientations and size. */
-#if LIBXFCE4PANEL_CHECK_VERSION (4,9,0)
+
 	soundmenu_mode_changed (soundmenu->plugin,
 	                        xfce_panel_plugin_get_mode (soundmenu->plugin),
 	                        soundmenu);
-#endif
 }
 
 static void
@@ -932,13 +912,8 @@ soundmenu_construct (XfcePanelPlugin *plugin)
 	g_signal_connect (G_OBJECT (plugin), "size-changed",
 				G_CALLBACK (soundmenu_size_changed), soundmenu);
 
-#if LIBXFCE4PANEL_CHECK_VERSION (4,9,0)
 	g_signal_connect (G_OBJECT (plugin), "mode-changed",
 				G_CALLBACK (soundmenu_mode_changed), soundmenu);
-#else
-	g_signal_connect (G_OBJECT (plugin), "orientation-changed",
-				G_CALLBACK (soundmenu_orientation_changed), soundmenu);
-#endif
 
 	/* show the configure menu item and connect signal */
 	xfce_panel_plugin_menu_show_configure (plugin);

@@ -43,7 +43,7 @@ soundmenu_configure_response (GtkWidget       *dialog,
                               SoundmenuPlugin *soundmenu)
 {
 	gboolean result;
-	const gchar *player = NULL;
+	const gchar *player = NULL, *client_player = NULL;
 
 	if (response == GTK_RESPONSE_HELP) {
 		result = g_spawn_command_line_async ("exo-open --launch WebBrowser " PLUGIN_WEBSITE, NULL);
@@ -53,17 +53,18 @@ soundmenu_configure_response (GtkWidget       *dialog,
 	}
 	else {
 		player = gtk_entry_get_text (GTK_ENTRY(soundmenu->w_player));
+		client_player = mpris2_client_get_player (soundmenu->mpris2);
 
-		/* If the player change, save it and reconnect client */
-		if (g_ascii_strcasecmp (player, mpris2_client_get_player (soundmenu->mpris2))) {
-			if (g_str_nempty0(soundmenu->player)) {
-				g_free(soundmenu->player);
-				soundmenu->player = NULL;
-			}
+		if (g_str_nempty0(soundmenu->player)) {
+			g_free(soundmenu->player);
+			soundmenu->player = NULL;
+		}
+		if (g_str_nempty0(player))
 			soundmenu->player = g_strdup(player);
 
+		/* If the player change reconnect client */
+		if (g_strcmp0 (soundmenu->player, client_player) != 0)
 			mpris2_client_set_player (soundmenu->mpris2, soundmenu->player);
-		}
 
 		#ifdef HAVE_LIBCLASTFM
 		soundmenu_lastfm_set_supported (soundmenu->clastfm,

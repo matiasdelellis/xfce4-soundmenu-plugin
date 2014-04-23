@@ -252,8 +252,15 @@ soundmenu_album_art_frame_press_callback (GtkWidget       *event_box,
 	    event->type != GDK_3BUTTON_PRESS)
 		return TRUE;
 
-	if (!mpris2_client_is_connected(soundmenu->mpris2)) {
-		soundmenu_launch_player (soundmenu->player);
+	if (mpris2_client_is_connected(soundmenu->mpris2) == FALSE) {
+		if (g_str_nempty0(soundmenu->player)) {
+			soundmenu_launch_player (soundmenu->player);
+		}
+		else {
+			soundmenu->player = mpris2_client_auto_set_player(soundmenu->mpris2);
+			if (g_str_empty0(soundmenu->player))
+				soundmenu_configure(soundmenu->plugin, soundmenu);
+		}
 		return TRUE;
 	}
 
@@ -390,7 +397,8 @@ soundmenu_save (XfcePanelPlugin *plugin,
 	if (G_LIKELY (rc != NULL)) {
 		/* save the settings */
 		DBG(".");
-		if (soundmenu->player)
+
+		if (g_str_nempty0(soundmenu->player))
 			xfce_rc_write_entry    (rc, "player", soundmenu->player);
 
 		xfce_rc_write_bool_entry (rc, "show_album_art", soundmenu->show_album_art);
@@ -705,9 +713,8 @@ static void init_soundmenu_plugin(SoundmenuPlugin *soundmenu)
 	g_signal_connect (G_OBJECT (soundmenu->mpris2), "shuffle",
 	                  G_CALLBACK(mpris2_panel_plugin_shuffle), soundmenu);
 
-	soundmenu->player = mpris2_client_auto_set_player (soundmenu->mpris2);
-	if (soundmenu->player == NULL)
-		soundmenu->player = g_strdup ("unknown");
+	if (g_str_nempty0(soundmenu->player))
+		mpris2_client_set_player (soundmenu->mpris2, soundmenu->player);
 
 	/* Init the goodies services .*/
 

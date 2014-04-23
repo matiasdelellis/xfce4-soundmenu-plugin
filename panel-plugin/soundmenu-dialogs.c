@@ -53,8 +53,17 @@ soundmenu_configure_response (GtkWidget       *dialog,
 	}
 	else {
 		player = gtk_entry_get_text (GTK_ENTRY(soundmenu->w_player));
-		if (g_ascii_strcasecmp (player, mpris2_client_get_player (soundmenu->mpris2)))
-			mpris2_client_set_player (soundmenu->mpris2, player);
+
+		/* If the player change, save it and reconnect client */
+		if (g_ascii_strcasecmp (player, mpris2_client_get_player (soundmenu->mpris2))) {
+			if (g_str_nempty0(soundmenu->player)) {
+				g_free(soundmenu->player);
+				soundmenu->player = NULL;
+			}
+			soundmenu->player = g_strdup(player);
+
+			mpris2_client_set_player (soundmenu->mpris2, soundmenu->player);
+		}
 
 		#ifdef HAVE_LIBCLASTFM
 		soundmenu_lastfm_set_supported (soundmenu->clastfm,
@@ -199,10 +208,11 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 	gtk_misc_set_alignment(GTK_MISC (player_label), 0, 0);
 
 	player_entry = gtk_entry_new();
-	gtk_entry_set_text(GTK_ENTRY(player_entry), soundmenu->player);
-        gtk_entry_set_icon_from_stock (GTK_ENTRY(player_entry), GTK_ENTRY_ICON_SECONDARY, GTK_STOCK_REFRESH);
-        g_signal_connect (G_OBJECT(player_entry), "icon-press",
-			  G_CALLBACK (refresh_player), soundmenu);
+	if (g_str_nempty0(soundmenu->player))
+		gtk_entry_set_text(GTK_ENTRY(player_entry), soundmenu->player);
+	gtk_entry_set_icon_from_stock (GTK_ENTRY(player_entry), GTK_ENTRY_ICON_SECONDARY, GTK_STOCK_REFRESH);
+	g_signal_connect (G_OBJECT(player_entry), "icon-press",
+	                  G_CALLBACK (refresh_player), soundmenu);
 	gtk_entry_set_activates_default (GTK_ENTRY(player_entry), TRUE);
 	soundmenu->w_player = player_entry;
 
@@ -225,23 +235,23 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 	                  G_CALLBACK(toggle_show_stop), soundmenu);
 
 	hide_controls_if_loose_check = gtk_check_button_new_with_label(_("Hide the controls if the player is not present"));
-	if(soundmenu->hide_controls_if_loose)
+	if (soundmenu->hide_controls_if_loose)
 		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(hide_controls_if_loose_check), TRUE);
 	g_signal_connect (G_OBJECT(hide_controls_if_loose_check), "toggled",
-				G_CALLBACK(toggle_hide_controls_if_loose), soundmenu);
+	                  G_CALLBACK(toggle_hide_controls_if_loose), soundmenu);
 
 	#ifdef HAVE_LIBKEYBINDER
 	use_global_keys_check = gtk_check_button_new_with_label(_("Use multimedia keys"));
-	if(soundmenu->use_global_keys)
+	if (soundmenu->use_global_keys)
 		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(use_global_keys_check), TRUE);
 	g_signal_connect (G_OBJECT(use_global_keys_check), "toggled",
-				G_CALLBACK(toggle_use_global_keys_check), soundmenu);
+	                  G_CALLBACK(toggle_use_global_keys_check), soundmenu);
 	#endif
 
 	#ifdef HAVE_LIBCLASTFM
 	support_lastfm = gtk_check_button_new_with_label(_("Scrobble on Last.fm"));
 	g_signal_connect (G_OBJECT(support_lastfm), "toggled",
-				G_CALLBACK(toggle_lastfm), soundmenu);
+	                  G_CALLBACK(toggle_lastfm), soundmenu);
 	soundmenu->lw.lastfm_w = support_lastfm;
 
 	lastfm_label_user = gtk_label_new(_("User"));
@@ -298,7 +308,7 @@ soundmenu_configure (XfcePanelPlugin *plugin,
 
 	/* connect the reponse signal to the dialog */
 	g_signal_connect (G_OBJECT (dialog), "response",
-				G_CALLBACK(soundmenu_configure_response), soundmenu);
+	                  G_CALLBACK(soundmenu_configure_response), soundmenu);
 
 	/* show the entire dialog */
 	gtk_dialog_set_default_response (GTK_DIALOG (dialog), GTK_RESPONSE_OK);

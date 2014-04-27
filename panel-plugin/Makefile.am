@@ -5,8 +5,6 @@ AM_CPPFLAGS = \
 	-DBASEICONDIR=\"$(datadir)/icons/hicolor\" \
 	$(PLATFORM_CPPFLAGS)
 
-bin_PROGRAMS = xfce4-soundmenu-icon
-
 #
 # Soundmenu plugin
 #
@@ -97,22 +95,6 @@ if HAVE_LIBNOTIFY
 libsoundmenu_la_CFLAGS += $(LIBNOTIFY_CFLAGS)
 libsoundmenu_la_LIBADD += $(LIBNOTIFY_LIBS)
 endif
-
-#
-# Status Icon
-#
-xfce4_soundmenu_icon_SOURCES = \
-	soundmenu-album-art.c \
-	soundmenu-album-art.h \
-	soundmenu-status-icon.c
-
-xfce4_soundmenu_icon_CFLAGS =  \
-	$(LIBMPRIS2CLIENT_CFLAG)   \
-	$(GTK_CFLAGS)
-
-xfce4_soundmenu_icon_LDADD =   \
-	$(LIBMPRIS2CLIENT_LIBS)    \
-	$(GTK_LIBS)
 
 #
 # Desktop file

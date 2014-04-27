@@ -164,6 +164,9 @@ mpris2_panel_plugin_coneccion (Mpris2Client *mpris2, gboolean connected, Soundme
 		/* Hide loop_status and shuffle options */
 		gtk_widget_set_visible (soundmenu->loop_menu_item, FALSE);
 		gtk_widget_set_visible (soundmenu->shuffle_menu_item, FALSE);
+
+		/* Ensure remove old album art */
+		soundmenu_album_art_set_path (soundmenu->album_art, NULL);
 	}
 
 	soundmenu_update_layout_changes (soundmenu);
@@ -284,24 +287,45 @@ soundmenu_album_art_frame_press_callback (GtkWidget       *event_box,
 static void
 prev_button_handler(GtkButton *button, SoundmenuPlugin *soundmenu)
 {
+	if (mpris2_client_is_connected(soundmenu->mpris2) == FALSE)
+		return;
+
 	mpris2_client_prev (soundmenu->mpris2);
 }
 
 static void
 play_button_handler(GtkButton *button, SoundmenuPlugin *soundmenu)
 {
-	mpris2_client_play_pause (soundmenu->mpris2);
+	if (mpris2_client_is_connected(soundmenu->mpris2)) {
+		mpris2_client_play_pause (soundmenu->mpris2);
+	}
+	else {
+		if (g_str_nempty0(soundmenu->player)) {
+			soundmenu_launch_player (soundmenu->player);
+		}
+		else {
+			soundmenu->player = mpris2_client_auto_set_player(soundmenu->mpris2);
+			if (g_str_empty0(soundmenu->player))
+				soundmenu_configure(soundmenu->plugin, soundmenu);
+		}
+	}
 }
 
 static void
 stop_button_handler(GtkButton *button, SoundmenuPlugin    *soundmenu)
 {
+	if (mpris2_client_is_connected(soundmenu->mpris2) == FALSE)
+		return;
+
 	mpris2_client_stop (soundmenu->mpris2);
 }
 
 static void
 next_button_handler(GtkButton *button, SoundmenuPlugin    *soundmenu)
 {
+	if (mpris2_client_is_connected(soundmenu->mpris2) == FALSE)
+		return;
+
 	mpris2_client_next (soundmenu->mpris2);
 }
 

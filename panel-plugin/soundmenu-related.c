@@ -22,7 +22,7 @@
 
 #include <glyr/glyr.h>
 #include "soundmenu-related.h"
-#include "mpris2-utils.h"
+#include "soundmenu-utils.h"
 #include "soundmenu-simple-async.h"
 
 #ifdef HAVE_LIBNOTIFY
@@ -38,8 +38,6 @@ typedef struct
 	GlyrMemCache     *head;
 }
 glyr_struct;
-
-//FIXME_GLYR_CAST: drop discarding const when we switch to enough new glyr, see https://github.com/sahib/glyr/issues/29
 
 /* Use the download info on glyr thread and show a dialog. */
    
@@ -113,11 +111,7 @@ glyr_finished_successfully(glyr_struct *glyr_info)
 		subtitle_header = g_strdup_printf(_("Lyrics thanks to %s"), glyr_info->head->prov);
 		soundmenu_show_related_text_info_dialog(glyr_info, title_header, subtitle_header);
 		break;
-#if GLYR_CHECK_VERSION (1, 0, 0)
 	case GLYR_TYPE_ARTIST_BIO:
-#else
-	case GLYR_TYPE_ARTISTBIO:
-#endif
 		title_header = g_strdup(glyr_info->query.artist);
 		subtitle_header = g_strdup_printf(_("Artist information thanks to %s"), glyr_info->head->prov);
 		soundmenu_show_related_text_info_dialog(glyr_info, title_header, subtitle_header);
@@ -141,11 +135,7 @@ glyr_finished_incorrectly(glyr_struct *glyr_info)
 		soundmenu_notify_message(_("Lyrics not found."));
 #endif
 		break;
-#if GLYR_CHECK_VERSION (1, 0, 0)
 	case GLYR_GET_ARTIST_BIO:
-#else
-	case GLYR_GET_ARTISTBIO:
-#endif
 #ifdef HAVE_LIBNOTIFY
 		soundmenu_notify_message(_("Artist information not found."));
 #endif
@@ -205,11 +195,7 @@ configure_and_launch_get_text_info_dialog(GLYR_GET_TYPE type,
 	glyr_opt_type(&glyr_info->query, type);
 
 	switch (type) {
-#if GLYR_CHECK_VERSION (1, 0, 0)
 	case GLYR_GET_ARTIST_BIO:
-#else
-	case GLYR_GET_ARTISTBIO:
-#endif
 		glyr_opt_artist(&glyr_info->query, (char*)artist); //FIXME_GLYR_CAST
 
 		glyr_opt_lang (&glyr_info->query, "auto");
@@ -235,34 +221,42 @@ configure_and_launch_get_text_info_dialog(GLYR_GET_TYPE type,
 
 void soundmenu_search_lyric_dialog (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 {
-    const gchar *artist = NULL, *title = NULL;
+	Mpris2Client *mpris2 = NULL;
+	Mpris2Metadata *metadata = NULL;
+	const gchar *artist = NULL, *title = NULL;
 
-    if(soundmenu->state == STOPPED)
+	mpris2 = soundmenu_get_mpris2_client (soundmenu);
+	if (mpris2_client_get_playback_status (mpris2) == STOPPED)
         return;
 
-    if (g_str_empty0(mpris2_metadata_get_artist(soundmenu->metadata)) ||
-        g_str_empty0(mpris2_metadata_get_title(soundmenu->metadata)))
-        return;
+	metadata = mpris2_client_get_metadata (mpris2);
+	if (g_str_empty0(mpris2_metadata_get_artist(metadata)) ||
+	    g_str_empty0(mpris2_metadata_get_title(metadata)))
+		return;
 
-    artist = mpris2_metadata_get_artist(soundmenu->metadata);
-    title = mpris2_metadata_get_title(soundmenu->metadata);
+	artist = mpris2_metadata_get_artist(metadata);
+	title = mpris2_metadata_get_title(metadata);
 
-    configure_and_launch_get_text_info_dialog(GLYR_GET_LYRICS, artist, title, soundmenu);
+	configure_and_launch_get_text_info_dialog(GLYR_GET_LYRICS, artist, title, soundmenu);
 }
 
 void soundmenu_search_artistinfo_dialog (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 {
-    const gchar *artist = NULL;
+	Mpris2Client *mpris2 = NULL;
+	Mpris2Metadata *metadata = NULL;
+	const gchar *artist = NULL;
 
-    if(soundmenu->state == STOPPED)
+	mpris2 = soundmenu_get_mpris2_client (soundmenu);
+	if (mpris2_client_get_playback_status (mpris2) == STOPPED)
+        return;
+	
+	metadata = mpris2_client_get_metadata (mpris2);
+	if (g_str_empty0(mpris2_metadata_get_artist(metadata)))
         return;
 
-    if (g_str_empty0(mpris2_metadata_get_artist(soundmenu->metadata)))
-        return;
+	artist = mpris2_metadata_get_artist (metadata);
 
-    artist = mpris2_metadata_get_artist(soundmenu->metadata);
-
-    configure_and_launch_get_text_info_dialog(GLYR_GET_ARTISTBIO, artist, NULL, soundmenu);
+	configure_and_launch_get_text_info_dialog(GLYR_GET_ARTISTBIO, artist, NULL, soundmenu);
 }
 
 /* Function to un/init libglyr */

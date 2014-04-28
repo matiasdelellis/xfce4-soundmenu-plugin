@@ -55,6 +55,12 @@ XFCE_PANEL_PLUGIN_REGISTER (soundmenu_construct);
  * Public Api.
  */
 
+Mpris2Client *
+soundmenu_get_mpris2_client (SoundmenuPlugin *soundmenu)
+{
+	return soundmenu->mpris2;
+}
+
 void
 soundmenu_set_visible_stop_button (SoundmenuPlugin *soundmenu,
                                    gboolean         visible)
@@ -699,6 +705,7 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	tools_menu_item = gtk_menu_item_new_with_mnemonic (_("Tools"));
 	gtk_menu_item_set_submenu (GTK_MENU_ITEM (tools_menu_item), tools_submenu);
 	xfce_panel_plugin_menu_insert_item (soundmenu->plugin, GTK_MENU_ITEM(tools_menu_item));
+	gtk_widget_show (tools_menu_item);
 
 	soundmenu->album_art = album_art;
 	soundmenu->ev_album_art = ev_album_art;

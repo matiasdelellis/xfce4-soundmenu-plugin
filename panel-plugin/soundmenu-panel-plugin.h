@@ -96,6 +96,7 @@ struct _SoundmenuPlugin {
 /*
  * Public api.
  */
+Mpris2Client * soundmenu_get_mpris2_client (SoundmenuPlugin *soundmenu);
 
 void     soundmenu_set_visible_stop_button (SoundmenuPlugin *soundmenu, gboolean visible);
 gboolean soundmenu_get_visible_stop_button (SoundmenuPlugin *soundmenu);

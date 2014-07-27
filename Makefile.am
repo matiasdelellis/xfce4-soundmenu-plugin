@@ -1,5 +1,6 @@
 SUBDIRS =	\
 	icons	\
+	gvc \
 	panel-plugin \
 	po
 

@@ -35,6 +35,9 @@
 #include <libxfce4util/libxfce4util.h>
 #include <libxfce4panel/xfce-hvbox.h>
 
+#include <pulse/pulseaudio.h>
+#include "gvc-mixer-control.h"
+
 #include <libmpris2client/libmpris2client.h>
 #include <libmpris2client/mpris2-metadata.h>
 
@@ -61,12 +64,15 @@ typedef struct _SoundmenuPlugin SoundmenuPlugin;
 struct _SoundmenuPlugin {
 	XfcePanelPlugin	*plugin;
 	Mpris2Client    *mpris2;
+	GvcMixerControl *mixer;
 
 	/* panel widgets */
 	GtkWidget		*hvbox;
 	GtkWidget		*hvbox_buttons;
 	SoundmenuAlbumArt *album_art;
 	GtkWidget		*ev_album_art;
+	GtkWidget       *vol_image;
+	GtkWidget		*vol_button;
 	GtkWidget		*prev_button;
 	GtkWidget		*play_button;
 	GtkWidget		*stop_button;
@@ -81,7 +87,6 @@ struct _SoundmenuPlugin {
 	GtkWidget	*w_player;
 	#ifdef HAVE_LIBCLASTFM
 	SoundmenuLastfm *clastfm;
-	struct lastfm_pref lw;
 	#endif
 
 	/* soundmenu settings */

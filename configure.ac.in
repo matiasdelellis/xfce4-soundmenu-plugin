@@ -105,6 +105,10 @@ XDT_CHECK_OPTIONAL_PACKAGE([LIBNOTIFY],
                        [libnotify],
                        [libnotify library], [yes])
 
+PULSE_MIN_VERS=2.0
+PKG_CHECK_MODULES(GVC, libpulse >= $PULSE_MIN_VERS libpulse-mainloop-glib gobject-2.0)
+AM_CONDITIONAL([HAVE_INTROSPECTION], 0)
+
 dnl ***********************************
 dnl *** Check for debugging support ***
 dnl ***********************************
@@ -128,6 +132,7 @@ Makefile
 icons/Makefile
 icons/128x128/Makefile
 panel-plugin/Makefile
+gvc/Makefile
 po/Makefile.in
 ])
 

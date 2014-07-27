@@ -20,6 +20,8 @@
 #include <config.h>
 #endif
 
+#include <math.h>
+
 #include "soundmenu-dialogs.h"
 #include "soundmenu-utils.h"
 #include "soundmenu-related.h"
@@ -35,6 +37,8 @@
 #ifdef HAVE_LIBNOTIFY
 #include "soundmenu-notify.h"
 #endif
+
+#define MIXER_NAME "Xfce Volume Control"
 
 /* default settings */
 
@@ -109,6 +113,82 @@ soundmenu_get_huge_album_art (SoundmenuPlugin *soundmenu)
 /*
  * Some Private api.
  */
+
+static void
+gvm_mixer_update_volume (SoundmenuPlugin *soundmenu)
+{
+	GvcMixerStream *stream;
+	gdouble vol_norm;
+	pa_volume_t vol;
+	int n;
+	const gchar *image;
+	gdouble db;
+	gchar *tooltip = NULL;
+
+	stream = gvc_mixer_control_get_default_sink(soundmenu->mixer);
+	vol_norm = gvc_mixer_control_get_vol_max_norm(soundmenu->mixer);
+	vol = gvc_mixer_stream_get_volume(stream);
+
+	/* Same maths as computed by volume.js in gnome-shell */
+	n = floor(3*vol/vol_norm) + 1;
+
+	if (gvc_mixer_stream_get_is_muted(stream) || vol <= 0) {
+		image = "audio-volume-muted";
+	}
+	else {
+		switch (n) {
+			case 1:
+				image = "audio-volume-low";
+				break;
+			case 2:
+				image = "audio-volume-medium";
+				break;
+			default:
+				image = "audio-volume-high";
+				break;
+		}
+	}
+
+	xfce_panel_image_set_from_source (XFCE_PANEL_IMAGE(soundmenu->vol_image), image);
+
+	/* Now update the tooltip with dB level */
+	if (gvc_mixer_stream_get_can_decibel(stream)) {
+		db = gvc_mixer_stream_get_decibel(stream);
+		tooltip = g_strdup_printf("%f dB", db);
+		gtk_widget_set_tooltip_text(GTK_WIDGET(soundmenu->vol_button), tooltip);
+		g_free(tooltip);
+	}
+}
+
+static void
+gvm_mixer_volume_cb(GvcMixerStream *stream, gulong vol, gpointer userdata)
+{
+	gvm_mixer_update_volume (userdata);
+}
+
+static void
+gvm_mixer_muted_cb(GvcMixerStream *stream, gboolean mute, gpointer userdata)
+{
+	gvm_mixer_update_volume (userdata);
+}
+
+static void
+gvm_mixer_state_changed (GvcMixerControl *mix, guint status, gpointer userdata)
+{
+	GvcMixerStream *stream;
+
+	/* First time we connect, update the volume */
+	if (status == GVC_STATE_READY) {
+		stream = gvc_mixer_control_get_default_sink(mix);
+
+		g_signal_connect (stream, "notify::volume",
+		                  G_CALLBACK(gvm_mixer_volume_cb), userdata);
+		g_signal_connect (stream, "notify::is-muted",
+		                  G_CALLBACK(gvm_mixer_muted_cb), userdata);
+
+		gvm_mixer_update_volume (userdata);
+	}
+}
 
 static void
 mpris2_panel_plugin_metadada (Mpris2Client *mpris2, Mpris2Metadata *metadata, SoundmenuPlugin *soundmenu)
@@ -551,9 +631,10 @@ soundmenu_new (XfcePanelPlugin *plugin)
 {
 	SoundmenuPlugin   *soundmenu;
 	GtkOrientation panel_orientation, orientation;
-	GtkWidget *ev_album_art, *play_button, *stop_button, *prev_button, *next_button;
+	GtkWidget *vol_button, *ev_album_art, *play_button, *stop_button, *prev_button, *next_button;
 	GtkWidget *separator, *loop_menu_item, *shuffle_menu_item, *tools_menu_item, *tools_submenu;
 	SoundmenuAlbumArt *album_art;
+	GtkWidget *vol_image;
 
 	/* allocate memory for the plugin structure */
 	soundmenu = panel_slice_new0 (SoundmenuPlugin);
@@ -562,6 +643,9 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	#ifdef HAVE_LIBCLASTFM
 	soundmenu->clastfm = soundmenu_lastfm_new ();
 	#endif
+
+  	soundmenu->mixer = gvc_mixer_control_new (MIXER_NAME);
+	gvc_mixer_control_open (soundmenu->mixer);
 
 	/* read the user settings */
 	soundmenu_read (soundmenu);
@@ -591,11 +675,16 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	album_art = soundmenu_album_art_new ();
 	gtk_container_add (GTK_CONTAINER (ev_album_art), GTK_WIDGET(album_art));
 
+	vol_image = xfce_panel_image_new_from_source("audio-volume-high");
+
+	vol_button = xfce_panel_create_button();
+	prev_button = xfce_panel_create_button();
 	prev_button = xfce_panel_create_button();
 	play_button = xfce_panel_create_button();
 	stop_button = xfce_panel_create_button();
 	next_button = xfce_panel_create_button();
 
+	gtk_container_add(GTK_CONTAINER(vol_button), vol_image);
 	gtk_container_add(GTK_CONTAINER(prev_button),
 		xfce_panel_image_new_from_source("media-skip-backward"));
 	gtk_container_add(GTK_CONTAINER(stop_button),
@@ -615,6 +704,9 @@ soundmenu_new (XfcePanelPlugin *plugin)
 		soundmenu->image_play);
 
 	gtk_box_pack_start(GTK_BOX(soundmenu->hvbox),
+			   GTK_WIDGET(vol_button),
+			   FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(soundmenu->hvbox),
 			   GTK_WIDGET(ev_album_art),
 			   FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(soundmenu->hvbox),
@@ -633,6 +725,7 @@ soundmenu_new (XfcePanelPlugin *plugin)
 			   GTK_WIDGET(next_button),
 			   TRUE, TRUE, 0);
 
+	gtk_widget_show_all(GTK_WIDGET(vol_button));
 	gtk_widget_show(GTK_WIDGET(album_art));
 	if(soundmenu->show_album_art)
 		gtk_widget_show(ev_album_art);
@@ -644,6 +737,10 @@ soundmenu_new (XfcePanelPlugin *plugin)
 
 	/* Signal handlers */
 
+	/*g_signal_connect(G_OBJECT (vol_button), "button_press_event",
+	                 G_CALLBACK (soundmenu_album_art_frame_press_callback), soundmenu);
+	g_signal_connect(G_OBJECT (vol_button), "scroll-event",
+	                  G_CALLBACK (soundmenu_panel_button_scrolled), soundmenu);*/
 	g_signal_connect(G_OBJECT (ev_album_art), "button_press_event",
 	                 G_CALLBACK (soundmenu_album_art_frame_press_callback), soundmenu);
 	g_signal_connect(G_OBJECT (ev_album_art), "scroll-event",
@@ -657,6 +754,7 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	g_signal_connect(G_OBJECT(next_button), "clicked",
 	                 G_CALLBACK(next_button_handler), soundmenu);
 
+	xfce_panel_plugin_add_action_widget (plugin, vol_button);
 	xfce_panel_plugin_add_action_widget (plugin, GTK_WIDGET(album_art));
 	xfce_panel_plugin_add_action_widget (plugin, GTK_WIDGET(ev_album_art));
 	xfce_panel_plugin_add_action_widget (plugin, prev_button);
@@ -664,12 +762,15 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	xfce_panel_plugin_add_action_widget (plugin, stop_button);
 	xfce_panel_plugin_add_action_widget (plugin, next_button);
 
+	//g_object_set (G_OBJECT(vol_button), "has-tooltip", TRUE, NULL);
 	g_object_set (G_OBJECT(album_art), "has-tooltip", TRUE, NULL);
 	g_object_set (G_OBJECT(prev_button), "has-tooltip", TRUE, NULL);
 	g_object_set (G_OBJECT(play_button), "has-tooltip", TRUE, NULL);
 	g_object_set (G_OBJECT(stop_button), "has-tooltip", TRUE, NULL);
 	g_object_set (G_OBJECT(next_button), "has-tooltip", TRUE, NULL);
 
+	//g_signal_connect(G_OBJECT(vol_button), "query-tooltip",
+	//		G_CALLBACK(soundmenu_set_query_tooltip_cb), soundmenu);
 	g_signal_connect(G_OBJECT(album_art), "query-tooltip",
 			G_CALLBACK(soundmenu_set_query_tooltip_cb), soundmenu);
 	g_signal_connect(G_OBJECT(prev_button), "query-tooltip",
@@ -680,6 +781,10 @@ soundmenu_new (XfcePanelPlugin *plugin)
 			G_CALLBACK(soundmenu_set_query_tooltip_cb), soundmenu);
 	g_signal_connect(G_OBJECT(next_button), "query-tooltip",
 			G_CALLBACK(soundmenu_set_query_tooltip_cb), soundmenu);
+
+	/* Pulse Audio */
+	g_signal_connect (soundmenu->mixer, "state-changed",
+	                  G_CALLBACK(gvm_mixer_state_changed), soundmenu);
 
 	/* Attach menus actions */
 
@@ -707,6 +812,8 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	xfce_panel_plugin_menu_insert_item (soundmenu->plugin, GTK_MENU_ITEM(tools_menu_item));
 	gtk_widget_show (tools_menu_item);
 
+	soundmenu->vol_image = vol_image;
+	soundmenu->vol_button = vol_button;
 	soundmenu->album_art = album_art;
 	soundmenu->ev_album_art = ev_album_art;
 	soundmenu->prev_button = prev_button;
@@ -786,6 +893,12 @@ soundmenu_free (XfcePanelPlugin *plugin,
 	soundmenu_notify_uninit();
 	#endif
 
+	if (soundmenu->mixer) {
+		gvc_mixer_control_close(soundmenu->mixer);
+		g_object_unref(soundmenu->mixer);
+		soundmenu->mixer = NULL;
+	}
+
 	/* check if the dialog is still open. if so, destroy it */
 	dialog = g_object_get_data (G_OBJECT (plugin), "dialog");
 	if (G_UNLIKELY (dialog != NULL))
@@ -808,7 +921,7 @@ soundmenu_size_changed (XfcePanelPlugin *plugin,
                         SoundmenuPlugin *soundmenu)
 {
 	GtkOrientation panel_orientation;
-	gint           size, album_size, rows = 3;
+	gint           size, album_size, rows = 4;
 
 	/* get the orientation of the plugin */
 	panel_orientation = xfce_panel_plugin_get_orientation (plugin);
@@ -838,6 +951,7 @@ soundmenu_size_changed (XfcePanelPlugin *plugin,
 			album_size = size;
 	}
 
+	gtk_widget_set_size_request (GTK_WIDGET (soundmenu->vol_button), size, size);
 	gtk_widget_set_size_request (GTK_WIDGET (soundmenu->next_button), size, size);
 	gtk_widget_set_size_request (GTK_WIDGET (soundmenu->prev_button), size, size);
 	gtk_widget_set_size_request (GTK_WIDGET (soundmenu->stop_button), size, size);

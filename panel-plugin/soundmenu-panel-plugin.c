@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011-2013 matias <mati86dl@gmail.com>
+ *  Copyright (c) 2011-2014 matias <mati86dl@gmail.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -113,6 +113,41 @@ soundmenu_get_huge_album_art (SoundmenuPlugin *soundmenu)
 /*
  * Some Private api.
  */
+
+static gboolean
+soundmenu_panel_vol_button_scrolled (GtkWidget       *widget,
+                                     GdkEventScroll  *event,
+                                     SoundmenuPlugin *soundmenu)
+{
+	GvcMixerStream *stream;
+	gdouble vol_norm, step_norm, volume = 0.0;
+
+	vol_norm = gvc_mixer_control_get_vol_max_norm (soundmenu->mixer);
+	stream = gvc_mixer_control_get_default_sink(soundmenu->mixer);
+	volume = (gdouble) gvc_mixer_stream_get_volume(stream);
+
+	step_norm = vol_norm * 0.02;
+
+	switch (event->direction) {
+		case GDK_SCROLL_UP:
+		case GDK_SCROLL_RIGHT:
+			volume += step_norm;
+			if (volume > vol_norm)
+				volume = vol_norm;
+			break;
+		case GDK_SCROLL_DOWN:
+		case GDK_SCROLL_LEFT:
+			volume -= step_norm;
+			if (volume < 0.0)
+				volume = 0.0;
+			break;
+	}
+
+	if (gvc_mixer_stream_set_volume (stream, (pa_volume_t) round(volume)) != FALSE)
+		gvc_mixer_stream_push_volume (stream);
+
+	return FALSE;
+}
 
 static void
 gvm_mixer_update_volume (SoundmenuPlugin *soundmenu)
@@ -738,9 +773,9 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	/* Signal handlers */
 
 	/*g_signal_connect(G_OBJECT (vol_button), "button_press_event",
-	                 G_CALLBACK (soundmenu_album_art_frame_press_callback), soundmenu);
+	                 G_CALLBACK (soundmenu_album_art_frame_press_callback), soundmenu);*/
 	g_signal_connect(G_OBJECT (vol_button), "scroll-event",
-	                  G_CALLBACK (soundmenu_panel_button_scrolled), soundmenu);*/
+	                 G_CALLBACK (soundmenu_panel_vol_button_scrolled), soundmenu);
 	g_signal_connect(G_OBJECT (ev_album_art), "button_press_event",
 	                 G_CALLBACK (soundmenu_album_art_frame_press_callback), soundmenu);
 	g_signal_connect(G_OBJECT (ev_album_art), "scroll-event",

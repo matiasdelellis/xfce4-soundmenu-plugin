@@ -32,8 +32,10 @@ void lastfm_track_unlove_action (GtkWidget *widget, SoundmenuPlugin *soundmenu);
 void soundmenu_update_playback_lastfm (SoundmenuPlugin    *soundmenu);
 void soundmenu_update_lastfm_menu (SoundmenuLastfm *clastfm);
 
-void             soundmenu_lastfm_uninit        (SoundmenuLastfm *lastfm);
-gint             soundmenu_lastfm_init          (SoundmenuLastfm *lastfm);
+void             soundmenu_lastfm_disconnect    (SoundmenuLastfm *lastfm);
+void             soundmenu_lastfm_connect       (SoundmenuLastfm *lastfm);
+
+void             soundmenu_lastfm_init          (SoundmenuLastfm *lastfm);
 gboolean         soundmenu_lastfm_is_initiated  (SoundmenuLastfm *lastfm);
 
 gboolean         soundmenu_lastfm_is_supported  (SoundmenuLastfm *lastfm);

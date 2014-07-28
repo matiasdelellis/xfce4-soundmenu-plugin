@@ -93,7 +93,8 @@ soundmenu_configure_response (GtkWidget       *dialog,
 		}
 
 		if (changed) {
-			soundmenu_lastfm_init (soundmenu->clastfm);
+			soundmenu_lastfm_disconnect (soundmenu->clastfm);
+			soundmenu_lastfm_connect (soundmenu->clastfm);
 		}
 		#endif
 
@@ -184,7 +185,7 @@ toggle_lastfm(GtkToggleButton *button,
 	gtk_widget_set_sensitive(soundmenu->lw.lastfm_pass_w, is_active);
 
 	if(!is_active && soundmenu_lastfm_is_initiated (soundmenu->clastfm))
-		soundmenu_lastfm_uninit (soundmenu->clastfm);
+		soundmenu_lastfm_disconnect (soundmenu->clastfm);
 }
 #endif
 

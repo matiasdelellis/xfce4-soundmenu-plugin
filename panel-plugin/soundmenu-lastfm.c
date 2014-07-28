@@ -132,7 +132,7 @@ lastfm_track_love_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 
 	lastfm = soundmenu->clastfm;
 
-	if (lastfm->session_id == NULL) {
+	if (lastfm->status != LASTFM_STATUS_OK) {
 		g_critical("No connection Last.fm has been established.");
 		return;
 	}
@@ -182,7 +182,7 @@ lastfm_track_unlove_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 
 	lastfm = soundmenu->clastfm;
 
-	if (lastfm->session_id == NULL) {
+	if (lastfm->status != LASTFM_STATUS_OK) {
 		g_critical("No connection Last.fm has been established.");
 		return;
 	}
@@ -281,7 +281,7 @@ soundmenu_lastfm_now_playing_handler (gpointer userdata)
 	SoundmenuPlugin *soundmenu = data->soundmenu;
 	SoundmenuLastfm *lastfm = soundmenu->clastfm;
 
-	if (lastfm->session_id == NULL) {
+	if (lastfm->status != LASTFM_STATUS_OK) {
 		g_critical("No connection Last.fm has been established.");
 		return FALSE;
 	}
@@ -318,7 +318,7 @@ soundmenu_update_playback_lastfm (SoundmenuPlugin *soundmenu)
 	if (mpris2_client_get_playback_status (soundmenu->mpris2) != PLAYING)
 		return;
 
-	if (lastfm->session_id == NULL)
+	if (lastfm->status != LASTFM_STATUS_OK)
 		return;
 
 	metadata = mpris2_client_get_metadata (soundmenu->mpris2);
@@ -354,63 +354,69 @@ void soundmenu_update_lastfm_menu (SoundmenuLastfm *clastfm)
 }
 
 static gboolean
-do_soundmenu_init_lastfm(gpointer data)
+soundmenu_lastfm_connect_idle (gpointer data)
 {
-	SoundmenuLastfm *clastfm = data;
+	SoundmenuLastfm *lastfm = data;
 
-	clastfm->session_id = LASTFM_init(LASTFM_API_KEY, LASTFM_SECRET);
-	if (clastfm->session_id != NULL) {
-		clastfm->status = LASTFM_login (clastfm->session_id,
-		                                clastfm->lastfm_user,
-		                                clastfm->lastfm_pass);
+	if (g_str_empty0(lastfm->lastfm_user) ||
+	    g_str_empty0(lastfm->lastfm_pass))
+		return FALSE;
 
-		if (clastfm->status != LASTFM_STATUS_OK) {
-			LASTFM_dinit(clastfm->session_id);
-			clastfm->session_id = NULL;
+	lastfm->session_id = LASTFM_init(LASTFM_API_KEY, LASTFM_SECRET);
+	if (lastfm->session_id != NULL) {
+	    lastfm->status = LASTFM_login (lastfm->session_id,
+		                               lastfm->lastfm_user,
+		                               lastfm->lastfm_pass);
+
+		if (lastfm->status != LASTFM_STATUS_OK) {
+			LASTFM_dinit(lastfm->session_id);
+			lastfm->session_id = NULL;
 		}
 	}
-	soundmenu_update_lastfm_menu(clastfm);
+
+	soundmenu_update_lastfm_menu (lastfm);
 
 	return FALSE;
 }
 
 void
-soundmenu_lastfm_uninit (SoundmenuLastfm *lastfm)
+soundmenu_lastfm_disconnect (SoundmenuLastfm *lastfm)
 {
-	LASTFM_dinit (lastfm->session_id);
-	lastfm->session_id = NULL;
+	if (lastfm->session_id == NULL) {
+		LASTFM_dinit (lastfm->session_id);
+
+		lastfm->session_id = NULL;
+		lastfm->status = LASTFM_STATUS_INVALID;
+	}
 
 	soundmenu_update_lastfm_menu (lastfm);
 }
 
-gint
+void
+soundmenu_lastfm_connect (SoundmenuLastfm *lastfm)
+{
+	g_idle_add (soundmenu_lastfm_connect_idle, lastfm);
+}
+
+void
 soundmenu_lastfm_init (SoundmenuLastfm *lastfm)
 {
-	if (g_str_empty0(lastfm->lastfm_user) ||
-	    g_str_empty0(lastfm->lastfm_pass))
-		return FALSE;
-
-    /* Test internet and launch threads.*/
 #if GLIB_CHECK_VERSION(2,32,0)
-    if (g_network_monitor_get_network_available (g_network_monitor_get_default ()))
+	if (g_network_monitor_get_network_available (g_network_monitor_get_default ()))
 #else
-    if(nm_is_online () == TRUE)
+	if(nm_is_online () == TRUE)
 #endif
-        g_idle_add (do_soundmenu_init_lastfm, lastfm);
-    else
-        g_timeout_add_seconds_full(G_PRIORITY_DEFAULT_IDLE,
-                                   30,
-                                   do_soundmenu_init_lastfm,
-                                   lastfm,
-                                   NULL);
-
-    return 0;
+		g_idle_add (soundmenu_lastfm_connect_idle, lastfm);
+	else
+		g_timeout_add_seconds_full (G_PRIORITY_DEFAULT_IDLE, 30,
+		                            soundmenu_lastfm_connect_idle, lastfm,
+		                            NULL);
 }
 
 gboolean
 soundmenu_lastfm_is_initiated (SoundmenuLastfm *lastfm)
 {
-	return (lastfm->session_id != NULL);
+	return (lastfm->status == LASTFM_STATUS_OK);
 }
 
 gboolean

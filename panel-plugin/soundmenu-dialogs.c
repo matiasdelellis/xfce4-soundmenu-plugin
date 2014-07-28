@@ -44,6 +44,8 @@ soundmenu_configure_response (GtkWidget       *dialog,
 {
 	gboolean result;
 	const gchar *player = NULL, *client_player = NULL;
+	const gchar *test_user = NULL, *entry_user = NULL, *test_pass = NULL, *entry_pass = NULL;
+	gboolean changed = FALSE, test_scrobble = FALSE, toggle_scrobble = FALSE;
 
 	if (response == GTK_RESPONSE_HELP) {
 		result = g_spawn_command_line_async ("exo-open --launch WebBrowser " PLUGIN_WEBSITE, NULL);
@@ -67,12 +69,32 @@ soundmenu_configure_response (GtkWidget       *dialog,
 			mpris2_client_set_player (soundmenu->mpris2, soundmenu->player);
 
 		#ifdef HAVE_LIBCLASTFM
-		soundmenu_lastfm_set_supported (soundmenu->clastfm,
-		                                gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(soundmenu->lw.lastfm_w)));
-		soundmenu_lastfm_set_user (soundmenu->clastfm,
-		                           gtk_entry_get_text(GTK_ENTRY(soundmenu->lw.lastfm_uname_w)));
-		soundmenu_lastfm_set_password (soundmenu->clastfm,
-		                               gtk_entry_get_text(GTK_ENTRY(soundmenu->lw.lastfm_pass_w)));
+		toggle_scrobble = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON(soundmenu->lw.lastfm_w));
+		entry_user = gtk_entry_get_text (GTK_ENTRY(soundmenu->lw.lastfm_uname_w));
+		entry_pass = gtk_entry_get_text (GTK_ENTRY(soundmenu->lw.lastfm_pass_w));
+
+		test_scrobble = soundmenu_lastfm_is_supported (soundmenu->clastfm);
+		test_user = soundmenu_lastfm_get_user (soundmenu->clastfm);
+		test_pass = soundmenu_lastfm_get_password (soundmenu->clastfm);
+
+		if (test_scrobble != toggle_scrobble) {
+			soundmenu_lastfm_set_supported (soundmenu->clastfm, toggle_scrobble);
+			changed = TRUE;
+		}
+
+		if (g_strcmp0 (test_user, entry_user)) {
+			soundmenu_lastfm_set_user (soundmenu->clastfm, entry_user);
+			changed = TRUE;
+		}
+
+		if (g_strcmp0 (test_pass, entry_pass)) {
+			soundmenu_lastfm_set_password (soundmenu->clastfm, entry_pass);
+			changed = TRUE;
+		}
+
+		if (changed) {
+			soundmenu_lastfm_init (soundmenu->clastfm);
+		}
 		#endif
 
 		/* remove the dialog data from the plugin */
@@ -87,10 +109,6 @@ soundmenu_configure_response (GtkWidget       *dialog,
 		/* destroy the properties dialog */
 		gtk_widget_destroy (dialog);
 	}
-	#ifdef HAVE_LIBCLASTFM
-    if (soundmenu_lastfm_is_supported (soundmenu->clastfm))
-		soundmenu_lastfm_init (soundmenu->clastfm);
-	#endif
 }
 
 static void

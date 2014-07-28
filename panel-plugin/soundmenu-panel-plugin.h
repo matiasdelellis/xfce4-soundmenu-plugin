@@ -87,6 +87,7 @@ struct _SoundmenuPlugin {
 	GtkWidget	*w_player;
 	#ifdef HAVE_LIBCLASTFM
 	SoundmenuLastfm *clastfm;
+	struct lastfm_pref lw;
 	#endif
 
 	/* soundmenu settings */

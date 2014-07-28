@@ -22,7 +22,7 @@
 
 #include <clastfm.h>
 #include "soundmenu-lastfm.h"
-#include "mpris2-utils.h"
+#include "soundmenu-utils.h"
 #include "soundmenu-simple-async.h"
 #include "soundmenu-panel-plugin.h"
 
@@ -51,6 +51,7 @@ struct _SoundmenuLastfm {
 static gpointer
 do_lastfm_current_song_love (gpointer data)
 {
+	Mpris2Metadata *metadata = NULL;
 	AsycMessageData *message_data = NULL;
 	gchar *title, *artist;
 	gint rv;
@@ -58,10 +59,11 @@ do_lastfm_current_song_love (gpointer data)
 	SoundmenuPlugin *soundmenu = data;
 	SoundmenuLastfm *lastfm = soundmenu->clastfm;
 
-	soundmenu_mutex_lock(soundmenu->metadata_mtx);
-	title = g_strdup(mpris2_metadata_get_title(soundmenu->metadata));
-	artist = g_strdup(mpris2_metadata_get_artist(soundmenu->metadata));
-	soundmenu_mutex_unlock(soundmenu->metadata_mtx);
+	//soundmenu_mutex_lock(soundmenu->metadata_mtx);
+	metadata = mpris2_client_get_metadata (soundmenu->mpris2);
+	title = g_strdup(mpris2_metadata_get_title(metadata));
+	artist = g_strdup(mpris2_metadata_get_artist(metadata));
+	//soundmenu_mutex_unlock(soundmenu->metadata_mtx);
 
 	rv = LASTFM_track_love (lastfm->session_id,
 	                        title, artist);
@@ -77,9 +79,10 @@ do_lastfm_current_song_love (gpointer data)
 
 void lastfm_track_love_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 {
+	Mpris2Metadata *metadata = NULL;
 	SoundmenuLastfm *lastfm = NULL;
 
-	if(soundmenu->state == STOPPED)
+	if (mpris2_client_get_playback_status (soundmenu->mpris2) == STOPPED)
 		return;
 
 	lastfm = soundmenu->clastfm;
@@ -89,8 +92,9 @@ void lastfm_track_love_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 		return;
 	}
 
-	if (g_str_empty0(mpris2_metadata_get_artist(soundmenu->metadata)) ||
-	    g_str_empty0(mpris2_metadata_get_title(soundmenu->metadata)))
+	metadata = mpris2_client_get_metadata (soundmenu->mpris2);
+	if (g_str_empty0(mpris2_metadata_get_artist(metadata)) ||
+	    g_str_empty0(mpris2_metadata_get_title(metadata)))
 		return;
 
 	set_watch_cursor (GTK_WIDGET(soundmenu->plugin));
@@ -102,6 +106,7 @@ void lastfm_track_love_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 static gpointer
 do_lastfm_current_song_unlove (gpointer data)
 {
+	Mpris2Metadata *metadata = NULL;
 	AsycMessageData *message_data = NULL;
 	gchar *title, *artist;
 	gint rv;
@@ -109,10 +114,11 @@ do_lastfm_current_song_unlove (gpointer data)
 	SoundmenuPlugin *soundmenu = data;
 	SoundmenuLastfm *lastfm = soundmenu->clastfm;
 
-	soundmenu_mutex_lock(soundmenu->metadata_mtx);
-	title = g_strdup(mpris2_metadata_get_title(soundmenu->metadata));
-	artist = g_strdup(mpris2_metadata_get_artist(soundmenu->metadata));
-	soundmenu_mutex_unlock(soundmenu->metadata_mtx);
+	//soundmenu_mutex_lock(soundmenu->metadata_mtx);
+	metadata = mpris2_client_get_metadata (soundmenu->mpris2);
+	title = g_strdup(mpris2_metadata_get_title(metadata));
+	artist = g_strdup(mpris2_metadata_get_artist(metadata));
+	//soundmenu_mutex_unlock(soundmenu->metadata_mtx);
 
 	rv = LASTFM_track_unlove (lastfm->session_id,
 	                          title, artist);
@@ -128,9 +134,10 @@ do_lastfm_current_song_unlove (gpointer data)
 
 void lastfm_track_unlove_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 {
+	Mpris2Metadata *metadata = NULL;
 	SoundmenuLastfm *lastfm = NULL;
 
-	if(soundmenu->state == STOPPED)
+	if (mpris2_client_get_playback_status (soundmenu->mpris2) == STOPPED)
 		return;
 
 	lastfm = soundmenu->clastfm;
@@ -139,8 +146,10 @@ void lastfm_track_unlove_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 		g_critical("No connection Last.fm has been established.");
 		return;
 	}
-	if (g_str_empty0(mpris2_metadata_get_artist(soundmenu->metadata)) ||
-	    g_str_empty0(mpris2_metadata_get_title(soundmenu->metadata)))
+
+	metadata = mpris2_client_get_metadata (soundmenu->mpris2);
+	if (g_str_empty0(mpris2_metadata_get_artist(metadata)) ||
+	    g_str_empty0(mpris2_metadata_get_title(metadata)))
 		return;
 
 	set_watch_cursor (GTK_WIDGET(soundmenu->plugin));
@@ -152,22 +161,25 @@ void lastfm_track_unlove_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 static gpointer
 do_lastfm_scrob (gpointer data)
 {
-    gint rv;
-    SoundmenuPlugin *soundmenu = data;
+    Mpris2Metadata *metadata = NULL;
 	gchar *title, *artist, *album;
 	gint length, track_no;
 	time_t playback_started;
+	gint rv;
 
+    SoundmenuPlugin *soundmenu = data;
 	SoundmenuLastfm *lastfm = soundmenu->clastfm;
 
-	soundmenu_mutex_lock(soundmenu->metadata_mtx);
-	title = g_strdup(mpris2_metadata_get_title(soundmenu->metadata));
-	artist = g_strdup(mpris2_metadata_get_artist(soundmenu->metadata));
-	album = g_strdup(mpris2_metadata_get_album(soundmenu->metadata));
+	//soundmenu_mutex_lock(soundmenu->metadata_mtx);
+	metadata = mpris2_client_get_metadata (soundmenu->mpris2);
+
+	title = g_strdup(mpris2_metadata_get_title(metadata));
+	artist = g_strdup(mpris2_metadata_get_artist(metadata));
+	album = g_strdup(mpris2_metadata_get_album(metadata));
 	playback_started = lastfm->playback_started;
-	length = mpris2_metadata_get_length(soundmenu->metadata);
-	track_no = mpris2_metadata_get_track_no(soundmenu->metadata);
-	soundmenu_mutex_unlock(soundmenu->metadata_mtx);
+	length = mpris2_metadata_get_length(metadata);
+	track_no = mpris2_metadata_get_track_no(metadata);
+	//soundmenu_mutex_unlock(soundmenu->metadata_mtx);
 
 	rv = LASTFM_track_scrobble (lastfm->session_id,
 	                            title,
@@ -194,7 +206,7 @@ lastfm_scrob_handler(gpointer data)
 	SoundmenuLastfm *lastfm = NULL;
 	SoundmenuPlugin *soundmenu = data;
 
-	if(soundmenu->state == STOPPED)
+	if (mpris2_client_get_playback_status (soundmenu->mpris2) == STOPPED)
 		return FALSE;
 
 	lastfm = soundmenu->clastfm;
@@ -216,20 +228,22 @@ lastfm_scrob_handler(gpointer data)
 static gpointer
 do_lastfm_now_playing (gpointer data)
 {
-	SoundmenuPlugin *soundmenu = data;
+	Mpris2Metadata *metadata = NULL;
 	gchar *title, *artist, *album;
 	gint length, track_no;
 	gint rv;
 
+	SoundmenuPlugin *soundmenu = data;
 	SoundmenuLastfm *lastfm = soundmenu->clastfm;
 
-	soundmenu_mutex_lock(soundmenu->metadata_mtx);
-	title = g_strdup(mpris2_metadata_get_title(soundmenu->metadata));
-	artist = g_strdup(mpris2_metadata_get_artist(soundmenu->metadata));
-	album = g_strdup(mpris2_metadata_get_album(soundmenu->metadata));
-	length = mpris2_metadata_get_length(soundmenu->metadata);
-	track_no = mpris2_metadata_get_track_no(soundmenu->metadata);
-	soundmenu_mutex_unlock(soundmenu->metadata_mtx);
+	//soundmenu_mutex_lock(soundmenu->metadata_mtx);
+	metadata = mpris2_client_get_metadata (soundmenu->mpris2);
+	title = g_strdup(mpris2_metadata_get_title(metadata));
+	artist = g_strdup(mpris2_metadata_get_artist(metadata));
+	album = g_strdup(mpris2_metadata_get_album(metadata));
+	length = mpris2_metadata_get_length(metadata);
+	track_no = mpris2_metadata_get_track_no(metadata);
+	//soundmenu_mutex_unlock(soundmenu->metadata_mtx);
 
 	rv = LASTFM_track_update_now_playing (lastfm->session_id,
 	                                      title,
@@ -253,12 +267,13 @@ do_lastfm_now_playing (gpointer data)
 static gboolean
 lastfm_now_playing_handler (gpointer data)
 {
+	Mpris2Metadata *metadata = NULL;
 	gint length, time = 0;
 
 	SoundmenuPlugin *soundmenu = data;
 	SoundmenuLastfm *lastfm = soundmenu->clastfm;
 
-	if(soundmenu->state == STOPPED)
+	if (mpris2_client_get_playback_status (soundmenu->mpris2) == STOPPED)
 		return FALSE;
 
 	if (lastfm->session_id == NULL) {
@@ -266,8 +281,9 @@ lastfm_now_playing_handler (gpointer data)
 		return FALSE;
 	}
 
-	if (g_str_empty0(mpris2_metadata_get_artist(soundmenu->metadata)) ||
-	    g_str_empty0(mpris2_metadata_get_album(soundmenu->metadata)))
+	metadata = mpris2_client_get_metadata (soundmenu->mpris2);
+	if (g_str_empty0(mpris2_metadata_get_artist(metadata)) ||
+	    g_str_empty0(mpris2_metadata_get_album(metadata)))
 		return FALSE;
 
 	/* Firt update now playing on lastfm */
@@ -281,7 +297,7 @@ lastfm_now_playing_handler (gpointer data)
 	 * Note: Only scrob if tracks is more than 30s.
 	 * and scrob when track is at 50% or 4mins, whichever comes
 	 * first */
-	length = mpris2_metadata_get_length(soundmenu->metadata);
+	length = mpris2_metadata_get_length(metadata);
 	if(length < 30) {
 		if(length == 0)
 			g_critical("The player no emit the length of track");
@@ -309,12 +325,12 @@ void update_lastfm (SoundmenuPlugin *soundmenu)
 	if (lastfm->lastfm_handler_id)
 		g_source_remove (lastfm->lastfm_handler_id);
 
-	if (soundmenu->state != PLAYING)
+	if (mpris2_client_get_playback_status (soundmenu->mpris2) != PLAYING)
 		return;
 
-	soundmenu_mutex_lock(soundmenu->metadata_mtx);
+	//soundmenu_mutex_lock(soundmenu->metadata_mtx);
 	time (&lastfm->playback_started);
-	soundmenu_mutex_unlock(soundmenu->metadata_mtx);
+	//soundmenu_mutex_unlock(soundmenu->metadata_mtx);
 
 	lastfm->lastfm_handler_id = g_timeout_add_seconds_full (G_PRIORITY_DEFAULT_IDLE,
 	                                                        WAIT_UPDATE,

@@ -48,39 +48,82 @@ struct _SoundmenuLastfm {
 	GtkWidget      *lastfm_unlove_item;
 };
 
-static gpointer
-do_lastfm_current_song_love (gpointer data)
+struct _LastfmData {
+	SoundmenuPlugin *soundmenu;
+
+	gchar           *title;
+	gchar           *artist;
+	gchar           *album;
+	gint             length;
+	gint             track_no;
+	time_t           started_t;
+};
+typedef struct _LastfmData LastfmData;
+
+static void
+soundmenu_lastfm_data_free (LastfmData *data)
 {
-	Mpris2Metadata *metadata = NULL;
+	if (g_str_nempty0(data->title))
+		g_free (data->title);
+	if (g_str_nempty0(data->artist))
+		g_free (data->artist);
+	if (g_str_nempty0(data->album))
+		g_free (data->album);
+
+	g_slice_free(LastfmData, data);
+}
+
+static LastfmData *
+soundmenu_lastfm_data_new (SoundmenuPlugin *soundmenu, Mpris2Metadata *metadata, time_t started_t)
+{
+	LastfmData *data = NULL;
+
+	data = g_slice_new0(LastfmData);
+
+	data->soundmenu = soundmenu;
+
+	if (g_str_nempty0(mpris2_metadata_get_title(metadata)))
+		data->title = g_strdup(mpris2_metadata_get_title(metadata));
+	if (g_str_nempty0(mpris2_metadata_get_artist(metadata)))
+		data->artist = g_strdup(mpris2_metadata_get_artist(metadata));
+	if (g_str_nempty0(mpris2_metadata_get_album(metadata)))
+		data->album = g_strdup(mpris2_metadata_get_album(metadata));
+
+	data->length = mpris2_metadata_get_length(metadata);
+	data->track_no = mpris2_metadata_get_track_no(metadata);
+
+	data->started_t = started_t;
+
+	return data;
+}
+
+static gpointer
+do_lastfm_current_song_love (gpointer userdata)
+{
 	AsycMessageData *message_data = NULL;
-	gchar *title, *artist;
 	gint rv;
 
-	SoundmenuPlugin *soundmenu = data;
+	LastfmData *data = userdata;
+	SoundmenuPlugin *soundmenu = data->soundmenu;
 	SoundmenuLastfm *lastfm = soundmenu->clastfm;
 
-	//soundmenu_mutex_lock(soundmenu->metadata_mtx);
-	metadata = mpris2_client_get_metadata (soundmenu->mpris2);
-	title = g_strdup(mpris2_metadata_get_title(metadata));
-	artist = g_strdup(mpris2_metadata_get_artist(metadata));
-	//soundmenu_mutex_unlock(soundmenu->metadata_mtx);
-
 	rv = LASTFM_track_love (lastfm->session_id,
-	                        title, artist);
+	                        data->title, data->artist);
 
 	message_data = soundmenu_async_finished_message_new(soundmenu,
 		(rv != 0) ? _("Love song on Last.fm failed.") : NULL);
 
-	g_free(title);
-	g_free(artist);
+	soundmenu_lastfm_data_free (data);
 
 	return message_data;
 }
 
-void lastfm_track_love_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
+void
+lastfm_track_love_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 {
 	Mpris2Metadata *metadata = NULL;
 	SoundmenuLastfm *lastfm = NULL;
+	LastfmData *data = NULL;
 
 	if (mpris2_client_get_playback_status (soundmenu->mpris2) == STOPPED)
 		return;
@@ -97,45 +140,40 @@ void lastfm_track_love_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 	    g_str_empty0(mpris2_metadata_get_title(metadata)))
 		return;
 
+	data = soundmenu_lastfm_data_new (soundmenu, metadata, 0);
 	set_watch_cursor (GTK_WIDGET(soundmenu->plugin));
 	soundmenu_async_launch(do_lastfm_current_song_love,
 	                       soundmenu_async_set_idle_message,
-	                       soundmenu);
+	                       data);
 }
 
 static gpointer
-do_lastfm_current_song_unlove (gpointer data)
+do_lastfm_current_song_unlove (gpointer userdata)
 {
-	Mpris2Metadata *metadata = NULL;
 	AsycMessageData *message_data = NULL;
-	gchar *title, *artist;
 	gint rv;
 
-	SoundmenuPlugin *soundmenu = data;
+	LastfmData *data = userdata;
+	SoundmenuPlugin *soundmenu = data->soundmenu;
 	SoundmenuLastfm *lastfm = soundmenu->clastfm;
 
-	//soundmenu_mutex_lock(soundmenu->metadata_mtx);
-	metadata = mpris2_client_get_metadata (soundmenu->mpris2);
-	title = g_strdup(mpris2_metadata_get_title(metadata));
-	artist = g_strdup(mpris2_metadata_get_artist(metadata));
-	//soundmenu_mutex_unlock(soundmenu->metadata_mtx);
-
 	rv = LASTFM_track_unlove (lastfm->session_id,
-	                          title, artist);
+	                          data->title, data->artist);
 
 	message_data = soundmenu_async_finished_message_new(soundmenu,
 		(rv != 0) ? _("Unlove song on Last.fm failed.") : NULL);
 
-	g_free(title);
-	g_free(artist);
+	soundmenu_lastfm_data_free (data);
 
 	return message_data;
 }
 
-void lastfm_track_unlove_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
+void
+lastfm_track_unlove_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 {
 	Mpris2Metadata *metadata = NULL;
 	SoundmenuLastfm *lastfm = NULL;
+	LastfmData *data = NULL;
 
 	if (mpris2_client_get_playback_status (soundmenu->mpris2) == STOPPED)
 		return;
@@ -152,10 +190,11 @@ void lastfm_track_unlove_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 	    g_str_empty0(mpris2_metadata_get_title(metadata)))
 		return;
 
+	data = soundmenu_lastfm_data_new (soundmenu, metadata, 0);
 	set_watch_cursor (GTK_WIDGET(soundmenu->plugin));
 	soundmenu_async_launch(do_lastfm_current_song_unlove,
 	                       soundmenu_async_set_idle_message,
-	                       soundmenu);
+	                       data);
 }
 
 static gpointer
@@ -318,7 +357,8 @@ lastfm_now_playing_handler (gpointer data)
 	return FALSE;
 }
 
-void update_lastfm (SoundmenuPlugin *soundmenu)
+void
+soundmenu_update_playback_lastfm (SoundmenuPlugin *soundmenu)
 {
 	SoundmenuLastfm *lastfm = soundmenu->clastfm;
 

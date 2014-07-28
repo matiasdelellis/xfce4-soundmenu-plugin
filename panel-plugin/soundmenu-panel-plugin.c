@@ -255,7 +255,7 @@ mpris2_panel_plugin_playback_status (Mpris2Client *mpris2, PlaybackStatus playba
 
 	#ifdef HAVE_LIBCLASTFM
 	if (soundmenu_lastfm_is_supported(soundmenu->clastfm))
-		update_lastfm(soundmenu);
+		soundmenu_update_playback_lastfm(soundmenu);
 	#endif
 }
 

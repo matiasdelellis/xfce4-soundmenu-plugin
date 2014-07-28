@@ -29,7 +29,7 @@ G_BEGIN_DECLS
 void lastfm_track_love_action   (GtkWidget *widget, SoundmenuPlugin *soundmenu);
 void lastfm_track_unlove_action (GtkWidget *widget, SoundmenuPlugin *soundmenu);
 
-void update_lastfm (SoundmenuPlugin    *soundmenu);
+void soundmenu_update_playback_lastfm (SoundmenuPlugin    *soundmenu);
 void soundmenu_update_lastfm_menu (SoundmenuLastfm *clastfm);
 
 void             soundmenu_lastfm_uninit        (SoundmenuLastfm *lastfm);

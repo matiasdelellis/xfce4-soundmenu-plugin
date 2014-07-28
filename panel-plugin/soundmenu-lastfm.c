@@ -41,7 +41,9 @@ struct _SoundmenuLastfm {
 	LASTFM_SESSION *session_id;
 	enum LASTFM_STATUS_CODES status;
 
-	guint           lastfm_handler_id;
+	guint           update_handler_id;
+	guint           scroble_handler_id;
+
 	time_t          playback_started;
 
 	GtkWidget      *lastfm_love_item;
@@ -198,57 +200,39 @@ lastfm_track_unlove_action (GtkWidget *widget, SoundmenuPlugin *soundmenu)
 }
 
 static gpointer
-do_lastfm_scrob (gpointer data)
+soundmenu_lastfm_scrobble_thread (gpointer userdata)
 {
-    Mpris2Metadata *metadata = NULL;
-	gchar *title, *artist, *album;
-	gint length, track_no;
-	time_t playback_started;
 	gint rv;
 
-    SoundmenuPlugin *soundmenu = data;
+	LastfmData *data = userdata;
+	SoundmenuPlugin *soundmenu = data->soundmenu;
 	SoundmenuLastfm *lastfm = soundmenu->clastfm;
 
-	//soundmenu_mutex_lock(soundmenu->metadata_mtx);
-	metadata = mpris2_client_get_metadata (soundmenu->mpris2);
-
-	title = g_strdup(mpris2_metadata_get_title(metadata));
-	artist = g_strdup(mpris2_metadata_get_artist(metadata));
-	album = g_strdup(mpris2_metadata_get_album(metadata));
-	playback_started = lastfm->playback_started;
-	length = mpris2_metadata_get_length(metadata);
-	track_no = mpris2_metadata_get_track_no(metadata);
-	//soundmenu_mutex_unlock(soundmenu->metadata_mtx);
-
 	rv = LASTFM_track_scrobble (lastfm->session_id,
-	                            title,
-	                            album ? album : "",
-	                            artist,
-	                            playback_started,
-	                            length,
-	                            track_no,
+	                            data->title,
+	                            data->album ? data->album : "",
+	                            data->artist,
+	                            data->started_t,
+	                            data->length,
+	                            data->track_no,
 	                            0, NULL);
 
     if (rv != 0)
         g_critical("Last.fm submission failed");
 
-	g_free(title);
-	g_free(artist);
-	g_free(album);
+	soundmenu_lastfm_data_free (data);
 
     return NULL;
 }
 
 static gboolean
-lastfm_scrob_handler(gpointer data)
+soundmenu_lastfm_scrobble_handler (gpointer userdata)
 {
-	SoundmenuLastfm *lastfm = NULL;
-	SoundmenuPlugin *soundmenu = data;
+	LastfmData *data = userdata;
+	SoundmenuPlugin *soundmenu = data->soundmenu;
+	SoundmenuLastfm *lastfm = soundmenu->clastfm;
 
-	if (mpris2_client_get_playback_status (soundmenu->mpris2) == STOPPED)
-		return FALSE;
-
-	lastfm = soundmenu->clastfm;
+	lastfm->scroble_handler_id = 0;
 
 	if (lastfm->status != LASTFM_STATUS_OK) {
 		g_critical("No connection Last.fm has been established.");
@@ -256,127 +240,111 @@ lastfm_scrob_handler(gpointer data)
 	}
 
 	#if GLIB_CHECK_VERSION(2,31,0)
-	g_thread_new("Scroble", do_lastfm_scrob, soundmenu);
+	g_thread_new("Scroble", soundmenu_lastfm_scrobble_thread, data);
 	#else
-	g_thread_create(do_lastfm_scrob, soundmenu, FALSE, NULL);
+	g_thread_create(soundmenu_lastfm_scrobble_thread, data, FALSE, NULL);
 	#endif
 
 	return FALSE;
 }
 
 static gpointer
-do_lastfm_now_playing (gpointer data)
+soundmenu_lastfm_now_playing_thread (gpointer userdata)
 {
-	Mpris2Metadata *metadata = NULL;
-	gchar *title, *artist, *album;
-	gint length, track_no;
 	gint rv;
 
-	SoundmenuPlugin *soundmenu = data;
+	LastfmData *data = userdata;
+	SoundmenuPlugin *soundmenu = data->soundmenu;
 	SoundmenuLastfm *lastfm = soundmenu->clastfm;
 
-	//soundmenu_mutex_lock(soundmenu->metadata_mtx);
-	metadata = mpris2_client_get_metadata (soundmenu->mpris2);
-	title = g_strdup(mpris2_metadata_get_title(metadata));
-	artist = g_strdup(mpris2_metadata_get_artist(metadata));
-	album = g_strdup(mpris2_metadata_get_album(metadata));
-	length = mpris2_metadata_get_length(metadata);
-	track_no = mpris2_metadata_get_track_no(metadata);
-	//soundmenu_mutex_unlock(soundmenu->metadata_mtx);
-
 	rv = LASTFM_track_update_now_playing (lastfm->session_id,
-	                                      title,
-	                                      album ? album : "",
-	                                      artist,
-	                                      length,
-	                                      track_no,
+	                                      data->title,
+	                                      data->album ? data->album : "",
+	                                      data->artist,
+	                                      data->length,
+	                                      data->track_no,
 	                                      0, NULL);
 
 	if (rv != 0) {
 		g_critical("Update current song on Last.fm failed");
 	}
 
-	g_free(title);
-	g_free(artist);
-	g_free(album);
+	soundmenu_lastfm_data_free (data);
 
 	return NULL;
 }
 
 static gboolean
-lastfm_now_playing_handler (gpointer data)
+soundmenu_lastfm_now_playing_handler (gpointer userdata)
 {
-	Mpris2Metadata *metadata = NULL;
-	gint length, time = 0;
-
-	SoundmenuPlugin *soundmenu = data;
+	LastfmData *data = userdata;
+	SoundmenuPlugin *soundmenu = data->soundmenu;
 	SoundmenuLastfm *lastfm = soundmenu->clastfm;
-
-	if (mpris2_client_get_playback_status (soundmenu->mpris2) == STOPPED)
-		return FALSE;
 
 	if (lastfm->session_id == NULL) {
 		g_critical("No connection Last.fm has been established.");
 		return FALSE;
 	}
 
-	metadata = mpris2_client_get_metadata (soundmenu->mpris2);
-	if (g_str_empty0(mpris2_metadata_get_artist(metadata)) ||
-	    g_str_empty0(mpris2_metadata_get_album(metadata)))
-		return FALSE;
-
 	/* Firt update now playing on lastfm */
 	#if GLIB_CHECK_VERSION(2,31,0)
-	g_thread_new("Lfm Now playing", do_lastfm_now_playing, soundmenu);
+	g_thread_new("Lfm Now playing", soundmenu_lastfm_now_playing_thread, data);
 	#else
-	g_thread_create(do_lastfm_now_playing, soundmenu, FALSE, NULL);
+	g_thread_create(soundmenu_lastfm_now_playing_thread, data, FALSE, NULL);
 	#endif
 
-	/* Kick the lastfm scrobbler on
-	 * Note: Only scrob if tracks is more than 30s.
-	 * and scrob when track is at 50% or 4mins, whichever comes
-	 * first */
-	length = mpris2_metadata_get_length(metadata);
-	if(length < 30) {
-		if(length == 0)
-			g_critical("The player no emit the length of track");
-		return FALSE;
-	}
-	if((length / 2) > (240 - WAIT_UPDATE)) {
-		time = 240 - WAIT_UPDATE;
-	}
-	else {
-		time = (length / 2) - WAIT_UPDATE;
-	}
-
-    lastfm->lastfm_handler_id = g_timeout_add_seconds_full (G_PRIORITY_DEFAULT_IDLE,
-                                                            time,
-                                                            lastfm_scrob_handler,
-                                                            soundmenu,
-                                                            NULL);
 	return FALSE;
 }
 
 void
 soundmenu_update_playback_lastfm (SoundmenuPlugin *soundmenu)
 {
+	Mpris2Metadata *metadata = NULL;
+	LastfmData *data1 = NULL, *data2 = NULL;
+	gint length, delay_time;
+	time_t started_t;
+
 	SoundmenuLastfm *lastfm = soundmenu->clastfm;
 
-	if (lastfm->lastfm_handler_id)
-		g_source_remove (lastfm->lastfm_handler_id);
+	if (lastfm->scroble_handler_id) {
+		g_source_remove (lastfm->scroble_handler_id);
+		lastfm->scroble_handler_id = 0;
+	}
+	if (lastfm->update_handler_id) {
+		g_source_remove (lastfm->update_handler_id);
+		lastfm->update_handler_id = 0;
+	}
 
 	if (mpris2_client_get_playback_status (soundmenu->mpris2) != PLAYING)
 		return;
 
-	//soundmenu_mutex_lock(soundmenu->metadata_mtx);
-	time (&lastfm->playback_started);
-	//soundmenu_mutex_unlock(soundmenu->metadata_mtx);
+	if (lastfm->session_id == NULL)
+		return;
 
-	lastfm->lastfm_handler_id = g_timeout_add_seconds_full (G_PRIORITY_DEFAULT_IDLE,
-	                                                        WAIT_UPDATE,
-	                                                        lastfm_now_playing_handler,
-	                                                        soundmenu,
-	                                                        NULL);
+	metadata = mpris2_client_get_metadata (soundmenu->mpris2);
+
+	if (g_str_empty0(mpris2_metadata_get_artist(metadata)) ||
+	    g_str_empty0(mpris2_metadata_get_album(metadata)))
+		return;
+
+	length = mpris2_metadata_get_length (metadata);
+	if (length < 30)
+		return;
+
+	time (&started_t);
+
+	data1 = soundmenu_lastfm_data_new (soundmenu, metadata, started_t);
+	lastfm->update_handler_id =
+		g_timeout_add_seconds_full (G_PRIORITY_DEFAULT_IDLE, WAIT_UPDATE,
+		                            soundmenu_lastfm_now_playing_handler, data1,
+		                            NULL);
+
+	data2 = soundmenu_lastfm_data_new (soundmenu, metadata, started_t);
+	delay_time = ((length / 2) > 240) ? 240 : (length / 2);
+	lastfm->scroble_handler_id =
+		g_timeout_add_seconds_full (G_PRIORITY_DEFAULT_IDLE, delay_time,
+		                            soundmenu_lastfm_scrobble_handler, data2,
+		                            NULL);
 }
 
 void soundmenu_update_lastfm_menu (SoundmenuLastfm *clastfm)

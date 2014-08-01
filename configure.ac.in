@@ -8,14 +8,14 @@ dnl ***************************
 dnl *** Version information ***
 dnl ***************************
 m4_define([soundmenu_version_major], [0])
-m4_define([soundmenu_version_minor], [6])
+m4_define([soundmenu_version_minor], [7])
 m4_define([soundmenu_version_micro], [0])
 m4_define([soundmenu_version], [soundmenu_version_major().soundmenu_version_minor().soundmenu_version_micro()])
 
 dnl ***************************
 dnl *** Initialize autoconf ***
 dnl ***************************
-AC_COPYRIGHT([Copyright (c) 2011-2013
+AC_COPYRIGHT([Copyright (c) 2011-2014
         Matias De lellis. All rights reserved.])
 AC_INIT([xfce4-soundmenu-plugin], [soundmenu_version], [http://bugzilla.xfce.org/], [xfce4-soundmenu-plugin])
 AC_PREREQ([2.50])
@@ -148,5 +148,3 @@ echo "  Lastfm support (Need http://liblastfm.sourceforge.net >=0.5)............
 echo "  Search lyrics and artist info( Need https://github.com/sahib/glyr >= 0.9.4).: $LIBGLYR_FOUND"
 echo "  Notification support........................................................: $LIBNOTIFY_FOUND"
 echo
-
-

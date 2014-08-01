@@ -1,8 +1,23 @@
 ==============================================================
-Overview of changes in xfce4-soundmenu-plugin v0.6.0
+Overview of changes in xfce4-soundmenu-plugin v0.7.0
 ==============================================================
 
 News
+	Port to libmpris2client (Developed here, and then moved in its own repository)
+	* Add LoopStatus and Shuffle support.
+	And another button to control pulseaudio volume. (Depend on gnome-volume-control git submodule)
+	Move to Xfce 4.10 or higher. (If it affects someone write me!.)
+
+Bug fixed:
+	* D'Oh!. Unlove instead love tacks.
+	* D'Oh!. g_thread_unref need glib 2.32 and is useless. ;)
+	* Fix seg faul that never reported!. Nobody uses this!??? :S
+	* Fix tooltip encoding when the song no has title.
+
+==============================================================
+OTHERS REALESES:
+==============================================================
+V0.6.0
 	Port to GDbus.. This allowed much of the next:
 	Detects if the player is running or not. (The player need has enabled mpris2).
 	* Add option to hide controls when not available.
@@ -23,9 +38,6 @@ News
 	 * Use glib to detect if network is available when glib > 2.32
 	 * In general better code.
 
-==============================================================
-OTHERS REALESES:
-==============================================================
 V0.4.10
 	Support to Xfce 4.10 thanks to Andrzej.
 	Add option to show a tiny album art, or use all panel size in deskbar mode.

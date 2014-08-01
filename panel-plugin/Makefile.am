@@ -27,7 +27,9 @@ libsoundmenu_la_SOURCES = \
 	soundmenu-utils.c \
 	soundmenu-utils.h \
 	soundmenu-simple-async.c \
-	soundmenu-simple-async.h
+	soundmenu-simple-async.h \
+	soundmenu-pulseaudio.c \
+	soundmenu-pulseaudio.h
 
 if HAVE_LIBKEYBINDER
 libsoundmenu_la_SOURCES += \

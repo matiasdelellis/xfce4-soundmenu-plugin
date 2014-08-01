@@ -615,31 +615,35 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	g_object_ref(soundmenu->image_play);
 	g_object_ref(soundmenu->image_pause);
 
-	gtk_container_add(GTK_CONTAINER(play_button),
-		soundmenu->image_play);
+	gtk_container_add (GTK_CONTAINER(play_button),
+	                   soundmenu->image_play);
 
-	gtk_box_pack_start(GTK_BOX(soundmenu->layout_box),
-			   GTK_WIDGET(vol_button),
-			   FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(soundmenu->layout_box),
-			   GTK_WIDGET(ev_album_art),
-			   FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(soundmenu->layout_box),
-			   GTK_WIDGET(soundmenu->playback_box),
-			   FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(soundmenu->playback_box),
-			   GTK_WIDGET(prev_button),
-			   TRUE, TRUE, 0);
-	gtk_box_pack_start(GTK_BOX(soundmenu->playback_box),
-			   GTK_WIDGET(play_button),
-			   TRUE, TRUE, 0);
-	gtk_box_pack_start(GTK_BOX(soundmenu->playback_box),
-			   GTK_WIDGET(stop_button),
-			   TRUE, TRUE, 0);
-	gtk_box_pack_start(GTK_BOX(soundmenu->playback_box),
-			   GTK_WIDGET(next_button),
-			   TRUE, TRUE, 0);
+	/* Controls buttons */
+	gtk_box_pack_start (GTK_BOX(soundmenu->playback_box),
+	                    GTK_WIDGET(prev_button),
+	                    TRUE, TRUE, 0);
+	gtk_box_pack_start (GTK_BOX(soundmenu->playback_box),
+	                    GTK_WIDGET(play_button),
+	                    TRUE, TRUE, 0);
+	gtk_box_pack_start (GTK_BOX(soundmenu->playback_box),
+	                    GTK_WIDGET(stop_button),
+	                    TRUE, TRUE, 0);
+	gtk_box_pack_start (GTK_BOX(soundmenu->playback_box),
+	                    GTK_WIDGET(next_button),
+	                    TRUE, TRUE, 0);
 
+	/* Layout */
+	gtk_box_pack_start (GTK_BOX(soundmenu->layout_box),
+	                    GTK_WIDGET(vol_button),
+	                    FALSE, FALSE, 0);
+	gtk_box_pack_start (GTK_BOX(soundmenu->layout_box),
+	                    GTK_WIDGET(ev_album_art),
+	                    FALSE, FALSE, 0);
+	gtk_box_pack_start (GTK_BOX(soundmenu->layout_box),
+	                    GTK_WIDGET(soundmenu->playback_box),
+	                    FALSE, FALSE, 0);
+
+	/* Show widgets */
 	gtk_widget_show_all(GTK_WIDGET(vol_button));
 	gtk_widget_show(GTK_WIDGET(album_art));
 	if(soundmenu->show_album_art)
@@ -895,13 +899,13 @@ soundmenu_mode_changed (XfcePanelPlugin     *plugin,
 	{
 		if (soundmenu->huge_on_deskbar_mode) {
 			xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->layout_box), GTK_ORIENTATION_VERTICAL);
-			gtk_box_pack_end (GTK_BOX(soundmenu->playback_box),
+			gtk_box_pack_start (GTK_BOX(soundmenu->playback_box),
 			                    GTK_WIDGET(soundmenu->vol_button),
 			                    FALSE, FALSE, 0);
 		}
 		else {
 			xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->layout_box), GTK_ORIENTATION_HORIZONTAL);
-			gtk_box_pack_end (GTK_BOX(soundmenu->layout_box),
+			gtk_box_pack_start (GTK_BOX(soundmenu->layout_box),
 			                    GTK_WIDGET(soundmenu->vol_button),
 			                    FALSE, FALSE, 0);
 		}
@@ -909,7 +913,7 @@ soundmenu_mode_changed (XfcePanelPlugin     *plugin,
 	}
 	else
 	{
-		gtk_box_pack_end (GTK_BOX(soundmenu->layout_box),
+		gtk_box_pack_start (GTK_BOX(soundmenu->layout_box),
 		                    GTK_WIDGET(soundmenu->vol_button),
 		                    FALSE, FALSE, 0);
 

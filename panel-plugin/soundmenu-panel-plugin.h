@@ -63,12 +63,14 @@ struct _SoundmenuPlugin {
 	XfcePanelPlugin	*plugin;
 	Mpris2Client    *mpris2;
 
+	/* Layout widgets */
+	GtkWidget       *playback_box;
+	GtkWidget       *layout_box;
+
 	/* panel widgets */
-	GtkWidget		*hvbox;
-	GtkWidget		*hvbox_buttons;
+	PulseaudioButton  *vol_button;
 	SoundmenuAlbumArt *album_art;
 	GtkWidget		*ev_album_art;
-	PulseaudioButton *vol_button;
 	GtkWidget		*prev_button;
 	GtkWidget		*play_button;
 	GtkWidget		*stop_button;

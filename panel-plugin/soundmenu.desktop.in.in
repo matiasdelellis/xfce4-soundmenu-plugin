@@ -6,4 +6,4 @@ _Comment=Sound menu plugin for the Xfce panel
 Icon=xfce4-soundmenu-plugin
 X-XFCE-Module=soundmenu
 X-XFCE-Internal=false
-X-XFCE-Unique=true
+X-XFCE-Unique=false

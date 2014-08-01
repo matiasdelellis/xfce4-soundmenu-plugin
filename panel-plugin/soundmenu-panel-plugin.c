@@ -577,11 +577,11 @@ soundmenu_new (XfcePanelPlugin *plugin)
 
 	/* create some panel widgets */
 
-	soundmenu->hvbox = xfce_hvbox_new (panel_orientation, FALSE, 2);
-	gtk_widget_show (soundmenu->hvbox);
+	soundmenu->layout_box = xfce_hvbox_new (panel_orientation, FALSE, 2);
+	gtk_widget_show (soundmenu->layout_box);
 
-	soundmenu->hvbox_buttons = xfce_hvbox_new (orientation, FALSE, 0);
-	gtk_widget_show (soundmenu->hvbox_buttons);
+	soundmenu->playback_box = xfce_hvbox_new (orientation, FALSE, 0);
+	gtk_widget_show (soundmenu->playback_box);
 
 	/* some soundmenu widgets */
 
@@ -611,31 +611,32 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	soundmenu->image_play =
 		xfce_panel_image_new_from_source("media-playback-start");
 
+	g_object_ref(soundmenu->vol_button);
 	g_object_ref(soundmenu->image_play);
 	g_object_ref(soundmenu->image_pause);
 
 	gtk_container_add(GTK_CONTAINER(play_button),
 		soundmenu->image_play);
 
-	gtk_box_pack_start(GTK_BOX(soundmenu->hvbox),
+	gtk_box_pack_start(GTK_BOX(soundmenu->layout_box),
 			   GTK_WIDGET(vol_button),
 			   FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(soundmenu->hvbox),
+	gtk_box_pack_start(GTK_BOX(soundmenu->layout_box),
 			   GTK_WIDGET(ev_album_art),
 			   FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(soundmenu->hvbox),
-			   GTK_WIDGET(soundmenu->hvbox_buttons),
+	gtk_box_pack_start(GTK_BOX(soundmenu->layout_box),
+			   GTK_WIDGET(soundmenu->playback_box),
 			   FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(soundmenu->hvbox_buttons),
+	gtk_box_pack_start(GTK_BOX(soundmenu->playback_box),
 			   GTK_WIDGET(prev_button),
 			   TRUE, TRUE, 0);
-	gtk_box_pack_start(GTK_BOX(soundmenu->hvbox_buttons),
+	gtk_box_pack_start(GTK_BOX(soundmenu->playback_box),
 			   GTK_WIDGET(play_button),
 			   TRUE, TRUE, 0);
-	gtk_box_pack_start(GTK_BOX(soundmenu->hvbox_buttons),
+	gtk_box_pack_start(GTK_BOX(soundmenu->playback_box),
 			   GTK_WIDGET(stop_button),
 			   TRUE, TRUE, 0);
-	gtk_box_pack_start(GTK_BOX(soundmenu->hvbox_buttons),
+	gtk_box_pack_start(GTK_BOX(soundmenu->playback_box),
 			   GTK_WIDGET(next_button),
 			   TRUE, TRUE, 0);
 
@@ -801,7 +802,7 @@ soundmenu_free (XfcePanelPlugin *plugin,
 		gtk_widget_destroy (dialog);
 
 	/* destroy the panel widgets */
-	gtk_widget_destroy (soundmenu->hvbox);
+	gtk_widget_destroy (soundmenu->layout_box);
 
 	/* cleanup the metadata and settings */
 	if (G_LIKELY (soundmenu->player != NULL))
@@ -860,6 +861,21 @@ soundmenu_size_changed (XfcePanelPlugin *plugin,
 }
 
 static void
+soundmenu_container_remove (GtkContainer *container, GtkWidget *widget)
+{
+	GList *list = NULL;
+	gint index = 0;
+
+	list = gtk_container_get_children (container);
+	index = g_list_index (list, widget);
+	if (index >= 0) {
+		g_object_ref(widget);
+		gtk_container_remove (container, widget);
+	}
+	 g_list_free (list);
+}
+
+static void
 soundmenu_mode_changed (XfcePanelPlugin     *plugin,
                         XfcePanelPluginMode  mode,
                         SoundmenuPlugin     *soundmenu)
@@ -870,19 +886,35 @@ soundmenu_mode_changed (XfcePanelPlugin     *plugin,
 		GTK_ORIENTATION_VERTICAL : GTK_ORIENTATION_HORIZONTAL;
 	panel_orientation = xfce_panel_plugin_get_orientation (plugin);
 
+	soundmenu_container_remove (GTK_CONTAINER(soundmenu->playback_box),
+	                            GTK_WIDGET(soundmenu->vol_button));
+	soundmenu_container_remove (GTK_CONTAINER(soundmenu->layout_box),
+	                            GTK_WIDGET(soundmenu->vol_button));
+
 	if (mode == XFCE_PANEL_PLUGIN_MODE_DESKBAR)
 	{
-		if (soundmenu->huge_on_deskbar_mode)
-			xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->hvbox), GTK_ORIENTATION_VERTICAL);
-		else
-			xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->hvbox), GTK_ORIENTATION_HORIZONTAL);
-
-		xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->hvbox_buttons), GTK_ORIENTATION_HORIZONTAL);
+		if (soundmenu->huge_on_deskbar_mode) {
+			xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->layout_box), GTK_ORIENTATION_VERTICAL);
+			gtk_box_pack_end (GTK_BOX(soundmenu->playback_box),
+			                    GTK_WIDGET(soundmenu->vol_button),
+			                    FALSE, FALSE, 0);
+		}
+		else {
+			xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->layout_box), GTK_ORIENTATION_HORIZONTAL);
+			gtk_box_pack_end (GTK_BOX(soundmenu->layout_box),
+			                    GTK_WIDGET(soundmenu->vol_button),
+			                    FALSE, FALSE, 0);
+		}
+		xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->playback_box), GTK_ORIENTATION_HORIZONTAL);
 	}
 	else
 	{
-		xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->hvbox), panel_orientation);
-		xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->hvbox_buttons), orientation);
+		gtk_box_pack_end (GTK_BOX(soundmenu->layout_box),
+		                    GTK_WIDGET(soundmenu->vol_button),
+		                    FALSE, FALSE, 0);
+
+		xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->layout_box), panel_orientation);
+		xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->playback_box), orientation);
 	}
 
 	/* update size after orientation change */
@@ -897,7 +929,7 @@ void soundmenu_update_layout_changes (SoundmenuPlugin *soundmenu)
 	/* Set visible widgets acording preferences */
 
 	if (connection) {
-		gtk_widget_show(GTK_WIDGET(soundmenu->hvbox_buttons));
+		gtk_widget_show(GTK_WIDGET(soundmenu->playback_box));
 
 		if(soundmenu->show_album_art)
 			gtk_widget_show(soundmenu->ev_album_art);
@@ -911,11 +943,11 @@ void soundmenu_update_layout_changes (SoundmenuPlugin *soundmenu)
 	}
 	else {
 		if(soundmenu->hide_controls_if_loose) {
-			gtk_widget_hide(GTK_WIDGET(soundmenu->hvbox_buttons));
+			gtk_widget_hide(GTK_WIDGET(soundmenu->playback_box));
 			gtk_widget_show(soundmenu->ev_album_art);
 		}
 		else {
-			gtk_widget_show(GTK_WIDGET(soundmenu->hvbox_buttons));
+			gtk_widget_show(GTK_WIDGET(soundmenu->playback_box));
 
 			if(soundmenu->show_album_art)
 				gtk_widget_show(soundmenu->ev_album_art);
@@ -948,7 +980,7 @@ soundmenu_construct (XfcePanelPlugin *plugin)
 	soundmenu = soundmenu_new (plugin);
 
 	/* add the hvbox to the panel */
-	gtk_container_add (GTK_CONTAINER (plugin), soundmenu->hvbox);
+	gtk_container_add (GTK_CONTAINER (plugin), soundmenu->layout_box);
 
 	/* connect plugin signals */
 	g_signal_connect (G_OBJECT (plugin), "free-data",

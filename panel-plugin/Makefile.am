@@ -20,6 +20,8 @@ libsoundmenu_la_SOURCES = \
 	soundmenu-panel-plugin.h \
 	soundmenu-album-art.c \
 	soundmenu-album-art.h \
+	soundmenu-controls.c \
+	soundmenu-controls.h \
 	soundmenu-dialog-hig.c \
 	soundmenu-dialog-hig.h \
 	soundmenu-dialogs.c \

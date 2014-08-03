@@ -41,6 +41,7 @@
 #include "soundmenu-album-art.h"
 #include "soundmenu-pulseaudio.h"
 #include "soundmenu-simple-async.h"
+#include "soundmenu-controls.h"
 
 #ifdef HAVE_LIBCLASTFM
 #include "soundmenu-lastfm.h"
@@ -60,25 +61,21 @@ struct lastfm_pref {
 typedef struct _SoundmenuPlugin SoundmenuPlugin;
 
 struct _SoundmenuPlugin {
-	XfcePanelPlugin	*plugin;
-	Mpris2Client    *mpris2;
+	XfcePanelPlugin	  *plugin;
+	Mpris2Client      *mpris2;
 
 	/* Layout widgets */
-	GtkWidget       *playback_box;
-	GtkWidget       *layout_box;
+	Mpris2Controls    *controls;
+	GtkWidget         *layout_box;
 
 	/* panel widgets */
 	PulseaudioButton  *vol_button;
 	SoundmenuAlbumArt *album_art;
-	GtkWidget		*ev_album_art;
-	GtkWidget		*prev_button;
-	GtkWidget		*play_button;
-	GtkWidget		*stop_button;
-	GtkWidget		*next_button;
-	GtkWidget		*image_pause;
-	GtkWidget		*image_play;
+	GtkWidget		  *ev_album_art;
+
 	GtkWidget       *loop_menu_item;
 	GtkWidget       *shuffle_menu_item;
+
 	GtkWidget       *tools_submenu;
 
 	/* Helper to obtain player name of preferences */

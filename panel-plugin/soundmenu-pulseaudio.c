@@ -20,7 +20,11 @@
 #include <gtk/gtk.h>
 #include <libxfce4panel/libxfce4panel.h>
 
+#include <libmpris2client/libmpris2client.h>
+
+#include "containermenuitem.h"
 #include "scalemenuitem.h"
+#include "soundmenu-controls.h"
 #include "soundmenu-pulseaudio.h"
 
 static const
@@ -294,6 +298,22 @@ pulseaudio_button_show_menu (PulseaudioButton *button)
 	button->menu = menu;
 	g_signal_connect(GTK_MENU_SHELL(menu), "deactivate", G_CALLBACK(menu_destroyed_cb), button);
 
+	/*
+	 * Mpris Controls menu item
+	 */
+	Mpris2Client *mpris2 = mpris2_client_new ();
+	gchar *player = mpris2_client_auto_set_player(mpris2);
+	GtkWidget *controls = GTK_WIDGET(mpris2_controls_new (mpris2));
+
+	mi = container_menu_item_new();
+	container_menu_item_add (CONTAINER_MENU_ITEM(mi), controls);
+	gtk_widget_show_all (mi);
+
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
+
+	/*
+	 * Pulseaudio menu item
+	 */
 	stream = gvc_mixer_control_get_default_sink (button->mixer);
 	vol_norm = gvc_mixer_control_get_vol_max_norm (button->mixer);
 	vol = gvc_mixer_stream_get_volume(stream);
@@ -320,6 +340,7 @@ pulseaudio_button_show_menu (PulseaudioButton *button)
 	gtk_widget_show_all (mi);
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
 
+	/* Show menu */
 	gtk_menu_popup (GTK_MENU (menu), NULL, NULL,
 	                set_menu_position,
 	                GTK_WIDGET(button), 0,

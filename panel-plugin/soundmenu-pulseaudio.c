@@ -281,6 +281,7 @@ pulseaudio_button_show_menu (PulseaudioButton *button)
 {
 	GtkWidget *menu, *mi, *img = NULL;
 	GdkScreen *gscreen;
+	GdkPixbuf *pix;
 	GvcMixerStream *stream;
 	gdouble vol_norm;
 	pa_volume_t vol;
@@ -292,7 +293,8 @@ pulseaudio_button_show_menu (PulseaudioButton *button)
 
 	/* keep track of the menu while it's being displayed */
 	button->menu = menu;
-	g_signal_connect(GTK_MENU_SHELL(menu), "deactivate", G_CALLBACK(menu_destroyed_cb), button);
+	g_signal_connect (GTK_MENU_SHELL(menu), "deactivate",
+	                  G_CALLBACK(menu_destroyed_cb), button);
 
 	stream = gvc_mixer_control_get_default_sink (button->mixer);
 	vol_norm = gvc_mixer_control_get_vol_max_norm (button->mixer);
@@ -304,9 +306,15 @@ pulseaudio_button_show_menu (PulseaudioButton *button)
 	scale_menu_item_set_description_label (SCALE_MENU_ITEM(mi),
 	                                       gvc_mixer_stream_get_description(stream));
 	/* Set icon */
-	img = gtk_image_new_from_icon_name (gvc_mixer_stream_get_icon_name(stream),
-	                                    GTK_ICON_SIZE_DIALOG);
-	gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM(mi), img);
+	pix = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (),
+	                                gvc_mixer_stream_get_icon_name(stream),
+	                                32,
+	                                GTK_ICON_LOOKUP_GENERIC_FALLBACK,
+	                                NULL);
+	if (pix) {
+		img = gtk_image_new_from_pixbuf (pix);
+		gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM(mi), img);
+	}
 
 	/* Set range slider and update level */
 	button->range = scale_menu_item_get_scale (SCALE_MENU_ITEM (mi));

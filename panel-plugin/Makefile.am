@@ -32,8 +32,6 @@ libsoundmenu_la_SOURCES = \
 	soundmenu-simple-async.h \
 	soundmenu-pulseaudio.c \
 	soundmenu-pulseaudio.h \
-	containermenuitem.c \
-	containermenuitem.h \
 	scalemenuitem.c \
 	scalemenuitem.h
 

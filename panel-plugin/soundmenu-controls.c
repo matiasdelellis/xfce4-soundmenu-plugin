@@ -231,22 +231,6 @@ mpris2_controls_init (Mpris2Controls *controls)
 	gtk_widget_show_all (controls->play_button);
 	gtk_widget_show_all (controls->next_button);
 
-	/* Tooltips */
-
-	g_object_set (G_OBJECT(controls->prev_button), "has-tooltip", TRUE, NULL);
-	g_object_set (G_OBJECT(controls->play_button), "has-tooltip", TRUE, NULL);
-	g_object_set (G_OBJECT(controls->stop_button), "has-tooltip", TRUE, NULL);
-	g_object_set (G_OBJECT(controls->next_button), "has-tooltip", TRUE, NULL);
-
-	/*g_signal_connect (G_OBJECT(controls->prev_button), "query-tooltip",
-	                  G_CALLBACK(soundmenu_set_query_tooltip_cb), controls);
-	g_signal_connect (G_OBJECT(controls->play_button), "query-tooltip",
-	                  G_CALLBACK(soundmenu_set_query_tooltip_cb), controls);
-	g_signal_connect (G_OBJECT(controls->stop_button), "query-tooltip",
-	                  G_CALLBACK(soundmenu_set_query_tooltip_cb), controls);
-	g_signal_connect (G_OBJECT(controls->next_button), "query-tooltip",
-	                  G_CALLBACK(soundmenu_set_query_tooltip_cb), controls);*/
-
 	/* CLick signals */
 	g_signal_connect (G_OBJECT(controls->prev_button), "clicked",
 	                  G_CALLBACK(soundmenu_prev_button_handler), controls);

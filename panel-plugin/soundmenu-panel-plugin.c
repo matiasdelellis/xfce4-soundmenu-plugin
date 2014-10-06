@@ -572,10 +572,11 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	xfce_panel_plugin_add_action_widget (plugin, stop_button);
 	xfce_panel_plugin_add_action_widget (plugin, next_button);*/
 
-	g_object_set (G_OBJECT(album_art), "has-tooltip", TRUE, NULL);
+	/* Tooltips */
 
-	g_signal_connect(G_OBJECT(album_art), "query-tooltip",
-			G_CALLBACK(soundmenu_set_query_tooltip_cb), soundmenu);
+	g_object_set (G_OBJECT(soundmenu->layout_box), "has-tooltip", TRUE, NULL);
+	g_signal_connect (G_OBJECT(soundmenu->layout_box), "query-tooltip",
+	                  G_CALLBACK(soundmenu_set_query_tooltip_cb), soundmenu);
 
 	/* Attach menus actions */
 

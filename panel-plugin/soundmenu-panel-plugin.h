@@ -39,13 +39,17 @@
 #include <libmpris2client/mpris2-metadata.h>
 
 #include "soundmenu-album-art.h"
-#include "soundmenu-pulseaudio.h"
 #include "soundmenu-simple-async.h"
 #include "soundmenu-controls.h"
 
 #ifdef HAVE_LIBCLASTFM
 #include "soundmenu-lastfm.h"
 #endif
+
+#if FEAT_MIXER
+#include "soundmenu-pulseaudio.h"
+#endif
+
 
 G_BEGIN_DECLS
 
@@ -69,7 +73,9 @@ struct _SoundmenuPlugin {
 	GtkWidget         *layout_box;
 
 	/* panel widgets */
+	#if FEAT_MIXER
 	PulseaudioButton  *vol_button;
+	#endif
 	SoundmenuAlbumArt *album_art;
 	GtkWidget		  *ev_album_art;
 

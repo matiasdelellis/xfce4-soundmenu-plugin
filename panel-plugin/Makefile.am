@@ -30,10 +30,14 @@ libsoundmenu_la_SOURCES = \
 	soundmenu-utils.h \
 	soundmenu-simple-async.c \
 	soundmenu-simple-async.h \
-	soundmenu-pulseaudio.c \
-	soundmenu-pulseaudio.h \
 	scalemenuitem.c \
 	scalemenuitem.h
+
+if FEAT_MIXER
+libsoundmenu_la_SOURCES += \
+	soundmenu-pulseaudio.c \
+	soundmenu-pulseaudio.h
+endif
 
 if HAVE_LIBKEYBINDER
 libsoundmenu_la_SOURCES += \
@@ -79,8 +83,11 @@ libsoundmenu_la_LIBADD = \
 	$(LIBXFCE4UI_LIBS) \
 	$(LIBXFCE4PANEL_LIBS) \
 	$(LIBMPRIS2CLIENT_LIBS) \
-	../gvc/libgvc.la \
 	-lm
+
+if FEAT_MIXER
+libsoundmenu_la_LIBADD += ../gvc/libgvc.la
+endif
 
 if HAVE_LIBKEYBINDER
 libsoundmenu_la_CFLAGS += $(LIBKEYBINDER_CFLAGS)

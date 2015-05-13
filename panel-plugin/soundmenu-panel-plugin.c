@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011-2014 matias <mati86dl@gmail.com>
+ *  Copyright (c) 2011-2015 matias <mati86dl@gmail.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -489,8 +489,10 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	GtkOrientation panel_orientation, orientation;
 	GtkWidget *ev_album_art;
 	GtkWidget *separator, *loop_menu_item, *shuffle_menu_item, *tools_menu_item, *tools_submenu;
-	PulseaudioButton *vol_button;
 	SoundmenuAlbumArt *album_art;
+	#if FEAT_MIXER
+	PulseaudioButton *vol_button;
+	#endif
 
 	/* allocate memory for the plugin structure */
 	soundmenu = panel_slice_new0 (SoundmenuPlugin);
@@ -532,15 +534,17 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	album_art = soundmenu_album_art_new ();
 	gtk_container_add (GTK_CONTAINER (ev_album_art), GTK_WIDGET(album_art));
 
+	#if FEAT_MIXER
 	vol_button = pulseaudio_button_new();
-
-	g_object_ref(soundmenu->vol_button);
+	g_object_ref(vol_button);
+	#endif
 
 	/* Layout */
-
+	#if FEAT_MIXER
 	gtk_box_pack_start (GTK_BOX(soundmenu->layout_box),
 	                    GTK_WIDGET(vol_button),
 	                    FALSE, FALSE, 0);
+	#endif
 	gtk_box_pack_start (GTK_BOX(soundmenu->layout_box),
 	                    GTK_WIDGET(ev_album_art),
 	                    FALSE, FALSE, 0);
@@ -549,7 +553,9 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	                    FALSE, FALSE, 0);
 
 	/* Show widgets */
+	#if FEAT_MIXER
 	gtk_widget_show_all(GTK_WIDGET(vol_button));
+	#endif
 	gtk_widget_show(GTK_WIDGET(album_art));
 	if(soundmenu->show_album_art)
 		gtk_widget_show(ev_album_art);
@@ -563,8 +569,9 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	                 G_CALLBACK (soundmenu_album_art_frame_press_callback), soundmenu);
 	g_signal_connect(G_OBJECT (ev_album_art), "scroll-event",
 	                  G_CALLBACK (soundmenu_panel_button_scrolled), soundmenu);
-
+	#if FEAT_MIXER
 	xfce_panel_plugin_add_action_widget (plugin, GTK_WIDGET(vol_button));
+	#endif
 	xfce_panel_plugin_add_action_widget (plugin, GTK_WIDGET(album_art));
 	xfce_panel_plugin_add_action_widget (plugin, GTK_WIDGET(ev_album_art));
 
@@ -605,7 +612,10 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	xfce_panel_plugin_menu_insert_item (soundmenu->plugin, GTK_MENU_ITEM(tools_menu_item));
 	gtk_widget_show (tools_menu_item);
 
+	#if FEAT_MIXER
 	soundmenu->vol_button = vol_button;
+	#endif
+
 	soundmenu->album_art = album_art;
 	soundmenu->ev_album_art = ev_album_art;
 	soundmenu->loop_menu_item = loop_menu_item;
@@ -731,7 +741,10 @@ soundmenu_size_changed (XfcePanelPlugin *plugin,
 			album_size = size;
 	}
 
+	#if FEAT_MIXER
 	gtk_widget_set_size_request (GTK_WIDGET (soundmenu->vol_button), size, size);
+	#endif
+
 	mpris2_controls_set_size (soundmenu->controls, size);
 	soundmenu_album_art_set_size (soundmenu->album_art, album_size);
 
@@ -765,33 +778,40 @@ soundmenu_mode_changed (XfcePanelPlugin     *plugin,
 		GTK_ORIENTATION_VERTICAL : GTK_ORIENTATION_HORIZONTAL;
 	panel_orientation = xfce_panel_plugin_get_orientation (plugin);
 
+	#if FEAT_MIXER
 	soundmenu_container_remove (GTK_CONTAINER(soundmenu->controls),
 	                            GTK_WIDGET(soundmenu->vol_button));
 	soundmenu_container_remove (GTK_CONTAINER(soundmenu->layout_box),
 	                            GTK_WIDGET(soundmenu->vol_button));
+	#endif
 
 	if (mode == XFCE_PANEL_PLUGIN_MODE_DESKBAR)
 	{
 		if (soundmenu->huge_on_deskbar_mode) {
 			mpris2_controls_set_orientation (soundmenu->controls, GTK_ORIENTATION_VERTICAL);
+			#if FEAT_MIXER
 			gtk_box_pack_start (GTK_BOX(soundmenu->controls),
 			                    GTK_WIDGET(soundmenu->vol_button),
 			                    FALSE, FALSE, 0);
+			#endif
 		}
 		else {
 			xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->layout_box), GTK_ORIENTATION_HORIZONTAL);
+			#if FEAT_MIXER
 			gtk_box_pack_start (GTK_BOX(soundmenu->layout_box),
 			                    GTK_WIDGET(soundmenu->vol_button),
 			                    FALSE, FALSE, 0);
+			#endif
 		}
 		mpris2_controls_set_orientation (soundmenu->controls, GTK_ORIENTATION_HORIZONTAL);
 	}
 	else
 	{
+		#if FEAT_MIXER
 		gtk_box_pack_start (GTK_BOX(soundmenu->layout_box),
 		                    GTK_WIDGET(soundmenu->vol_button),
 		                    FALSE, FALSE, 0);
-
+		#endif
 		xfce_hvbox_set_orientation (XFCE_HVBOX (soundmenu->layout_box), panel_orientation);
 		mpris2_controls_set_orientation (soundmenu->controls, orientation);
 	}

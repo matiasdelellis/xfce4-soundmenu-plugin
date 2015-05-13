@@ -15,7 +15,7 @@ m4_define([soundmenu_version], [soundmenu_version_major().soundmenu_version_mino
 dnl ***************************
 dnl *** Initialize autoconf ***
 dnl ***************************
-AC_COPYRIGHT([Copyright (c) 2011-2014
+AC_COPYRIGHT([Copyright (c) 2011-2015
         Matias De lellis. All rights reserved.])
 AC_INIT([xfce4-soundmenu-plugin], [soundmenu_version], [http://bugzilla.xfce.org/], [xfce4-soundmenu-plugin])
 AC_PREREQ([2.50])
@@ -105,8 +105,22 @@ XDT_CHECK_OPTIONAL_PACKAGE([LIBNOTIFY],
                        [libnotify],
                        [libnotify library], [yes])
 
-PULSE_MIN_VERS=2.0
-PKG_CHECK_MODULES(GVC, libpulse >= $PULSE_MIN_VERS libpulse-mainloop-glib gobject-2.0)
+dnl Check enable the mixer button.
+AC_MSG_CHECKING(--enable-mixer argument)
+AC_ARG_ENABLE(mixer,
+    [  --enable-mixer         Include mixer button.],
+    [enable_mixer=$enableval],
+    [enable_mixer="no"])
+AC_MSG_RESULT($enable_mixer)
+if test "$enable_mixer" = "yes"; then
+  PULSE_MIN_VERS=2.0
+  PKG_CHECK_MODULES(GVC, libpulse >= $PULSE_MIN_VERS libpulse-mainloop-glib gobject-2.0)
+  AM_CONDITIONAL([FEAT_MIXER], 1)
+else
+  AM_CONDITIONAL([FEAT_MIXER], 0)
+fi
+
+dnl force disable introspeccion
 AM_CONDITIONAL([HAVE_INTROSPECTION], 0)
 
 dnl ***********************************
@@ -127,14 +141,17 @@ AC_MSG_CHECKING([PLATFORM_LDFLAGS])
 AC_MSG_RESULT([$PLATFORM_LDFLAGS])
 AC_SUBST([PLATFORM_LDFLAGS])
 
-AC_OUTPUT([
-Makefile
-icons/Makefile
-icons/128x128/Makefile
-panel-plugin/Makefile
-gvc/Makefile
-po/Makefile.in
-])
+dnl Output files
+AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([panel-plugin/Makefile])
+AC_CONFIG_FILES([icons/Makefile])
+AC_CONFIG_FILES([icons/128x128/Makefile])
+AC_CONFIG_FILES([po/Makefile.in])
+
+if test x"$enable_mixer" = x"yes"; then
+AC_CONFIG_FILES([gvc/Makefile])
+fi
+AC_OUTPUT
 
 dnl ***************************
 dnl *** Print configuration ***
@@ -147,4 +164,5 @@ echo "  Global keyboard shortcuts support.......................................
 echo "  Lastfm support (Need http://liblastfm.sourceforge.net >=0.5)................: $LIBCLASTFM_FOUND"
 echo "  Search lyrics and artist info( Need https://github.com/sahib/glyr >= 0.9.4).: $LIBGLYR_FOUND"
 echo "  Notification support........................................................: $LIBNOTIFY_FOUND"
+echo "  Experimental mixer button...................................................: $enable_mixer"
 echo

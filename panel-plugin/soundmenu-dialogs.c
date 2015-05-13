@@ -118,11 +118,12 @@ refresh_player (GtkEntry        *player_entry,
                 GdkEventButton  *event,
                 SoundmenuPlugin *soundmenu)
 {
-	gchar *player = NULL;
+	if (position != GTK_ENTRY_ICON_SECONDARY)
+		return;
 
-	if (position == GTK_ENTRY_ICON_SECONDARY) {
-		player = mpris2_client_auto_set_player (soundmenu->mpris2);
-		gtk_entry_set_text(GTK_ENTRY(soundmenu->w_player), player);
+	if (mpris2_client_auto_connect(soundmenu->mpris2)) {
+		gtk_entry_set_text(GTK_ENTRY(soundmenu->w_player),
+		                   mpris2_client_get_player(soundmenu->mpris2));
 	}
 }
 

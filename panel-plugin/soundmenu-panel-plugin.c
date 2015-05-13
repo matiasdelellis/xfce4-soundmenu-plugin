@@ -246,9 +246,10 @@ soundmenu_album_art_frame_press_callback (GtkWidget       *event_box,
 			soundmenu_launch_player (soundmenu->player);
 		}
 		else {
-			soundmenu->player = mpris2_client_auto_set_player(soundmenu->mpris2);
-			if (g_str_empty0(soundmenu->player))
+			if (mpris2_client_auto_connect(soundmenu->mpris2)) {
+				soundmenu->player = g_strdup (mpris2_client_get_player(soundmenu->mpris2));
 				soundmenu_configure(soundmenu->plugin, soundmenu);
+			}
 		}
 		return TRUE;
 	}

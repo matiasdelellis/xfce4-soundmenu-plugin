@@ -489,6 +489,7 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	GtkOrientation panel_orientation, orientation;
 	GtkWidget *ev_album_art;
 	GtkWidget *separator, *loop_menu_item, *shuffle_menu_item, *tools_menu_item, *tools_submenu;
+	GList *list = NULL, *i;
 	SoundmenuAlbumArt *album_art;
 	#if FEAT_MIXER
 	PulseaudioButton *vol_button;
@@ -575,10 +576,13 @@ soundmenu_new (XfcePanelPlugin *plugin)
 	xfce_panel_plugin_add_action_widget (plugin, GTK_WIDGET(album_art));
 	xfce_panel_plugin_add_action_widget (plugin, GTK_WIDGET(ev_album_art));
 
-	/*xfce_panel_plugin_add_action_widget (plugin, prev_button);
-	xfce_panel_plugin_add_action_widget (plugin, play_button);
-	xfce_panel_plugin_add_action_widget (plugin, stop_button);
-	xfce_panel_plugin_add_action_widget (plugin, next_button);*/
+	/* Tiny hack to asociate menu options to mpris controls. */
+
+	list = gtk_container_get_children (GTK_CONTAINER(soundmenu->controls));
+	for (i = list; i != NULL; i = i->next) {
+		xfce_panel_plugin_add_action_widget (plugin, GTK_WIDGET(i->data));
+	}
+	g_list_free(list);
 
 	/* Tooltips */
 
